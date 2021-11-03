@@ -92,4 +92,11 @@ public class RateLimiterImpl<K> implements RateLimiter<K> {
     private Rate getInitialRate() {
         return Objects.requireNonNull(rateSupplier.getInitialRate());
     }
+
+    @Override
+    public String toString() {
+        return "RateLimiterImpl{" +
+                "limits=" + limits +
+                '}';
+    }
 }
