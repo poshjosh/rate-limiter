@@ -4,7 +4,7 @@ import com.looseboxes.ratelimiter.rates.LimitWithinDuration;
 import com.looseboxes.ratelimiter.rates.Rate;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class RateLimiterIT {
 
@@ -19,22 +19,21 @@ public class RateLimiterIT {
     private void testPerformance(int count, long maxTime, long maxMemory) {
         final long tb4 = System.currentTimeMillis();
         final long mb4 = Util.availableMemory();
-        RateLimiter rateLimiter = getRateLimiter(count + 1, 60_000);
+        RateLimiter<Integer> rateLimiter = getRateLimiter(count + 1, 60_000);
         for(int i = 0; i < count; i++) {
             rateLimiter.record(i);
         }
-        System.out.println(
-                String.format("Count: %s, Spent -> time: %d millis, memory: %d kb",
-                        count,
-                        (System.currentTimeMillis() - tb4),
-                        (Util.usedMemory(mb4)/1000)
-                )
-        );
+        final long timeSpent = (System.currentTimeMillis() - tb4);
+        final long memorySpent = Util.usedMemory(mb4);
+
+        System.out.printf("Count: %s, Spent -> time: %d millis, memory: %d kb", count, timeSpent, (memorySpent/1000));
+        assertThat(timeSpent).isLessThan(maxTime);
+        assertThat(memorySpent).isLessThanOrEqualTo(maxMemory);
     }
 
-    public RateLimiter getRateLimiter(int limit, int duration) {
+    public RateLimiter<Integer> getRateLimiter(int limit, int duration) {
         Rate rateLimit = new LimitWithinDuration(limit, duration);
-        return new RateLimiterImpl(() -> new LimitWithinDuration(), Collections.singletonList(rateLimit));
+        return new RateLimiterImpl<>(() -> new LimitWithinDuration(), rateLimit);
     }
 }
 

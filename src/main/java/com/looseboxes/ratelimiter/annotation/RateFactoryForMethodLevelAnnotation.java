@@ -1,6 +1,5 @@
 package com.looseboxes.ratelimiter.annotation;
 
-import com.looseboxes.ratelimiter.rates.LimitWithinDuration;
 import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.util.RateFactory;
 
@@ -10,44 +9,48 @@ import java.util.*;
 public class RateFactoryForMethodLevelAnnotation<K> implements RateFactory<K> {
 
     private final List<Class<?>> targetClasses;
-    private final AnnotatedElementIdProvider<Method, K> methodAnnotatedElementIdProvider;
+    private final AnnotatedElementIdProvider<Method, K> annotatedMethodIdProvider;
 
     public RateFactoryForMethodLevelAnnotation(List<Class<?>> targetClasses,
-                                               AnnotatedElementIdProvider<Method, K> methodAnnotatedElementIdProvider) {
+                                               AnnotatedElementIdProvider<Method, K> annotatedMethodIdProvider) {
         this.targetClasses = Objects.requireNonNull(targetClasses);
-        this.methodAnnotatedElementIdProvider = Objects.requireNonNull(methodAnnotatedElementIdProvider);
+        this.annotatedMethodIdProvider = Objects.requireNonNull(annotatedMethodIdProvider);
     }
 
     @Override
-    public Map<K, Rate[]> getRates() {
-        final Map<K, Rate[]> rates = new HashMap<>();
+    public List<RateComposition<K>> getRates() {
+        final List<RateComposition<K>> rates = new ArrayList<>();
         for (Class<?> clazz : targetClasses) {
-            addRates(clazz, rates);
+            do {
+                addRates(clazz, rates);
+                clazz = clazz.getSuperclass();
+            }while(clazz != null && !clazz.equals(Object.class));
         }
-        return rates.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(rates);
+        return rates.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(rates);
     }
 
-    private void addRates(Class<?> clazz, Map<K, Rate[]> addTo){
+    private void addRates(Class<?> clazz, List<RateComposition<K>> addTo){
 
-        final Method[] methods = clazz.getMethods();
+        final Method[] methods = clazz.getDeclaredMethods();
 
         for (Method method : methods) {
 
-            RateLimit [] rateLimitArray = method.getAnnotationsByType(RateLimit.class);
+            final K key = annotatedMethodIdProvider.getId(method);
 
-            if (rateLimitArray != null && rateLimitArray.length > 0) {
-
-                Rate [] rates = new Rate[rateLimitArray.length];
-
-                for(int i=0; i< rateLimitArray.length; i++) {
-
-                    rates[i] = new LimitWithinDuration(rateLimitArray[i].limit(), rateLimitArray[i].duration());
-                }
-
-                final K key = methodAnnotatedElementIdProvider.getId(method);
-
-                addTo.put(key, rates);
+            if(key == null) {
+                continue;
             }
+
+            final RateLimit [] rateLimitArray = method.getAnnotationsByType(RateLimit.class);
+            if(rateLimitArray.length < 1) {
+                continue;
+            }
+
+            final Rate [] rates = Util.createRates(rateLimitArray);
+
+            final RateComposition<K> rateComposition = new RateComposition<K>().id(key).rates(rates);
+
+            addTo.add(rateComposition);
         }
     }
 }

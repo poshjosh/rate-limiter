@@ -1,11 +1,10 @@
 package com.looseboxes.ratelimiter.annotation.builder;
 
 import com.looseboxes.ratelimiter.*;
-import com.looseboxes.ratelimiter.rates.LimitWithinDuration;
-import com.looseboxes.ratelimiter.rates.Rate;
-import com.looseboxes.ratelimiter.rates.Rates;
-import com.looseboxes.ratelimiter.util.RateFactory;
 import com.looseboxes.ratelimiter.annotation.AnnotatedElementIdProvider;
+import com.looseboxes.ratelimiter.annotation.RateComposition;
+import com.looseboxes.ratelimiter.rates.LimitWithinDuration;
+import com.looseboxes.ratelimiter.util.RateFactory;
 
 import java.util.*;
 
@@ -21,35 +20,33 @@ public abstract class AbstractRateLimiterForAnnotatedElementBuilder<SOURCE, ID>
     private AnnotatedElementIdProvider<SOURCE, ID> annotatedElementIdProvider;
     private RateFactory<ID> rateFactory;
     private RateSupplier rateSupplier;
-    private RateExceededHandler<ID> rateExceededHandler;
+    private RateExceededHandler rateExceededHandler;
 
     protected abstract RateFactory<ID> rateFactory(List<Class<?>> targetClasses,
                                                      AnnotatedElementIdProvider<SOURCE, ID> annotatedElementIdProvider);
 
     public Map<ID, RateLimiter<ID>> build() {
-        Map<ID, Rate[]> limits = rates();
+        List<RateComposition<ID>> limits = rates();
         final Map<ID, RateLimiter<ID>> rateLimiters;
         if(limits.isEmpty()) {
             rateLimiters = Collections.emptyMap();
         }else{
             rateLimiters = new HashMap<>(limits.size(), 1.0f);
-            for (Map.Entry<ID, Rate[]> entry : limits.entrySet()) {
-                ID key = entry.getKey();
-                Rate[] rates = entry.getValue();
-                rateLimiters.put(key, new RateLimiterSingleton<>(
-                        key, rateSupplier, Rates.Logic.OR, Arrays.asList(rates), rateExceededHandler
+            for (RateComposition<ID> limit : limits) {
+                rateLimiters.put(limit.getId(), new RateLimiterSingleton<>(
+                        limit.getId(), rateSupplier, limit.getLogic(), rateExceededHandler, limit.getRates()
                 ));
             }
         }
         return rateLimiters.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(rateLimiters);
     }
 
-    public Map<ID, Rate[]> rates() {
+    public List<RateComposition<ID>> rates() {
         if(rateSupplier == null) {
             rateSupplier = () -> new LimitWithinDuration();
         }
         if(rateExceededHandler == null) {
-            rateExceededHandler = new RateExceededExceptionThrower<>();
+            rateExceededHandler = new RateExceededExceptionThrower();
         }
         if(rateFactory == null) {
             rateFactory = rateFactory(targetClasses, annotatedElementIdProvider);
@@ -77,7 +74,7 @@ public abstract class AbstractRateLimiterForAnnotatedElementBuilder<SOURCE, ID>
         return this;
     }
 
-    public RateLimiterForAnnotatedElementBuilder<SOURCE, ID> rateExceededHandler(RateExceededHandler<ID> rateExceededHandler) {
+    public RateLimiterForAnnotatedElementBuilder<SOURCE, ID> rateExceededHandler(RateExceededHandler rateExceededHandler) {
         this.rateExceededHandler = rateExceededHandler;
         return this;
     }

@@ -59,7 +59,7 @@ public class RateLimiterTest {
     }
 
     public RateLimiter getRateLimiter(List<Rate> limits) {
-        return new RateLimiterImpl(getBaseRateSupplier(), limits);
+        return new RateLimiterImpl(getBaseRateSupplier(), limits.toArray(new Rate[0]));
     }
 
     protected String getKey(int index) {

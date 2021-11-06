@@ -9,44 +9,47 @@ import java.util.*;
 public class RateFactoryForClassLevelAnnotation<K> implements RateFactory<K> {
 
     private final List<Class<?>> targetClasses;
-    private final AnnotatedElementIdProvider<Class<?>, K> classAnnotatedElementIdProvider;
+    private final AnnotatedElementIdProvider<Class<?>, K> annotatedClassIdProvider;
 
     public RateFactoryForClassLevelAnnotation(List<Class<?>> targetClasses,
-                                              AnnotatedElementIdProvider<Class<?>, K> classAnnotatedElementIdProvider) {
+                                              AnnotatedElementIdProvider<Class<?>, K> annotatedClassIdProvider) {
         this.targetClasses = Objects.requireNonNull(targetClasses);
-        this.classAnnotatedElementIdProvider = Objects.requireNonNull(classAnnotatedElementIdProvider);
+        this.annotatedClassIdProvider = Objects.requireNonNull(annotatedClassIdProvider);
     }
 
     @Override
-    public Map<K, Rate[]> getRates() {
+    public List<RateComposition<K>> getRates() {
 
-        final Map<K, Rate[]> rateMap = new HashMap<>();
+        final List<RateComposition<K>> rateCompositionList = new ArrayList<>();
 
         for (Class<?> clazz : targetClasses) {
+            do {
 
-            Rate [] rates = getRates(clazz);
+                final RateComposition<K> rateComposition = getRateCompositionOrNull(clazz);
 
-            if(rates.length > 0) {
+                if(rateComposition != null) {
 
-                final K key = classAnnotatedElementIdProvider.getId(clazz);
+                    rateCompositionList.add(rateComposition);
+                }
 
-                rateMap.put(key, rates);
-            }
+                clazz = clazz.getSuperclass();
+
+            }while(clazz != null && !clazz.equals(Object.class));
         }
 
-        return rateMap.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(rateMap);
+        return rateCompositionList.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(rateCompositionList);
     }
 
-    private Rate[] getRates(Class<?> clazz){
-        final RateLimit [] rateLimitArray = clazz.getAnnotationsByType(RateLimit.class);
-        if(rateLimitArray != null && rateLimitArray.length > 0) {
-            final Rate [] rates = new Rate[rateLimitArray.length];
-            for(int i=0; i<rateLimitArray.length; i++) {
-                rates[i] = new LimitWithinDuration(rateLimitArray[i].limit(), rateLimitArray[i].duration());
-            }
-            return rates;
-        }else{
-            return new Rate[0];
+    private RateComposition<K> getRateCompositionOrNull(Class<?> clazz){
+        final K key = annotatedClassIdProvider.getId(clazz);
+        if(key == null) {
+            return null;
         }
+        final RateLimit [] rateLimitArray = clazz.getAnnotationsByType(RateLimit.class);
+        if(rateLimitArray.length < 1) {
+            return null;
+        }
+        final Rate [] rates = Util.createRates(rateLimitArray);
+        return new RateComposition<K>().id(key).rates(rates);
     }
 }

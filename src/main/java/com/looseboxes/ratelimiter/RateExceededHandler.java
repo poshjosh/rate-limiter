@@ -5,7 +5,7 @@ import com.looseboxes.ratelimiter.rates.Rate;
 import java.util.Objects;
 
 @FunctionalInterface
-public interface RateExceededHandler<K>{
+public interface RateExceededHandler{
 
     RateExceededHandler NO_OP = (key, rate, limit) -> {};
 
@@ -16,7 +16,7 @@ public interface RateExceededHandler<K>{
      * @param rate The Rate which exceeded the limit
      * @param limit The limit that was exceeded
      */
-    void onRateExceeded(K key, Rate rate, Rate limit);
+    void onRateExceeded(Object key, Rate rate, Rate limit);
 
     /**
      * Returns a composed {@code RateExceededHandler} that performs, in sequence, this
@@ -30,7 +30,7 @@ public interface RateExceededHandler<K>{
      * operation followed by the {@code after} operation
      * @throws NullPointerException if {@code after} is null
      */
-    default RateExceededHandler<K> andThen(RateExceededHandler<K> after) {
+    default RateExceededHandler andThen(RateExceededHandler after) {
         Objects.requireNonNull(after);
 
         return (key, rate, limit) -> {

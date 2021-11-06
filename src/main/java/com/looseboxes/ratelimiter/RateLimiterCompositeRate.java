@@ -20,21 +20,21 @@ public class RateLimiterCompositeRate<K> implements RateLimiter<K> {
 
     private final Rate limit;
 
-    private final RateExceededHandler<K> rateExceededHandler;
+    private final RateExceededHandler rateExceededHandler;
 
     public RateLimiterCompositeRate(Rate first, Rate limit) {
-        this(new RateCacheInMemory<>(), () -> first, limit, new RateExceededExceptionThrower<>());
+        this(new RateCacheInMemory<>(), () -> first, limit, new RateExceededExceptionThrower());
     }
 
     public RateLimiterCompositeRate(RateSupplier rateSupplier, Collection<Rate> limits) {
-        this(new RateCacheInMemory<>(), rateSupplier, limits, new RateExceededExceptionThrower<>());
+        this(new RateCacheInMemory<>(), rateSupplier, limits, new RateExceededExceptionThrower());
     }
 
     public RateLimiterCompositeRate(
             RateCache<K> cache,
             RateSupplier rateSupplier,
             Collection<Rate> limit,
-            RateExceededHandler<K> rateExceededHandler) {
+            RateExceededHandler rateExceededHandler) {
         this(cache, rateSupplier, Rates.or(limit.toArray(new Rate[0])), rateExceededHandler);
     }
 
@@ -42,7 +42,7 @@ public class RateLimiterCompositeRate<K> implements RateLimiter<K> {
             RateCache<K> cache,
             RateSupplier rateSupplier,
             Rate limit,
-            RateExceededHandler<K> rateExceededHandler) {
+            RateExceededHandler rateExceededHandler) {
         this.cache = Objects.requireNonNull(cache);
         this.rateSupplier = Objects.requireNonNull(rateSupplier);
         this.limit = Objects.requireNonNull(limit);

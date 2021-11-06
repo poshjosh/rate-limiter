@@ -1,9 +1,9 @@
 package com.looseboxes.ratelimiter.util;
 
-import com.looseboxes.ratelimiter.rates.Rate;
+import com.looseboxes.ratelimiter.annotation.RateComposition;
 
-import java.util.Map;
+import java.util.List;
 
 public interface RateFactory<K> {
-    Map<K, Rate[]> getRates();
+    List<RateComposition<K>> getRates();
 }

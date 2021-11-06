@@ -7,14 +7,15 @@ Limit how much a method is called, or a key is used within a given duration.
 ### Sample Usage
 
 ```java
-import com.looseboxes.ratelimiter.annotation.RateLimit;
 import com.looseboxes.ratelimiter.annotation.AnnotatedElementIdProvider;
+import com.looseboxes.ratelimiter.annotation.RateLimit;
 import com.looseboxes.ratelimiter.annotation.builder.RateLimiterBuilders;
 import com.looseboxes.ratelimiter.rates.LimitWithinDuration;
 import com.looseboxes.ratelimiter.rates.Rate;
 
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class SampleUsage {
 
@@ -41,7 +42,7 @@ public class SampleUsage {
         // Using Annotations - See the rate limited method below
         ////////////////////////////////////////////////////////
 
-        final Class targetClass = SampleUsage.class;
+        final Class<SampleUsage> targetClass = SampleUsage.class;
 
         final String sampleRequestPath = "/sampleRequestPath";
 
@@ -59,7 +60,9 @@ public class SampleUsage {
         rateLimiterForAnnotatedMethod.record(sampleRequestPath);
     }
 
-    @RateLimit(limit = 9, duration = 999)
+    // Limited to 5 invocations every 1 second OR 100 invocations every 2 minutes
+    @RateLimit(limit = 5, duration = 1, timeUnit = TimeUnit.SECONDS)
+    @RateLimit(limit = 100, duration = 2, timeUnit = TimeUnit.MINUTES)
     public void rateLimitedMethod() {
 
     }

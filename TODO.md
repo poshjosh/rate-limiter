@@ -1,6 +1,6 @@
 # TODO
 
-- Update README.md (Also add a link to TODO.md)
+- Add `TimeUnit` related tests for `@RateLimit`
   
 - Test the use of `Rates.Logic.AND` for `RateLimiterImpl`
 

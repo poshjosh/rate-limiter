@@ -4,9 +4,6 @@ import com.looseboxes.ratelimiter.cache.RateCacheSingleton;
 import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.rates.Rates;
 
-import java.util.Collection;
-import java.util.Collections;
-
 /**
  * A rate limiter that accepts a single key, for recording/limiting a single candidate
  *
@@ -21,11 +18,11 @@ public class RateLimiterSingleton<K> extends RateLimiterImpl<K> {
         super(first, limit);
     }
 
-    public RateLimiterSingleton(RateSupplier rateSupplier, Collection<Rate> limits) {
-        this(null, rateSupplier, Rates.Logic.OR, limits, new RateExceededExceptionThrower<>());
+    public RateLimiterSingleton(RateSupplier rateSupplier, Rate... limits) {
+        this(null, rateSupplier, Rates.Logic.OR, new RateExceededExceptionThrower(), limits);
     }
 
-    public RateLimiterSingleton(K key, RateSupplier rateSupplier, Rates.Logic logic, Collection<Rate> limits, RateExceededHandler<K> rateExceededHandler) {
-        super(new RateCacheSingleton<>(key), rateSupplier, logic, limits, rateExceededHandler);
+    public RateLimiterSingleton(K key, RateSupplier rateSupplier, Rates.Logic logic, RateExceededHandler rateExceededHandler, Rate... limits) {
+        super(new RateCacheSingleton<>(key), rateSupplier, logic, rateExceededHandler, limits);
     }
 }
