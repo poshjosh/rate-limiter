@@ -3,6 +3,7 @@ package com.looseboxes.ratelimiter;
 import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.cache.RateCacheInMemory;
 import com.looseboxes.ratelimiter.rates.Rate;
+import com.looseboxes.ratelimiter.rates.Rates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +17,8 @@ public class RateLimiterImpl<K> implements RateLimiter<K> {
 
     private final RateSupplier rateSupplier;
 
+    private final Rates.Logic logic;
+
     private final List<Rate> limits;
 
     private final RateExceededHandler<K> rateExceededHandler;
@@ -25,16 +28,18 @@ public class RateLimiterImpl<K> implements RateLimiter<K> {
     }
 
     public RateLimiterImpl(RateSupplier rateSupplier, Collection<Rate> limits) {
-        this(new RateCacheInMemory<>(), rateSupplier, limits, new RateExceededExceptionThrower<>());
+        this(new RateCacheInMemory<>(), rateSupplier, Rates.Logic.OR, limits, new RateExceededExceptionThrower<>());
     }
 
     public RateLimiterImpl(
             RateCache<K> cache,
             RateSupplier rateSupplier,
+            Rates.Logic logic,
             Collection<Rate> limits,
             RateExceededHandler<K> rateExceededHandler) {
         this.cache = Objects.requireNonNull(cache);
         this.rateSupplier = Objects.requireNonNull(rateSupplier);
+        this.logic = Objects.requireNonNull(logic);
         this.limits = Collections.unmodifiableList(new ArrayList<>(limits));
         this.rateExceededHandler = Objects.requireNonNull(rateExceededHandler);
     }
@@ -54,12 +59,19 @@ public class RateLimiterImpl<K> implements RateLimiter<K> {
             int resetCount = 0;
             for(Rate limit : limits) {
                 final int n = next.compareTo(limit);
-                LOG.trace("Result: {}, for {} compareTo {}", n, next, limit);
+//                LOG.trace("Result: {}, for {} compareTo {}", n, next, limit);
                 if(n == 0) {
                     ++resetCount;
                 }else if(n > 0) {
                     if(firstExceededLimit == null) {
                         firstExceededLimit = limit;
+                    }
+                    if(logic == Rates.Logic.OR) {
+                        break;
+                    }
+                }else if(n < 0) {
+                    if(logic == Rates.Logic.AND) {
+                        firstExceededLimit = null;
                         break;
                     }
                 }
@@ -96,7 +108,8 @@ public class RateLimiterImpl<K> implements RateLimiter<K> {
     @Override
     public String toString() {
         return "RateLimiterImpl{" +
-                "limits=" + limits +
+                "logic=" + logic +
+                ", limits=" + limits +
                 '}';
     }
 }

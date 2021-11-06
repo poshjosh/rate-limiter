@@ -40,6 +40,12 @@ public final class LimitWithinDuration implements Rate, Serializable {
 
     @Override
     public int compareTo(Rate other) {
+
+        if(other instanceof CompositeRate) {
+            CompositeRate compositeRate = (CompositeRate)other;
+            return - compositeRate.compareTo(this);
+        }
+
         LimitWithinDuration limitWithinDuration = (LimitWithinDuration) other;
         if(limit == limitWithinDuration.limit && duration == limitWithinDuration.duration) {
             return 0;

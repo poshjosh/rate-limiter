@@ -3,6 +3,7 @@ package com.looseboxes.ratelimiter.annotation.builder;
 import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.rates.LimitWithinDuration;
 import com.looseboxes.ratelimiter.rates.Rate;
+import com.looseboxes.ratelimiter.rates.Rates;
 import com.looseboxes.ratelimiter.util.RateFactory;
 import com.looseboxes.ratelimiter.annotation.AnnotatedElementIdProvider;
 
@@ -37,7 +38,7 @@ public abstract class AbstractRateLimiterForAnnotatedElementBuilder<SOURCE, ID>
             rateLimiters = new HashMap<>(limits.size(), 1.0f);
             limits.forEach((key, rate) -> {
                 rateLimiters.put(key, new RateLimiterSingleton<>(
-                        key, rateSupplier, Collections.singletonList(rate), rateExceededHandler
+                        key, rateSupplier, Rates.Logic.OR, Collections.singletonList(rate), rateExceededHandler
                 ));
             });
         }
