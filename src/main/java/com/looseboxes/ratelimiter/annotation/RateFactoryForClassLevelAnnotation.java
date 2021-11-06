@@ -8,37 +8,45 @@ import java.util.*;
 
 public class RateFactoryForClassLevelAnnotation<K> implements RateFactory<K> {
 
-    private final List<Class<?>> restResourceClasses;
+    private final List<Class<?>> targetClasses;
     private final AnnotatedElementIdProvider<Class<?>, K> classAnnotatedElementIdProvider;
 
-    public RateFactoryForClassLevelAnnotation(List<Class<?>> restResourceClasses,
+    public RateFactoryForClassLevelAnnotation(List<Class<?>> targetClasses,
                                               AnnotatedElementIdProvider<Class<?>, K> classAnnotatedElementIdProvider) {
-        this.restResourceClasses = Objects.requireNonNull(restResourceClasses);
+        this.targetClasses = Objects.requireNonNull(targetClasses);
         this.classAnnotatedElementIdProvider = Objects.requireNonNull(classAnnotatedElementIdProvider);
     }
 
     @Override
-    public Map<K, Rate> getRates() {
+    public Map<K, Rate[]> getRates() {
 
-        final Map<K, Rate> rates = new HashMap<>();
+        final Map<K, Rate[]> rateMap = new HashMap<>();
 
-        for (Class<?> controllerClass : restResourceClasses) {
+        for (Class<?> clazz : targetClasses) {
 
-            getRateOptional(controllerClass).ifPresent(rate -> {
-                final K key = classAnnotatedElementIdProvider.getId(controllerClass);
-                rates.put(key, rate);
-            });
+            Rate [] rates = getRates(clazz);
+
+            if(rates.length > 0) {
+
+                final K key = classAnnotatedElementIdProvider.getId(clazz);
+
+                rateMap.put(key, rates);
+            }
         }
 
-        return rates.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(rates);
+        return rateMap.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(rateMap);
     }
 
-    private Optional<Rate> getRateOptional(Class<?> controllerClass){
-        final RateLimit rateLimit = controllerClass.getAnnotation(RateLimit.class);
-        if(rateLimit != null) {
-            return Optional.of(new LimitWithinDuration(rateLimit.limit(), rateLimit.duration()));
+    private Rate[] getRates(Class<?> clazz){
+        final RateLimit [] rateLimitArray = clazz.getAnnotationsByType(RateLimit.class);
+        if(rateLimitArray != null && rateLimitArray.length > 0) {
+            final Rate [] rates = new Rate[rateLimitArray.length];
+            for(int i=0; i<rateLimitArray.length; i++) {
+                rates[i] = new LimitWithinDuration(rateLimitArray[i].limit(), rateLimitArray[i].duration());
+            }
+            return rates;
         }else{
-            return Optional.empty();
+            return new Rate[0];
         }
     }
 }

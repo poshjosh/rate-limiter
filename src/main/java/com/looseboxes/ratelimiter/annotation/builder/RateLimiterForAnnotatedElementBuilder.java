@@ -15,7 +15,7 @@ public interface RateLimiterForAnnotatedElementBuilder<SOURCE, ID> {
 
     Map<ID, RateLimiter<ID>> build();
 
-    Map<ID, Rate> rates();
+    Map<ID, Rate[]> rates();
 
     default RateLimiterForAnnotatedElementBuilder<SOURCE, ID> targetClass(Class<?> targetClass) {
         return targetClasses(Collections.singletonList(targetClass));

@@ -7,10 +7,7 @@ import com.looseboxes.ratelimiter.rates.Rates;
 import com.looseboxes.ratelimiter.util.RateFactory;
 import com.looseboxes.ratelimiter.annotation.AnnotatedElementIdProvider;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A builder for building rate limiters for elements like Class/Method
@@ -30,22 +27,24 @@ public abstract class AbstractRateLimiterForAnnotatedElementBuilder<SOURCE, ID>
                                                      AnnotatedElementIdProvider<SOURCE, ID> annotatedElementIdProvider);
 
     public Map<ID, RateLimiter<ID>> build() {
-        Map<ID, Rate> limits = rates();
+        Map<ID, Rate[]> limits = rates();
         final Map<ID, RateLimiter<ID>> rateLimiters;
         if(limits.isEmpty()) {
             rateLimiters = Collections.emptyMap();
         }else{
             rateLimiters = new HashMap<>(limits.size(), 1.0f);
-            limits.forEach((key, rate) -> {
+            for (Map.Entry<ID, Rate[]> entry : limits.entrySet()) {
+                ID key = entry.getKey();
+                Rate[] rates = entry.getValue();
                 rateLimiters.put(key, new RateLimiterSingleton<>(
-                        key, rateSupplier, Rates.Logic.OR, Collections.singletonList(rate), rateExceededHandler
+                        key, rateSupplier, Rates.Logic.OR, Arrays.asList(rates), rateExceededHandler
                 ));
-            });
+            }
         }
         return rateLimiters.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(rateLimiters);
     }
 
-    public Map<ID, Rate> rates() {
+    public Map<ID, Rate[]> rates() {
         if(rateSupplier == null) {
             rateSupplier = () -> new LimitWithinDuration();
         }
