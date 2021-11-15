@@ -3,7 +3,7 @@ package com.looseboxes.ratelimiter.annotation;
 import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;
 
-@Repeatable(RateLimit.List.class)
+//@Repeatable(RateLimit.List.class)
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})
@@ -15,10 +15,10 @@ public @interface RateLimit {
 
     TimeUnit timeUnit() default TimeUnit.MILLISECONDS;
 
-    @Documented
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.TYPE, ElementType.METHOD})
-    @interface List {
-        RateLimit[] value();
-    }
+//    @Documented
+//    @Retention(RetentionPolicy.RUNTIME)
+//    @Target({ElementType.TYPE, ElementType.METHOD})
+//    @interface List {
+//        RateLimit[] value();
+//    }
 }

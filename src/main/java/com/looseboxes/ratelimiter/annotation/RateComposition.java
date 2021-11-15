@@ -1,6 +1,5 @@
 package com.looseboxes.ratelimiter.annotation;
 
-import com.looseboxes.ratelimiter.rates.CompositeRate;
 import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.rates.Rates;
 
@@ -18,10 +17,6 @@ public class RateComposition<ID>{
     private Rates.Logic logic = Rates.Logic.OR;
 
     public RateComposition() { }
-
-    public RateComposition(ID id) {
-        this.id = id;
-    }
 
     public ID getId() {
         return id;

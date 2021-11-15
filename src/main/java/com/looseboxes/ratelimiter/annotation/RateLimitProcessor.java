@@ -1,18 +1,26 @@
 package com.looseboxes.ratelimiter.annotation;
 
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
+import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
+import java.util.Collections;
 import java.util.Set;
 
-@SupportedAnnotationTypes("com.looseboxes.ratelimiter.annotation.RateLimit")
+@SupportedAnnotationTypes(RateLimitProcessor.RATE_LIMIT_ANNOTATION_TYPE_NAME)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class RateLimitProcessor extends AbstractProcessor {
+
+    public static final String RATE_LIMIT_ANNOTATION_TYPE_NAME = "com.looseboxes.ratelimiter.annotation.RateLimit";
+
+    private Messager messager;
+
+    @Override
+    public synchronized void init(ProcessingEnvironment processingEnv) {
+        super.init(processingEnv);
+        messager = processingEnv.getMessager();
+    }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
@@ -28,12 +36,12 @@ public class RateLimitProcessor extends AbstractProcessor {
 
                 final String limitError = getErrorMessageIfInvalidLimit(rateLimit.limit(), null);
                 if (limitError != null){
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, limitError);
+                    messager.printMessage(Diagnostic.Kind.ERROR, limitError);
                 }
 
                 final String durationError = getErrorMessageIfInvalidDuration(rateLimit.duration(), null);
                 if(durationError != null) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, durationError);
+                    messager.printMessage(Diagnostic.Kind.ERROR, durationError);
                 }
             });
         });
@@ -47,5 +55,15 @@ public class RateLimitProcessor extends AbstractProcessor {
 
     public static String getErrorMessageIfInvalidDuration(long duration, String resultIfNone) {
         return duration < 0 ? "Invalid duration: " + duration : resultIfNone;
+    }
+
+    @Override
+    public Set<String> getSupportedAnnotationTypes() {
+        return Collections.singleton(RateLimitProcessor.RATE_LIMIT_ANNOTATION_TYPE_NAME);
+    }
+
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.RELEASE_0;
     }
 }

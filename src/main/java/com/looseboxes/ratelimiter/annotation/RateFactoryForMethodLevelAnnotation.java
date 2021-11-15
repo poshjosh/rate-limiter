@@ -19,13 +19,20 @@ public class RateFactoryForMethodLevelAnnotation<K> implements RateFactory<K> {
 
     @Override
     public List<RateComposition<K>> getRates() {
+
         final List<RateComposition<K>> rates = new ArrayList<>();
+
         for (Class<?> clazz : targetClasses) {
+
             do {
+
                 addRates(clazz, rates);
+
                 clazz = clazz.getSuperclass();
+
             }while(clazz != null && !clazz.equals(Object.class));
         }
+
         return rates.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(rates);
     }
 
