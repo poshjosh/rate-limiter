@@ -59,9 +59,9 @@ public class SampleUsage {
         }
     }
 
-    // Limited to 3 invocations every 1 second OR 100 invocations every 2 minutes
-    @RateLimit(limit = 3, duration = 1, timeUnit = TimeUnit.SECONDS)
-//    @RateLimit(limit = 100, duration = 2, timeUnit = TimeUnit.MINUTES)
+    // Limited to 3 invocations every 2 second OR 100 invocations every 1 minute
+    @RateLimit(limit = 3, duration = 2, timeUnit = TimeUnit.SECONDS)
+    @RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES)
     public void rateLimitedMethod() {
 
     }

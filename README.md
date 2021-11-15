@@ -36,20 +36,22 @@ public class SampleUsage {
         rateLimiter.record(3);
 
         // This will fail, it is the second recording of the number 1
-        rateLimiter.record(1);
+        try {
+            rateLimiter.record(1);
+        }catch(RateLimitExceededException e) {
+            System.err.println(e);
+        }
 
         ////////////////////////////////////////////////////////
         // Using Annotations - See the rate limited method below
         ////////////////////////////////////////////////////////
-
-        final Class<SampleUsage> targetClass = SampleUsage.class;
 
         final String sampleRequestPath = "/sampleRequestPath";
 
         AnnotatedElementIdProvider<Method, String> annotatedElementIdProvider = method -> sampleRequestPath;
 
         Map<String, RateLimiter<String>> rateLimiters = RateLimiterBuilders.forAnnotatedMethods(String.class)
-                .targetClass(targetClass)
+                .targetClass(SampleUsage.class)
                 .requestPathsProvider(annotatedElementIdProvider)
                 .build();
 
@@ -57,12 +59,16 @@ public class SampleUsage {
 
         // Call this method as often as required to record usage
         // Will throw an Exception, when the limit within the duration specified by the annotation, is exceeded.
-        rateLimiterForAnnotatedMethod.record(sampleRequestPath);
+        for(int i=0; i<4; i++) {
+            // Will fail on the fourth invocation (i.e when i == 3)
+            System.out.println("Record number: " + i);
+            rateLimiterForAnnotatedMethod.record(sampleRequestPath);
+        }
     }
 
-    // Limited to 5 invocations every 1 second OR 100 invocations every 2 minutes
-    @RateLimit(limit = 5, duration = 1, timeUnit = TimeUnit.SECONDS)
-    @RateLimit(limit = 100, duration = 2, timeUnit = TimeUnit.MINUTES)
+    // Limited to 3 invocations every 2 second OR 100 invocations every 1 minute
+    @RateLimit(limit = 3, duration = 2, timeUnit = TimeUnit.SECONDS)
+    @RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES)
     public void rateLimitedMethod() {
 
     }
