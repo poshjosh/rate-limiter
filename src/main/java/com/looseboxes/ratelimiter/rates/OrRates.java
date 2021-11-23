@@ -16,11 +16,6 @@ public class OrRates implements CompositeRate{
     }
 
     @Override
-    public Rate clone() {
-        return new OrRates(rates);
-    }
-
-    @Override
     public Rate increment() {
         final Rate [] updates = new Rate[rates.length];
         for(int i = 0; i< rates.length; i++) {

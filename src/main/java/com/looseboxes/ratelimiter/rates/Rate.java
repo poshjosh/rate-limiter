@@ -4,10 +4,6 @@ public interface Rate extends Comparable<Rate>, Cloneable {
 
     Rate NONE = new Rate() {
         @Override
-        public Rate clone() {
-            return this;
-        }
-        @Override
         public Rate increment() {
             return this;
         }
@@ -21,23 +17,19 @@ public interface Rate extends Comparable<Rate>, Cloneable {
         }
     };
 
-    Rate clone();
-
     Rate increment();
 
     /**
      * Compare this to another.
      *
+     * @param other The Rate to compare this Rate to
+     * @return
      * <p><b>The return value represents the following:</b></p>
-     *
      * <ul>
      *     <li>POSITIVE_INTEGER = HAS EXCEEDED LIMIT</li>
      *     <li>ZERO = IS AT A THRESHOLD (Should be reset)</li>
      *     <li>NEGATIVE_INTEGER = IS WITHIN LIMIT</li>
      * </ul>
-     *
-     * @param other
-     * @return
      * @see Comparable#compareTo(Object)
      */
     @Override

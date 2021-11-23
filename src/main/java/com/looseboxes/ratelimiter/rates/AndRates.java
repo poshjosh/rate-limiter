@@ -16,11 +16,6 @@ public class AndRates implements CompositeRate{
     }
 
     @Override
-    public Rate clone() {
-        return new AndRates(rates);
-    }
-
-    @Override
     public Rate increment() {
         final Rate [] updates = new Rate[rates.length];
         for(int i = 0; i< rates.length; i++) {

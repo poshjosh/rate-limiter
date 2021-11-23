@@ -1,7 +1,7 @@
 package com.looseboxes.ratelimiter;
 
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.cache.RateCacheInMemory;
+import com.looseboxes.ratelimiter.cache.InMemoryRateCache;
 import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.rates.Rates;
 import org.slf4j.Logger;
@@ -9,9 +9,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public class RateLimiterImpl<K> implements RateLimiter<K> {
+public class DefaultRateLimiter<K> implements RateLimiter<K> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RateLimiterImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultRateLimiter.class);
 
     private final RateCache<K> cache;
 
@@ -23,19 +23,11 @@ public class RateLimiterImpl<K> implements RateLimiter<K> {
 
     private final RateExceededHandler rateExceededHandler;
 
-    public RateLimiterImpl(Rate first, Rate limit) {
-        this(() -> first, limit);
+    public DefaultRateLimiter(Rate... limits) {
+        this(new InMemoryRateCache<>(), new LimitWithinDurationSupplier(), Rates.Logic.OR, new RateExceededExceptionThrower(), limits);
     }
 
-    public RateLimiterImpl(RateSupplier rateSupplier, Collection<Rate> limits) {
-        this(rateSupplier, limits.toArray(new Rate[0]));
-    }
-
-    public RateLimiterImpl(RateSupplier rateSupplier, Rate... limits) {
-        this(new RateCacheInMemory<>(), rateSupplier, Rates.Logic.OR, new RateExceededExceptionThrower(), limits);
-    }
-
-    public RateLimiterImpl(
+    public DefaultRateLimiter(
             RateCache<K> cache,
             RateSupplier rateSupplier,
             Rates.Logic logic,
@@ -71,28 +63,29 @@ public class RateLimiterImpl<K> implements RateLimiter<K> {
                     if(firstExceededLimit == null) {
                         firstExceededLimit = limit;
                     }
-                    if(logic == Rates.Logic.OR) {
+                    if(isOr()) {
                         break;
                     }
                 }else {
-                    if(logic == Rates.Logic.AND) {
+                    if(isAnd()) {
                         firstExceededLimit = null;
                         break;
                     }
                 }
             }
-            if(resetCount == limits.length) {
+            if((isAnd() && resetCount == limits.length)
+                    || (isOr() && resetCount > 0)) {
                 reset = true;
             }
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("For: {}, rate: {} exceeds: {}, limit: {}",
-                    key, next, firstExceededLimit != null, firstExceededLimit);
+            LOG.debug("For: {}, limit exceeded: {}, rate: {}, limits: {}",
+                    key, firstExceededLimit != null, next, Arrays.toString(limits));
         }
 
         if(reset) {
-            cache.remove(key);
+            cache.put(key, getInitialRate());
         }else{
             if(existingRate != next) {
                 cache.put(key, next);
@@ -106,13 +99,21 @@ public class RateLimiterImpl<K> implements RateLimiter<K> {
         return reset ? Rate.NONE : next;
     }
 
+    private boolean isOr() {
+        return logic == Rates.Logic.OR;
+    }
+
+    private boolean isAnd() {
+        return logic == Rates.Logic.AND;
+    }
+
     private Rate getInitialRate() {
         return Objects.requireNonNull(rateSupplier.getInitialRate());
     }
 
     @Override
     public String toString() {
-        return "RateLimiterImpl{" +
+        return "DefaultRateLimiter{" +
                 "logic=" + logic +
                 ", limits=" + Arrays.toString(limits) +
                 '}';

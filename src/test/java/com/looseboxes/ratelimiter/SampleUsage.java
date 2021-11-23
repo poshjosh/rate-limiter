@@ -21,7 +21,7 @@ public class SampleUsage {
         // Only one recording is allowed within a second (for each unique recording key)
         final Rate limit = new LimitWithinDuration(1, oneSecond);
 
-        final RateLimiter<Integer> rateLimiter = new RateLimiterImpl<>(first, limit);
+        final RateLimiter<Integer> rateLimiter = new DefaultRateLimiter<>(first, limit);
 
         // We use numbers as recording keys
         rateLimiter.record(1);

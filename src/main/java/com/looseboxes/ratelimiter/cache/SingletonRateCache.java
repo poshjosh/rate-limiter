@@ -10,13 +10,13 @@ import java.util.function.BiConsumer;
  * A {code null} key will match any/all keys.
  * @param <K> The type of the key which this Cache holds
  */
-public class RateCacheSingleton<K> implements RateCache<K>{
+public class SingletonRateCache<K> implements RateCache<K>{
 
     private final K key;
 
     private Rate rate;
 
-    public RateCacheSingleton(K key) {
+    public SingletonRateCache(K key) {
         this.key = key;
     }
 

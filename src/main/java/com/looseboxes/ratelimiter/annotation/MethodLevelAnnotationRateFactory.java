@@ -6,13 +6,13 @@ import com.looseboxes.ratelimiter.util.RateFactory;
 import java.lang.reflect.Method;
 import java.util.*;
 
-public class RateFactoryForMethodLevelAnnotation<K> implements RateFactory<K> {
+public class MethodLevelAnnotationRateFactory<K> implements RateFactory<K> {
 
     private final List<Class<?>> targetClasses;
     private final AnnotatedElementIdProvider<Method, K> annotatedMethodIdProvider;
 
-    public RateFactoryForMethodLevelAnnotation(List<Class<?>> targetClasses,
-                                               AnnotatedElementIdProvider<Method, K> annotatedMethodIdProvider) {
+    public MethodLevelAnnotationRateFactory(List<Class<?>> targetClasses,
+                                            AnnotatedElementIdProvider<Method, K> annotatedMethodIdProvider) {
         this.targetClasses = Objects.requireNonNull(targetClasses);
         this.annotatedMethodIdProvider = Objects.requireNonNull(annotatedMethodIdProvider);
     }
@@ -26,7 +26,11 @@ public class RateFactoryForMethodLevelAnnotation<K> implements RateFactory<K> {
 
             do {
 
-                addRates(clazz, rates);
+                // We only get the methods of the current class (i.e not inherited methods) since we
+                // are recursively calling getSuperClass()
+                final Method[] methods = clazz.getDeclaredMethods();
+
+                addRates(methods, rates);
 
                 clazz = clazz.getSuperclass();
 
@@ -36,9 +40,7 @@ public class RateFactoryForMethodLevelAnnotation<K> implements RateFactory<K> {
         return rates.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(rates);
     }
 
-    private void addRates(Class<?> clazz, List<RateComposition<K>> addTo){
-
-        final Method[] methods = clazz.getDeclaredMethods();
+    private void addRates(Method[] methods, List<RateComposition<K>> addTo){
 
         for (Method method : methods) {
 

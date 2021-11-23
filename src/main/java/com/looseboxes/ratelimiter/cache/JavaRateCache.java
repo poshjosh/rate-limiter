@@ -6,11 +6,11 @@ import javax.cache.Cache;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-public class RateCacheJavaCache<K> implements RateCache<K>{
+public class JavaRateCache<K> implements RateCache<K>{
 
     private final Cache<K, Rate> delegate;
 
-    public RateCacheJavaCache(Cache<K, Rate> delegate) {
+    public JavaRateCache(Cache<K, Rate> delegate) {
         this.delegate = Objects.requireNonNull(delegate);
     }
 

@@ -34,11 +34,6 @@ public final class LimitWithinDuration implements Rate, Serializable {
     }
 
     @Override
-    public Rate clone() {
-        return new LimitWithinDuration(limit, duration);
-    }
-
-    @Override
     public int compareTo(Rate other) {
 
         if(other instanceof CompositeRate) {

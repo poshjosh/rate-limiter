@@ -1,7 +1,7 @@
-package com.looseboxes.ratelimiter;
+package com.looseboxes.ratelimiter.wip;
 
+import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.cache.RateCacheInMemory;
 import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.rates.Rates;
 import org.slf4j.Logger;
@@ -12,7 +12,7 @@ import java.util.Objects;
 
 public class RateLimiterCompositeRate<K> implements RateLimiter<K> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RateLimiterImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultRateLimiter.class);
 
     private final RateCache<K> cache;
 
@@ -21,14 +21,6 @@ public class RateLimiterCompositeRate<K> implements RateLimiter<K> {
     private final Rate limit;
 
     private final RateExceededHandler rateExceededHandler;
-
-    public RateLimiterCompositeRate(Rate first, Rate limit) {
-        this(new RateCacheInMemory<>(), () -> first, limit, new RateExceededExceptionThrower());
-    }
-
-    public RateLimiterCompositeRate(RateSupplier rateSupplier, Collection<Rate> limits) {
-        this(new RateCacheInMemory<>(), rateSupplier, limits, new RateExceededExceptionThrower());
-    }
 
     public RateLimiterCompositeRate(
             RateCache<K> cache,
@@ -85,7 +77,7 @@ public class RateLimiterCompositeRate<K> implements RateLimiter<K> {
 
     @Override
     public String toString() {
-        return "RateLimiterImpl{" +
+        return "DefaultRateLimiter{" +
                 "limit=" + limit +
                 '}';
     }

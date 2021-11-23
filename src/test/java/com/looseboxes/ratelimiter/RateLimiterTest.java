@@ -52,14 +52,13 @@ public class RateLimiterTest {
 
     @Test
     void shouldFailWhenLimitExceeded() {
-        instance = getRateLimiter(getLimitsThatWillLeadToException());
         final String key = getKey(0);
         Rate result = instance.record(key);
         assertThatThrownBy(() -> instance.record(key));
     }
 
     public RateLimiter getRateLimiter(List<Rate> limits) {
-        return new RateLimiterImpl(getBaseRateSupplier(), limits.toArray(new Rate[0]));
+        return new DefaultRateLimiter(limits.toArray(new Rate[0]));
     }
 
     protected String getKey(int index) {
@@ -78,10 +77,6 @@ public class RateLimiterTest {
 
     protected List<Rate> getLimitsThatWillLeadToReset() {
         return Arrays.asList(getBaseRate(), getBaseRate());
-    }
-
-    protected RateSupplier getBaseRateSupplier() {
-        return () -> getBaseRate();
     }
 
     private Rate getBaseRate() {

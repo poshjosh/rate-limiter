@@ -20,8 +20,23 @@ public class ClassFilterForAnnotations implements ClassFilter {
     }
 
     @Override
-    public boolean test(Class<?> aClass) {
+    public boolean test(Class<?> clazz) {
         return annotationClassList.stream()
-                .anyMatch(annotationClass -> aClass.getAnnotation(annotationClass) != null);
+                .anyMatch(annotationClass -> hasAnnotation(clazz, annotationClass));
+    }
+
+    private boolean hasAnnotation(Class<?> clazz, Class<? extends Annotation> annotationClass) {
+
+        do {
+
+            if(clazz.isAnnotationPresent(annotationClass)) {
+                return true;
+            }
+
+            clazz = clazz.getSuperclass();
+
+        }while(clazz != null && !clazz.equals(Object.class));
+
+        return false;
     }
 }

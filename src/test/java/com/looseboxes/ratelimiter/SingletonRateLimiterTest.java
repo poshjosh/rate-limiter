@@ -4,10 +4,10 @@ import com.looseboxes.ratelimiter.rates.Rate;
 
 import java.util.List;
 
-public class RateLimiterSingletonTest extends RateLimiterTest {
+public class SingletonRateLimiterTest extends RateLimiterTest {
 
     @Override
     public RateLimiter getRateLimiter(List<Rate> limits) {
-        return new RateLimiterSingleton(getBaseRateSupplier(), limits.toArray(new Rate[0]));
+        return new SingletonRateLimiter(limits.toArray(new Rate[0]));
     }
 }

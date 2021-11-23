@@ -33,11 +33,11 @@ public class RateLimiterIT {
 
     public RateLimiter<Integer> getRateLimiter(int limit, int duration) {
         Rate rateLimit = new LimitWithinDuration(limit, duration);
-        return new RateLimiterImpl<>(() -> new LimitWithinDuration(), rateLimit);
+        return new DefaultRateLimiter<>(rateLimit);
     }
 }
 
-//Immutable Rate instances - RateLimiterSingleton
+//Immutable Rate instances - SingletonRateLimiter
 
 //Count: 1000, Spent -> time: 57 millis, memory: 2,694 kb
 //Count: 1000, Spent -> time: 57 millis, memory: 2,694 kb
@@ -51,11 +51,11 @@ public class RateLimiterIT {
 //Count: 1000000, Spent -> time: 153 millis, memory: 51,202 kb
 //Count: 1000000, Spent -> time: 171 millis, memory: 51,202 kb
 
-//Immutable Rate instances - RateLimiterImpl
+//Immutable Rate instances - DefaultRateLimiter
 
 // Count: 1000000, Spent -> time: 292 millis, memory: 70,554 kb
 
-// Mutable Rate instances RateLimiterSingleton
+// Mutable Rate instances SingletonRateLimiter
 
 //Count: 1000, Spent -> time: 58 millis, memory: 2,695 kb
 //Count: 1000, Spent -> time: 58 millis, memory: 2,694 kb
@@ -69,6 +69,6 @@ public class RateLimiterIT {
 //Count: 1000000, Spent -> time: 131 millis, memory: 18,864 kb
 //Count: 1000000, Spent -> time: 142 millis, memory: 18,864 kb
 
-//Mutable Rate instances - RateLimiterImpl
+//Mutable Rate instances - DefaultRateLimiter
 
 //Count: 1000000, Spent -> time: 417 millis, memory: 70363 kb

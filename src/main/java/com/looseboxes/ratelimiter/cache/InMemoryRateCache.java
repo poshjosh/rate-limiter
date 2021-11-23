@@ -7,15 +7,15 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
-public class RateCacheInMemory<K> implements RateCache<K>{
+public class InMemoryRateCache<K> implements RateCache<K>{
 
     private final Map<K, Rate> delegate;
 
-    public RateCacheInMemory() {
+    public InMemoryRateCache() {
         this(new ConcurrentHashMap<>());
     }
 
-    public RateCacheInMemory(Map<K, Rate> delegate) {
+    public InMemoryRateCache(Map<K, Rate> delegate) {
         this.delegate = Objects.requireNonNull(delegate);
     }
 

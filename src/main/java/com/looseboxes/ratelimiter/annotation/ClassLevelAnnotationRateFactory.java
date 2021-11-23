@@ -5,13 +5,13 @@ import com.looseboxes.ratelimiter.util.RateFactory;
 
 import java.util.*;
 
-public class RateFactoryForClassLevelAnnotation<K> implements RateFactory<K> {
+public class ClassLevelAnnotationRateFactory<K> implements RateFactory<K> {
 
     private final List<Class<?>> targetClasses;
     private final AnnotatedElementIdProvider<Class<?>, K> annotatedClassIdProvider;
 
-    public RateFactoryForClassLevelAnnotation(List<Class<?>> targetClasses,
-                                              AnnotatedElementIdProvider<Class<?>, K> annotatedClassIdProvider) {
+    public ClassLevelAnnotationRateFactory(List<Class<?>> targetClasses,
+                                           AnnotatedElementIdProvider<Class<?>, K> annotatedClassIdProvider) {
         this.targetClasses = Objects.requireNonNull(targetClasses);
         this.annotatedClassIdProvider = Objects.requireNonNull(annotatedClassIdProvider);
     }
