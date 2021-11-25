@@ -23,7 +23,7 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
 
     private final Rate [] limits;
 
-    private final RateExceededHandler rateExceededHandler;
+    private final RateRecordedListener rateRecordedListener;
 
     public DefaultRateLimiter(RateConfig rateConfig) {
         this(new RateLimitConfig().addLimit(rateConfig));
@@ -42,7 +42,7 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
         this.rateSupplier = Objects.requireNonNull(rateLimiterConfiguration.getRateSupplier());
         this.logic = Objects.requireNonNull(rateLimiterConfiguration.getRateLimitConfig().getLogic());
         this.limits = rateLimiterConfiguration.getRateLimitConfig().toRateList().toArray(new Rate[0]);
-        this.rateExceededHandler = Objects.requireNonNull(rateLimiterConfiguration.getRateExceededHandler());
+        this.rateRecordedListener = Objects.requireNonNull(rateLimiterConfiguration.getRateExceededHandler());
     }
 
     @Override
@@ -96,8 +96,10 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
             }
         }
 
+        rateRecordedListener.onRateRecorded(key, next);
+
         if(firstExceededLimit != null) {
-            rateExceededHandler.onRateExceeded(key, next, firstExceededLimit);
+            rateRecordedListener.onRateExceeded(key, next, firstExceededLimit);
         }
 
         return reset ? Rate.NONE : next;

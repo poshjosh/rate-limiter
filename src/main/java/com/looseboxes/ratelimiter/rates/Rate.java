@@ -1,6 +1,6 @@
 package com.looseboxes.ratelimiter.rates;
 
-public interface Rate extends Comparable<Rate>, Cloneable {
+public interface Rate extends Comparable<Rate> {
 
     Rate NONE = new Rate() {
         @Override

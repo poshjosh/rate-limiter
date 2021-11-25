@@ -2,10 +2,13 @@ package com.looseboxes.ratelimiter;
 
 import com.looseboxes.ratelimiter.rates.Rate;
 
-public class RateExceededExceptionThrower implements RateExceededHandler{
+public class RateExceededExceptionThrower implements RateRecordedListener {
 
     @Override
-    public void onRateExceeded(Object key, Rate rate, Rate limit) {
-        throw new RateLimitExceededException(String.format("For: %s, rate: %s exceeds limit: %s", key, rate, limit));
+    public void onRateRecorded(Object key, Rate rate) { }
+
+    @Override
+    public void onRateExceeded(Object key, Rate rate, Rate exceededRate) {
+        throw new RateLimitExceededException(String.format("For: %s, rate: %s exceeds limit: %s", key, rate, exceededRate));
     }
 }

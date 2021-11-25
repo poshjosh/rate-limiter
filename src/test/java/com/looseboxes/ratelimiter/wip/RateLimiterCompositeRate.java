@@ -20,25 +20,25 @@ public class RateLimiterCompositeRate<K> implements RateLimiter<K> {
 
     private final Rate limit;
 
-    private final RateExceededHandler rateExceededHandler;
+    private final RateRecordedListener rateRecordedListener;
 
     public RateLimiterCompositeRate(
             RateCache<K> cache,
             RateSupplier rateSupplier,
             Collection<Rate> limit,
-            RateExceededHandler rateExceededHandler) {
-        this(cache, rateSupplier, Rates.or(limit.toArray(new Rate[0])), rateExceededHandler);
+            RateRecordedListener rateRecordedListener) {
+        this(cache, rateSupplier, Rates.or(limit.toArray(new Rate[0])), rateRecordedListener);
     }
 
     public RateLimiterCompositeRate(
             RateCache<K> cache,
             RateSupplier rateSupplier,
             Rate limit,
-            RateExceededHandler rateExceededHandler) {
+            RateRecordedListener rateRecordedListener) {
         this.cache = Objects.requireNonNull(cache);
         this.rateSupplier = Objects.requireNonNull(rateSupplier);
         this.limit = Objects.requireNonNull(limit);
-        this.rateExceededHandler = Objects.requireNonNull(rateExceededHandler);
+        this.rateRecordedListener = Objects.requireNonNull(rateRecordedListener);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class RateLimiterCompositeRate<K> implements RateLimiter<K> {
         }
 
         if(n > 0) {
-            rateExceededHandler.onRateExceeded(key, next, limit);
+            rateRecordedListener.onRateExceeded(key, next, limit);
         }
 
         return reset ? Rate.NONE : next;

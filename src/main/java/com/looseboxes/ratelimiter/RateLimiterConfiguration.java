@@ -7,7 +7,7 @@ public class RateLimiterConfiguration<K> {
 
     private RateCache<K> rateCache;
     private RateSupplier rateSupplier;
-    private RateExceededHandler rateExceededHandler;
+    private RateRecordedListener rateRecordedListener;
     private RateLimitConfig rateLimitConfig;
 
     public RateLimiterConfiguration() { }
@@ -15,7 +15,7 @@ public class RateLimiterConfiguration<K> {
     public RateLimiterConfiguration(RateLimiterConfiguration<K> rateLimiterConfiguration) {
         this.setRateCache(rateLimiterConfiguration.rateCache);
         this.setRateSupplier(rateLimiterConfiguration.rateSupplier);
-        this.setRateExceededHandler(rateLimiterConfiguration.rateExceededHandler);
+        this.setRateExceededHandler(rateLimiterConfiguration.rateRecordedListener);
         this.setRateLimitConfig(rateLimiterConfiguration.rateLimitConfig == null ? null : new RateLimitConfig(rateLimiterConfiguration.rateLimitConfig));
     }
 
@@ -45,17 +45,17 @@ public class RateLimiterConfiguration<K> {
         this.rateSupplier = rateSupplier;
     }
 
-    public RateLimiterConfiguration<K> rateExceededHandler(RateExceededHandler rateExceededHandler) {
-        this.setRateExceededHandler(rateExceededHandler);
+    public RateLimiterConfiguration<K> rateExceededHandler(RateRecordedListener rateRecordedListener) {
+        this.setRateExceededHandler(rateRecordedListener);
         return this;
     }
 
-    public RateExceededHandler getRateExceededHandler() {
-        return rateExceededHandler;
+    public RateRecordedListener getRateExceededHandler() {
+        return rateRecordedListener;
     }
 
-    public void setRateExceededHandler(RateExceededHandler rateExceededHandler) {
-        this.rateExceededHandler = rateExceededHandler;
+    public void setRateExceededHandler(RateRecordedListener rateRecordedListener) {
+        this.rateRecordedListener = rateRecordedListener;
     }
 
     public RateLimiterConfiguration<K> rateLimitConfig(RateLimitConfig rateLimitConfig) {
