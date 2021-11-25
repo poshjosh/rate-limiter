@@ -1,5 +1,7 @@
 package com.looseboxes.ratelimiter.rates;
 
+import com.looseboxes.ratelimiter.util.Experimental;
+
 import java.util.Arrays;
 
 /**
@@ -7,6 +9,7 @@ import java.util.Arrays;
  *
  * Any operation on this object will affect all the composite members.
  */
+@Experimental
 public class OrRates implements CompositeRate{
 
     private final Rate [] rates;

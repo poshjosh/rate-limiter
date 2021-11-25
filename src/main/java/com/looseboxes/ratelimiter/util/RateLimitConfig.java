@@ -1,7 +1,7 @@
 package com.looseboxes.ratelimiter.util;
 
+import com.looseboxes.ratelimiter.rates.Logic;
 import com.looseboxes.ratelimiter.rates.Rate;
-import com.looseboxes.ratelimiter.rates.Rates;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 public class RateLimitConfig {
 
-    private Rates.Logic logic = Rates.Logic.OR;
+    private Logic logic = Logic.OR;
 
     private List<RateConfig> limits;
 
@@ -45,16 +45,16 @@ public class RateLimitConfig {
         return this;
     }
 
-    public RateLimitConfig logic(Rates.Logic logic) {
+    public RateLimitConfig logic(Logic logic) {
         setLogic(logic);
         return this;
     }
 
-    public Rates.Logic getLogic() {
+    public Logic getLogic() {
         return logic;
     }
 
-    public void setLogic(Rates.Logic logic) {
+    public void setLogic(Logic logic) {
         this.logic = logic;
     }
 

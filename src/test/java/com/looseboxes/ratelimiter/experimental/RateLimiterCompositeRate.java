@@ -1,15 +1,17 @@
-package com.looseboxes.ratelimiter.wip;
+package com.looseboxes.ratelimiter.experimental;
 
 import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.rates.Rates;
+import com.looseboxes.ratelimiter.util.Experimental;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Objects;
 
+@Experimental
 public class RateLimiterCompositeRate<K> implements RateLimiter<K> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultRateLimiter.class);

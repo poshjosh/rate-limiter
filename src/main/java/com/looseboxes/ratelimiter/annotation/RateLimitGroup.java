@@ -1,6 +1,6 @@
 package com.looseboxes.ratelimiter.annotation;
 
-import com.looseboxes.ratelimiter.rates.Rates;
+import com.looseboxes.ratelimiter.rates.Logic;
 
 import java.lang.annotation.*;
 
@@ -12,7 +12,7 @@ public @interface RateLimitGroup {
 
     String name() default "";
     String value() default "";
-    Rates.Logic logic() default Rates.Logic.OR;
+    Logic logic() default Logic.OR;
 
     @Documented
     @Retention(RetentionPolicy.RUNTIME)

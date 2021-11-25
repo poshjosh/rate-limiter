@@ -2,8 +2,8 @@ package com.looseboxes.ratelimiter;
 
 import com.looseboxes.ratelimiter.cache.InMemoryRateCache;
 import com.looseboxes.ratelimiter.cache.RateCache;
+import com.looseboxes.ratelimiter.rates.Logic;
 import com.looseboxes.ratelimiter.rates.Rate;
-import com.looseboxes.ratelimiter.rates.Rates;
 import com.looseboxes.ratelimiter.util.RateConfig;
 import com.looseboxes.ratelimiter.util.RateLimitConfig;
 import org.slf4j.Logger;
@@ -19,7 +19,7 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
 
     private final RateSupplier rateSupplier;
 
-    private final Rates.Logic logic;
+    private final Logic logic;
 
     private final Rate [] limits;
 
@@ -106,11 +106,11 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
     }
 
     private boolean isOr() {
-        return logic == Rates.Logic.OR;
+        return logic == Logic.OR;
     }
 
     private boolean isAnd() {
-        return logic == Rates.Logic.AND;
+        return logic == Logic.AND;
     }
 
     private Rate getInitialRate() {

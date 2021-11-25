@@ -52,24 +52,24 @@ class CompositeRateTest {
 
     @Test
     void orCompositeShouldReturnZeroWhenComparedToMatchingRate() {
-        whenComparedToMatchingRate(Rates.Logic.OR, true);
+        whenComparedToMatchingRate(Logic.OR, true);
     }
 
     @Test
     void orCompositeShouldReturnZeroWhenReverseComparedToMatchingRate() {
-        whenComparedToMatchingRate(Rates.Logic.OR, false);
+        whenComparedToMatchingRate(Logic.OR, false);
     }
     @Test
     void andCompositeShouldReturnZeroWhenComparedToMatchingRate() {
-        whenComparedToMatchingRate(Rates.Logic.AND, true);
+        whenComparedToMatchingRate(Logic.AND, true);
     }
 
     @Test
     void andCompositeShouldReturnZeroWhenReverseComparedToMatchingRate() {
-        whenComparedToMatchingRate(Rates.Logic.AND, false);
+        whenComparedToMatchingRate(Logic.AND, false);
     }
 
-    private void whenComparedToMatchingRate(Rates.Logic logic, boolean forward) {
+    private void whenComparedToMatchingRate(Logic logic, boolean forward) {
         Rate lhs = getRate(2, 2);
         Rate rhs = getRate(3, 3);
         Rate composite = getInstance(logic, lhs, rhs);
@@ -87,24 +87,24 @@ class CompositeRateTest {
 
     @Test
     void orCompositeShouldReturnNegativeWhenComparedToHigherRates() {
-        compositeRateWhenComparedToHigherRates(Rates.Logic.OR, true);
+        compositeRateWhenComparedToHigherRates(Logic.OR, true);
     }
     @Test
     void orCompositeShouldReturnPositiveWhenReverseComparedToHigherRates() {
-        compositeRateWhenComparedToHigherRates(Rates.Logic.OR, false);
+        compositeRateWhenComparedToHigherRates(Logic.OR, false);
     }
 
     @Test
     void andCompositeShouldReturnNegativeWhenComparedToHigherRates() {
-        compositeRateWhenComparedToHigherRates(Rates.Logic.AND, true);
+        compositeRateWhenComparedToHigherRates(Logic.AND, true);
     }
 
     @Test
     void andCompositeShouldReturnPositiveWhenReverseComparedToHigherRates() {
-        compositeRateWhenComparedToHigherRates(Rates.Logic.AND, false);
+        compositeRateWhenComparedToHigherRates(Logic.AND, false);
     }
 
-    private void compositeRateWhenComparedToHigherRates(Rates.Logic logic, boolean forward) {
+    private void compositeRateWhenComparedToHigherRates(Logic logic, boolean forward) {
         Rate lhs = getRate(1, 1);
         Rate rhs = getRate(2, 2);
         Rate composite = getInstance(logic, lhs, rhs);
@@ -122,15 +122,15 @@ class CompositeRateTest {
 
     @Test
     void orCompositeShouldReturnZeroWhenComparedToMatchingRates() {
-        shouldReturnZeroWhenComparedToMatchingRates(Rates.Logic.OR);
+        shouldReturnZeroWhenComparedToMatchingRates(Logic.OR);
     }
 
     @Test
     void andCompositeShouldReturnZeroWhenComparedToMatchingRates() {
-        shouldReturnZeroWhenComparedToMatchingRates(Rates.Logic.AND);
+        shouldReturnZeroWhenComparedToMatchingRates(Logic.AND);
     }
 
-    private void shouldReturnZeroWhenComparedToMatchingRates(Rates.Logic logic) {
+    private void shouldReturnZeroWhenComparedToMatchingRates(Logic logic) {
         Rate lhs = getRate(1, 1);
         Rate rhs = getRate(2, 2);
         Rate composite0 = getInstance(logic, lhs, rhs);
@@ -178,7 +178,7 @@ class CompositeRateTest {
         return new LimitWithinDuration(limit, duration);
     }
 
-    public CompositeRate getInstance(Rates.Logic logic, Rate... rates) {
+    public CompositeRate getInstance(Logic logic, Rate... rates) {
         return Rates.compose(logic, rates);
     }
 

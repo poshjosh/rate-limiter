@@ -1,6 +1,6 @@
 package com.looseboxes.ratelimiter.annotation;
 
-import com.looseboxes.ratelimiter.rates.Rates;
+import com.looseboxes.ratelimiter.rates.Logic;
 import com.looseboxes.ratelimiter.util.RateConfig;
 import com.looseboxes.ratelimiter.util.RateLimitConfig;
 
@@ -53,8 +53,8 @@ public class AnnotationCollectorImpl<S> implements AnnotationCollector<S, Map<Ra
     }
 
     private void requireEqualLogic(RateLimitGroup rateLimitGroup, RateLimitConfig rateLimitConfig, String name) {
-        Rates.Logic existingLogic = rateLimitConfig.getLogic();
-        Rates.Logic currentLogic = rateLimitGroup.logic();
+        Logic existingLogic = rateLimitConfig.getLogic();
+        Logic currentLogic = rateLimitGroup.logic();
         if(existingLogic != null && !existingLogic.equals(currentLogic)) {
             RateLimitGroupMembers<S> members = nameToMembers.get(name);
             throw new AnnotationProcessingException(RateLimitGroup.class.getName() +
@@ -83,7 +83,7 @@ public class AnnotationCollectorImpl<S> implements AnnotationCollector<S, Map<Ra
             Map<RateLimitGroupMembers<S>, RateLimitConfig> configs) {
         configs.values().stream()
                 .filter(rateLimitConfig -> rateLimitConfig.getLogic() == null)
-                .forEach(rateLimitConfig -> rateLimitConfig.setLogic(Rates.Logic.OR));
+                .forEach(rateLimitConfig -> rateLimitConfig.setLogic(Logic.OR));
         return configs;
     }
 }
