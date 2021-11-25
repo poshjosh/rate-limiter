@@ -1,7 +1,7 @@
 package com.looseboxes.ratelimiter.annotation;
 
-public final class ClassAnnotationCollector extends DefaultAnnotationCollector<Class<?>>{
+public final class ClassAnnotationCollector extends AnnotationCollectorImpl<Class<?>> {
     public ClassAnnotationCollector() {
-        super(Class::getName);
+        super(new ClassNameProvider());
     }
 }

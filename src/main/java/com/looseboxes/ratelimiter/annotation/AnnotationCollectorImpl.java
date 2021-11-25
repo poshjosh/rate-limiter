@@ -8,32 +8,31 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 
-public class DefaultAnnotationCollector<S> implements AnnotationCollector<S, Map<RateLimitGroupMembers<S>, RateLimitConfig>>{
+public class AnnotationCollectorImpl<S> implements AnnotationCollector<S, Map<RateLimitGroupMembers<S>, RateLimitConfig>>{
 
     private final Map<String, RateLimitGroupMembers<S>> nameToMembers;
     private final Map<RateLimitGroupMembers<S>, RateLimitConfig> result;
-    private final Function<S, String> sourceToNameConverter;
+    private final IdProvider<S, String> sourceIdProvider;
 
-    public DefaultAnnotationCollector(Function<S, String> sourceToNameConverter) {
+    public AnnotationCollectorImpl(IdProvider<S, String> sourceIdProvider) {
         this.nameToMembers = new HashMap<>();
         this.result = new HashMap<>();
-        this.sourceToNameConverter = Objects.requireNonNull(sourceToNameConverter);
+        this.sourceIdProvider = Objects.requireNonNull(sourceIdProvider);
     }
 
     @Override
     public AnnotationCollector<S, Map<RateLimitGroupMembers<S>, RateLimitConfig>> collect(S source, RateLimitGroup rateLimitGroup) {
-        String name = selectFirstValidName(rateLimitGroup.name(), rateLimitGroup.value(), sourceToNameConverter.apply(source));
+        String name = selectFirstValidName(rateLimitGroup.name(), rateLimitGroup.value(), sourceIdProvider.getId(source));
         RateLimitConfig rateLimitConfig = getOrCreateConfig(name, source);
-        requireEqualLogic(rateLimitGroup, rateLimitConfig);
+        requireEqualLogic(rateLimitGroup, rateLimitConfig, name);
         rateLimitConfig.setLogic(rateLimitGroup.logic());
         return this;
     }
 
     @Override
     public AnnotationCollector<S, Map<RateLimitGroupMembers<S>, RateLimitConfig>> collect(S source, RateLimit rateLimit) {
-        String name = selectFirstValidName(rateLimit.group(), sourceToNameConverter.apply(source));
+        String name = selectFirstValidName(rateLimit.group(), sourceIdProvider.getId(source));
         RateLimitConfig rateLimitConfig = getOrCreateConfig(name, source);
         RateConfig rateConfig = new RateConfig();
         rateConfig.setLimit(rateLimit.limit());
@@ -47,17 +46,19 @@ public class DefaultAnnotationCollector<S> implements AnnotationCollector<S, Map
         RateLimitGroupMembers<S> members = nameToMembers.computeIfAbsent(name, RateLimitGroupMembers::new);
         members.addElement(source);
         if(members.getMembers().size() > 1) {
-            throw new AnnotationProcessingException("A RateLimitGroup may not be applied to more than 1 class/method");
+            throw new AnnotationProcessingException("A " + RateLimitGroup.class.getName() +
+                    " may not be applied to more than 1 class/method. Group: " + name + ", applied to: " + members);
         }
-        return result.computeIfAbsent(members, k -> new RateLimitConfig());
+        return result.computeIfAbsent(members, k -> newConfigWithoutDefaultLogic());
     }
 
-    private void requireEqualLogic(RateLimitGroup rateLimitGroup, RateLimitConfig rateLimitConfig) {
+    private void requireEqualLogic(RateLimitGroup rateLimitGroup, RateLimitConfig rateLimitConfig, String name) {
         Rates.Logic existingLogic = rateLimitConfig.getLogic();
         Rates.Logic currentLogic = rateLimitGroup.logic();
         if(existingLogic != null && !existingLogic.equals(currentLogic)) {
-            throw new AnnotationProcessingException(RateLimitGroup.class.getSimpleName() +
-                    " was defined more than once, with different values for logic()");
+            RateLimitGroupMembers<S> members = nameToMembers.get(name);
+            throw new AnnotationProcessingException(RateLimitGroup.class.getName() +
+                    " was defined more than once, with different values for logic. See: " + members);
         }
     }
 
@@ -71,6 +72,18 @@ public class DefaultAnnotationCollector<S> implements AnnotationCollector<S, Map
     }
 
     public Map<RateLimitGroupMembers<S>, RateLimitConfig> getResult() {
-        return result.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(result);
+        return result.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(addDefaultLogic(result));
+    }
+
+    private RateLimitConfig newConfigWithoutDefaultLogic() {
+        return new RateLimitConfig().logic(null);
+    }
+
+    private Map<RateLimitGroupMembers<S>, RateLimitConfig> addDefaultLogic(
+            Map<RateLimitGroupMembers<S>, RateLimitConfig> configs) {
+        configs.values().stream()
+                .filter(rateLimitConfig -> rateLimitConfig.getLogic() == null)
+                .forEach(rateLimitConfig -> rateLimitConfig.setLogic(Rates.Logic.OR));
+        return configs;
     }
 }

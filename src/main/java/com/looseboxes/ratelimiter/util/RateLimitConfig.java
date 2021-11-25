@@ -45,12 +45,22 @@ public class RateLimitConfig {
         return this;
     }
 
+    public RateLimitConfig logic(Rates.Logic logic) {
+        setLogic(logic);
+        return this;
+    }
+
     public Rates.Logic getLogic() {
         return logic;
     }
 
     public void setLogic(Rates.Logic logic) {
         this.logic = logic;
+    }
+
+    public RateLimitConfig limits(List<RateConfig> limits) {
+        setLimits(limits);
+        return this;
     }
 
     public List<RateConfig> getLimits() {
