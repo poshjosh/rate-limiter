@@ -2,6 +2,8 @@ package com.looseboxes.ratelimiter;
 
 import com.looseboxes.ratelimiter.rates.LimitWithinDuration;
 import com.looseboxes.ratelimiter.rates.Rate;
+import com.looseboxes.ratelimiter.util.RateConfig;
+import com.looseboxes.ratelimiter.util.RateLimitConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,8 +27,10 @@ public class RateLimiterTest {
     @Test
     void firstRateShouldEqualBaseRate() {
         final String key = getKey(0);
-        Rate result = instance.record(key);
-        assertThat(result).isEqualTo(getBaseRate());
+        LimitWithinDuration result = (LimitWithinDuration)instance.record(key);
+        RateConfig expected = getBaseRate();
+        assertThat(result.getLimit()).isEqualTo(expected.getLimit());
+        assertThat(result.getDuration()).isEqualTo(expected.getTimeUnit().toMillis(expected.getDuration()));
     }
 
     @Test
@@ -57,29 +61,29 @@ public class RateLimiterTest {
         assertThatThrownBy(() -> instance.record(key));
     }
 
-    public RateLimiter getRateLimiter(List<Rate> limits) {
-        return new DefaultRateLimiter(limits.toArray(new Rate[0]));
+    public RateLimiter<Object> getRateLimiter(List<RateConfig> limits) {
+        return new DefaultRateLimiter<>(new RateLimitConfig().addLimits(limits));
     }
 
     protected String getKey(int index) {
         return Integer.toString(index + 1);
     }
 
-    protected List<Rate> getDefaultLimits() { return Arrays.asList(getDefaultLimit()); }
+    protected List<RateConfig> getDefaultLimits() { return Arrays.asList(getDefaultLimit()); }
 
-    protected List<Rate> getLimitsThatWillLeadToException() {
+    protected List<RateConfig> getLimitsThatWillLeadToException() {
         return Arrays.asList(getBaseRate(), getDefaultLimit());
     }
 
-    protected Rate getDefaultLimit() {
-        return new LimitWithinDuration(1, durationMillis);
+    protected RateConfig getDefaultLimit() {
+        return new RateConfig().limit(1).duration(durationMillis);
     }
 
-    protected List<Rate> getLimitsThatWillLeadToReset() {
+    protected List<RateConfig> getLimitsThatWillLeadToReset() {
         return Arrays.asList(getBaseRate(), getBaseRate());
     }
 
-    private Rate getBaseRate() {
-        return new LimitWithinDuration();
+    private RateConfig getBaseRate() {
+        return new RateConfig().limit(1).duration(0);
     }
 }

@@ -1,8 +1,9 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.rates.LimitWithinDuration;
-import com.looseboxes.ratelimiter.rates.Rate;
+import com.looseboxes.ratelimiter.util.RateConfig;
 import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -32,8 +33,7 @@ public class RateLimiterIT {
     }
 
     public RateLimiter<Integer> getRateLimiter(int limit, int duration) {
-        Rate rateLimit = new LimitWithinDuration(limit, duration);
-        return new DefaultRateLimiter<>(rateLimit);
+        return new DefaultRateLimiter<>(new RateConfig().limit(limit).duration(duration).timeUnit(TimeUnit.MILLISECONDS));
     }
 }
 

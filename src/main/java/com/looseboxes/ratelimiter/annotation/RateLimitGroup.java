@@ -1,26 +1,23 @@
 package com.looseboxes.ratelimiter.annotation;
 
-import java.lang.annotation.*;
-import java.util.concurrent.TimeUnit;
+import com.looseboxes.ratelimiter.rates.Rates;
 
-@Repeatable(RateLimit.List.class)
+import java.lang.annotation.*;
+
+@Repeatable(RateLimitGroup.List.class)
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
-public @interface RateLimit {
+public @interface RateLimitGroup {
 
-    int limit() default Integer.MAX_VALUE;
-
-    long duration() default 0;
-
-    TimeUnit timeUnit() default TimeUnit.MILLISECONDS;
-
-    String group() default "";
+    String name() default "";
+    String value() default "";
+    Rates.Logic logic() default Rates.Logic.OR;
 
     @Documented
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.TYPE, ElementType.METHOD})
     @interface List {
-        RateLimit[] value();
+        RateLimitGroup[] value();
     }
 }

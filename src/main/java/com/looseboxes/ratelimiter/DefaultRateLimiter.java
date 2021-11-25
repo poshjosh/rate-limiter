@@ -1,9 +1,11 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.cache.InMemoryRateCache;
+import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.rates.Rates;
+import com.looseboxes.ratelimiter.util.RateConfig;
+import com.looseboxes.ratelimiter.util.RateLimitConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,22 +25,24 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
 
     private final RateExceededHandler rateExceededHandler;
 
-    public DefaultRateLimiter(Rate... limits) {
-        this(new InMemoryRateCache<>(), new LimitWithinDurationSupplier(), Rates.Logic.OR, new RateExceededExceptionThrower(), limits);
+    public DefaultRateLimiter(RateConfig rateConfig) {
+        this(new RateLimitConfig().addLimit(rateConfig));
     }
 
-    public DefaultRateLimiter(
-            RateCache<K> cache,
-            RateSupplier rateSupplier,
-            Rates.Logic logic,
-            RateExceededHandler rateExceededHandler,
-            Rate... limits) {
-        this.cache = Objects.requireNonNull(cache);
-        this.rateSupplier = Objects.requireNonNull(rateSupplier);
-        this.logic = Objects.requireNonNull(logic);
-        this.limits = new Rate[limits.length];
-        System.arraycopy(limits, 0, this.limits, 0, limits.length);
-        this.rateExceededHandler = Objects.requireNonNull(rateExceededHandler);
+    public DefaultRateLimiter(RateLimitConfig rateLimitConfig) {
+        this(new RateLimiterConfiguration<K>()
+                .rateCache(new InMemoryRateCache<>())
+                .rateSupplier(new LimitWithinDurationSupplier())
+                .rateExceededHandler(new RateExceededExceptionThrower())
+                .rateLimitConfig(rateLimitConfig));
+    }
+
+    public DefaultRateLimiter(RateLimiterConfiguration<K> rateLimiterConfiguration) {
+        this.cache = Objects.requireNonNull(rateLimiterConfiguration.getRateCache());
+        this.rateSupplier = Objects.requireNonNull(rateLimiterConfiguration.getRateSupplier());
+        this.logic = Objects.requireNonNull(rateLimiterConfiguration.getRateLimitConfig().getLogic());
+        this.limits = rateLimiterConfiguration.getRateLimitConfig().toRateList().toArray(new Rate[0]);
+        this.rateExceededHandler = Objects.requireNonNull(rateLimiterConfiguration.getRateExceededHandler());
     }
 
     @Override

@@ -8,11 +8,11 @@ import javax.tools.Diagnostic;
 import java.util.Collections;
 import java.util.Set;
 
-@SupportedAnnotationTypes(RateLimitProcessor.RATE_LIMIT_ANNOTATION_TYPE_NAME)
+@SupportedAnnotationTypes(RateLimitProcessor.ANNOTATION_CLASS_NAME)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class RateLimitProcessor extends AbstractProcessor {
 
-    public static final String RATE_LIMIT_ANNOTATION_TYPE_NAME = "com.looseboxes.ratelimiter.annotation.RateLimit";
+    public static final String ANNOTATION_CLASS_NAME = "com.looseboxes.ratelimiter.annotation.RateLimit";
 
     private Messager messager;
 
@@ -59,7 +59,7 @@ public class RateLimitProcessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
-        return Collections.singleton(RateLimitProcessor.RATE_LIMIT_ANNOTATION_TYPE_NAME);
+        return Collections.singleton(RateLimitProcessor.ANNOTATION_CLASS_NAME);
     }
 
     @Override
