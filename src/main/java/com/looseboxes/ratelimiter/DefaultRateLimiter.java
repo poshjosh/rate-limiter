@@ -17,7 +17,7 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
 
     private final RateCache<K> cache;
 
-    private final RateSupplier rateSupplier;
+    private final RateFactory rateFactory;
 
     private final Logic logic;
 
@@ -32,17 +32,17 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
     public DefaultRateLimiter(RateLimitConfig rateLimitConfig) {
         this(new RateLimiterConfiguration<K>()
                 .rateCache(new InMemoryRateCache<>())
-                .rateSupplier(new LimitWithinDurationSupplier())
-                .rateExceededHandler(new RateExceededExceptionThrower())
+                .rateFactory(new LimitWithinDurationFactory())
+                .rateRecordedListener(new RateExceededExceptionThrower())
                 .rateLimitConfig(rateLimitConfig));
     }
 
     public DefaultRateLimiter(RateLimiterConfiguration<K> rateLimiterConfiguration) {
         this.cache = Objects.requireNonNull(rateLimiterConfiguration.getRateCache());
-        this.rateSupplier = Objects.requireNonNull(rateLimiterConfiguration.getRateSupplier());
+        this.rateFactory = Objects.requireNonNull(rateLimiterConfiguration.getRateFactory());
         this.logic = Objects.requireNonNull(rateLimiterConfiguration.getRateLimitConfig().getLogic());
         this.limits = rateLimiterConfiguration.getRateLimitConfig().toRateList().toArray(new Rate[0]);
-        this.rateRecordedListener = Objects.requireNonNull(rateLimiterConfiguration.getRateExceededHandler());
+        this.rateRecordedListener = Objects.requireNonNull(rateLimiterConfiguration.getRateRecordedListener());
     }
 
     @Override
@@ -88,21 +88,18 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
                     key, firstExceededLimit != null, next, Arrays.toString(limits));
         }
 
-        if(reset) {
-            cache.put(key, getInitialRate());
-        }else{
-            if(existingRate != next) {
-                cache.put(key, next);
-            }
+        final Rate result = reset ? getInitialRate() : next;
+        if(existingRate != result) {
+            cache.put(key, result);
         }
 
-        rateRecordedListener.onRateRecorded(key, next);
+        rateRecordedListener.onRateRecorded(key, result);
 
         if(firstExceededLimit != null) {
-            rateRecordedListener.onRateExceeded(key, next, firstExceededLimit);
+            rateRecordedListener.onRateExceeded(key, result, firstExceededLimit);
         }
 
-        return reset ? Rate.NONE : next;
+        return result;
     }
 
     private boolean isOr() {
@@ -114,7 +111,7 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
     }
 
     private Rate getInitialRate() {
-        return Objects.requireNonNull(rateSupplier.getInitialRate());
+        return Objects.requireNonNull(rateFactory.createNew());
     }
 
     @Override

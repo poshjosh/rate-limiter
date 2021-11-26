@@ -27,10 +27,8 @@ public class RateLimiterTest {
     @Test
     void firstRateShouldEqualBaseRate() {
         final String key = getKey(0);
-        LimitWithinDuration result = (LimitWithinDuration)instance.record(key);
-        RateConfig expected = getBaseRate();
-        assertThat(result.getLimit()).isEqualTo(expected.getLimit());
-        assertThat(result.getDuration()).isEqualTo(expected.getTimeUnit().toMillis(expected.getDuration()));
+        Rate result = instance.record(key);
+        assertEqualsBaseRate(result);
     }
 
     @Test
@@ -51,7 +49,7 @@ public class RateLimiterTest {
         Thread.sleep(durationMillis + 500);
 
         result = instance.record(key);
-        assertThat(result).isEqualTo(Rate.NONE);
+        assertEqualsBaseRate(result);
     }
 
     @Test
@@ -59,6 +57,16 @@ public class RateLimiterTest {
         final String key = getKey(0);
         Rate result = instance.record(key);
         assertThatThrownBy(() -> instance.record(key));
+    }
+
+    protected void assertEqualsBaseRate(Rate result) {
+        assertEquals(result, getBaseRate());
+    }
+
+    protected void assertEquals(Rate result, RateConfig expected) {
+        LimitWithinDuration rate = (LimitWithinDuration)result;
+        assertThat(rate.getLimit()).isEqualTo(expected.getLimit());
+        assertThat(rate.getDuration()).isEqualTo(expected.getTimeUnit().toMillis(expected.getDuration()));
     }
 
     public RateLimiter<Object> getRateLimiter(List<RateConfig> limits) {

@@ -6,7 +6,7 @@ import com.looseboxes.ratelimiter.util.RateLimitConfig;
 public class RateLimiterConfiguration<K> {
 
     private RateCache<K> rateCache;
-    private RateSupplier rateSupplier;
+    private RateFactory rateFactory;
     private RateRecordedListener rateRecordedListener;
     private RateLimitConfig rateLimitConfig;
 
@@ -14,8 +14,8 @@ public class RateLimiterConfiguration<K> {
 
     public RateLimiterConfiguration(RateLimiterConfiguration<K> rateLimiterConfiguration) {
         this.setRateCache(rateLimiterConfiguration.rateCache);
-        this.setRateSupplier(rateLimiterConfiguration.rateSupplier);
-        this.setRateExceededHandler(rateLimiterConfiguration.rateRecordedListener);
+        this.setRateFactory(rateLimiterConfiguration.rateFactory);
+        this.setRateRecordedListener(rateLimiterConfiguration.rateRecordedListener);
         this.setRateLimitConfig(rateLimiterConfiguration.rateLimitConfig == null ? null : new RateLimitConfig(rateLimiterConfiguration.rateLimitConfig));
     }
 
@@ -32,29 +32,29 @@ public class RateLimiterConfiguration<K> {
         this.rateCache = rateCache;
     }
 
-    public RateLimiterConfiguration<K> rateSupplier(RateSupplier rateSupplier) {
-        this.setRateSupplier(rateSupplier);
+    public RateLimiterConfiguration<K> rateFactory(RateFactory rateFactory) {
+        this.setRateFactory(rateFactory);
         return this;
     }
 
-    public RateSupplier getRateSupplier() {
-        return rateSupplier;
+    public RateFactory getRateFactory() {
+        return rateFactory;
     }
 
-    public void setRateSupplier(RateSupplier rateSupplier) {
-        this.rateSupplier = rateSupplier;
+    public void setRateFactory(RateFactory rateFactory) {
+        this.rateFactory = rateFactory;
     }
 
-    public RateLimiterConfiguration<K> rateExceededHandler(RateRecordedListener rateRecordedListener) {
-        this.setRateExceededHandler(rateRecordedListener);
+    public RateLimiterConfiguration<K> rateRecordedListener(RateRecordedListener rateRecordedListener) {
+        this.setRateRecordedListener(rateRecordedListener);
         return this;
     }
 
-    public RateRecordedListener getRateExceededHandler() {
+    public RateRecordedListener getRateRecordedListener() {
         return rateRecordedListener;
     }
 
-    public void setRateExceededHandler(RateRecordedListener rateRecordedListener) {
+    public void setRateRecordedListener(RateRecordedListener rateRecordedListener) {
         this.rateRecordedListener = rateRecordedListener;
     }
 

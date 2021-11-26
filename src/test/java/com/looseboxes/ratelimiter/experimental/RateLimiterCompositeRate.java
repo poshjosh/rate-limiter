@@ -18,7 +18,7 @@ public class RateLimiterCompositeRate<K> implements RateLimiter<K> {
 
     private final RateCache<K> cache;
 
-    private final RateSupplier rateSupplier;
+    private final RateFactory rateFactory;
 
     private final Rate limit;
 
@@ -26,19 +26,19 @@ public class RateLimiterCompositeRate<K> implements RateLimiter<K> {
 
     public RateLimiterCompositeRate(
             RateCache<K> cache,
-            RateSupplier rateSupplier,
+            RateFactory rateFactory,
             Collection<Rate> limit,
             RateRecordedListener rateRecordedListener) {
-        this(cache, rateSupplier, Rates.or(limit.toArray(new Rate[0])), rateRecordedListener);
+        this(cache, rateFactory, Rates.or(limit.toArray(new Rate[0])), rateRecordedListener);
     }
 
     public RateLimiterCompositeRate(
             RateCache<K> cache,
-            RateSupplier rateSupplier,
+            RateFactory rateFactory,
             Rate limit,
             RateRecordedListener rateRecordedListener) {
         this.cache = Objects.requireNonNull(cache);
-        this.rateSupplier = Objects.requireNonNull(rateSupplier);
+        this.rateFactory = Objects.requireNonNull(rateFactory);
         this.limit = Objects.requireNonNull(limit);
         this.rateRecordedListener = Objects.requireNonNull(rateRecordedListener);
     }
@@ -74,7 +74,7 @@ public class RateLimiterCompositeRate<K> implements RateLimiter<K> {
     }
 
     private Rate getInitialRate() {
-        return Objects.requireNonNull(rateSupplier.getInitialRate());
+        return Objects.requireNonNull(rateFactory.createNew());
     }
 
     @Override

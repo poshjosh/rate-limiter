@@ -13,6 +13,8 @@ import com.looseboxes.ratelimiter.annotation.ClassAnnotationCollector;
 import com.looseboxes.ratelimiter.annotation.ClassAnnotationProcessor;
 import com.looseboxes.ratelimiter.annotation.RateLimit;
 import com.looseboxes.ratelimiter.util.RateConfig;
+import com.looseboxes.ratelimiter.util.RateLimitConfig;
+import com.looseboxes.ratelimiter.util.RateLimitGroupData;
 
 import java.util.concurrent.TimeUnit;
 
@@ -44,11 +46,13 @@ public class SampleUsage {
         // Using Annotations - See the annotations at the class declaration above
         //////////////////////////////////////////////////////////////////////////
 
-        RateLimiter<Object> rateLimiterForClass = new ClassAnnotationProcessor()
+        RateLimitConfig rateLimitConfig = new ClassAnnotationProcessor()
                 .process(SampleUsage.class, new ClassAnnotationCollector())
                 .values().stream().findFirst()   // Only one method was annotated
-                .map(DefaultRateLimiter::new)
+                .map(RateLimitGroupData::getConfig)
                 .orElseThrow(() -> new RuntimeException("Failed to extract configuration from annotated class"));
+
+        RateLimiter<Object> rateLimiterForClass = new DefaultRateLimiter<>(rateLimitConfig);
 
         // Call this method as often as required to record usage
         // Will throw an Exception, when the limit within the duration specified by the annotation, is exceeded.
