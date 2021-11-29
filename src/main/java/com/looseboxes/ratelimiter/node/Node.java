@@ -16,6 +16,8 @@
 
 package com.looseboxes.ratelimiter.node;
 
+import com.looseboxes.ratelimiter.util.Experimental;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -31,8 +33,12 @@ public interface Node<V> {
 
     /**
      * Detach this node from its parent
+     *
      * @return {code true} if this node had a parent in the first instance, otherwise return {code false}
+     * @deprecated Simply put - Do not use. Nodes are not intended to be mutable. This method will
+     * thus be removed in the future.
      */
+    @Deprecated
     boolean detach();
 
     /**

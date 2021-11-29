@@ -1,4 +1,4 @@
-package com.looseboxes.ratelimiter.node;
+package com.looseboxes.ratelimiter.annotation;
 
 import com.looseboxes.ratelimiter.util.RateLimitConfig;
 
@@ -34,5 +34,9 @@ public final class NodeData implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(source, config);
+    }
+
+    @Override public String toString() {
+        return "NodeData{" + "source=" + source.getClass().getSimpleName() + ", config=" + config + '}';
     }
 }

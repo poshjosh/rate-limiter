@@ -15,6 +15,7 @@
  */
 package com.looseboxes.ratelimiter.node;
 
+import com.looseboxes.ratelimiter.node.formatters.NodeFormatters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,9 +27,9 @@ import java.util.function.Predicate;
 /**
  * @author Chinomso Bassey Ikwuagwu on Oct 16, 2017 9:21:53 PM
  */
-public class NodeVisitor<T> implements Consumer<Node<T>>{
+public class BreadthFirstNodeVisitor<T> implements Consumer<Node<T>>{
 
-    private static final Logger LOG = LoggerFactory.getLogger(NodeVisitor.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(BreadthFirstNodeVisitor.class.getName());
 
     private final Predicate<Node<T>> filter;
     
@@ -36,14 +37,14 @@ public class NodeVisitor<T> implements Consumer<Node<T>>{
     
     private final int depth;
 
-    public NodeVisitor(
+    public BreadthFirstNodeVisitor(
             Predicate<Node<T>> filter,
             Consumer<Node<T>> consumer) {
         
         this(filter, consumer, Integer.MAX_VALUE);
     }
     
-    public NodeVisitor(
+    public BreadthFirstNodeVisitor(
             Predicate<Node<T>> filter,
             Consumer<Node<T>> consumer,
             int depth) {
@@ -61,7 +62,7 @@ public class NodeVisitor<T> implements Consumer<Node<T>>{
     public void visit(Node<T> node, int depth) {
 
         if(LOG.isTraceEnabled()) {
-            LOG.trace("Visiting: {}", NodeUtil.toString(node));
+            LOG.trace("Visiting: {}", node);
         }
         
         this.visit(filter, consumer, node);

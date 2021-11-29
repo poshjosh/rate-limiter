@@ -2,7 +2,7 @@ package com.looseboxes.ratelimiter;
 
 import com.looseboxes.ratelimiter.annotation.*;
 import com.looseboxes.ratelimiter.node.Node;
-import com.looseboxes.ratelimiter.node.NodeData;
+import com.looseboxes.ratelimiter.annotation.NodeData;
 import com.looseboxes.ratelimiter.util.RateConfig;
 import com.looseboxes.ratelimiter.util.RateLimitConfig;
 
@@ -37,7 +37,7 @@ public class SampleUsage {
         // Using Annotations - See the annotations at the class declaration above
         //////////////////////////////////////////////////////////////////////////
 
-        RateLimitConfig rateLimitConfig = new DefaultAnnotationProcessor()
+        RateLimitConfig rateLimitConfig = new ClassAnnotationProcessor()
                 .process(Collections.singletonList(SampleUsage.class))
                 .findFirstChild()
                 .flatMap(Node::getValueOptional)

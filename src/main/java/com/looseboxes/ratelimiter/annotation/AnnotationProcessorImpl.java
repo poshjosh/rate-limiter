@@ -1,5 +1,6 @@
 package com.looseboxes.ratelimiter.annotation;
 
+import com.looseboxes.ratelimiter.node.formatters.NodeFormatters;
 import com.looseboxes.ratelimiter.rates.Logic;
 import com.looseboxes.ratelimiter.util.RateConfig;
 import com.looseboxes.ratelimiter.util.RateLimitConfig;
@@ -26,7 +27,7 @@ public abstract class AnnotationProcessorImpl<S extends GenericDeclaration> impl
     @Override
     public Node<NodeData> process(List<S> elements){
         Node<NodeData> rootNode = NodeUtil.getOrCreateRootNode();
-        process(rootNode, elements, (element, node) -> {});
+        process(rootNode, elements);
         return rootNode;
     }
 
@@ -54,7 +55,7 @@ public abstract class AnnotationProcessorImpl<S extends GenericDeclaration> impl
             node = null;
         }
         if(LOG.isTraceEnabled()) {
-            LOG.trace("Processed: {}, Node: {}", element, NodeUtil.toString(node));
+            LOG.trace("\nProcessed: {}\nInto Node: {}", element, NodeFormatters.indented().format(node));
         }
 
         consumer.accept(element, node);
@@ -64,19 +65,22 @@ public abstract class AnnotationProcessorImpl<S extends GenericDeclaration> impl
 
     protected Node<NodeData> findOrCreateNodeForRateLimitGroupOrNull(
             Node<NodeData> root, Node<NodeData> parent,
-            RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
-        String name = rateLimitGroup == null ? "" : selectFirstValidOrEmptyText(rateLimitGroup.name(), rateLimitGroup.value());
+            GenericDeclaration annotatedElement, RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
+        String name = getName(rateLimitGroup);
         final Node<NodeData> node;
         if(rateLimitGroup == null || name.isEmpty()) {
             node = null;
         }else{
-
             node = root.findFirstChild(n -> name.equals(n.getName()))
-                    .map(foundNode -> requireConsistentData(foundNode, rateLimitGroup, rateLimits))
+                    .map(foundNode -> requireConsistentData(foundNode, annotatedElement, rateLimitGroup, rateLimits))
                     .orElseGet(() -> createNodeForGroupOrNull(parent, name, rateLimitGroup, rateLimits));
         }
 
         return node;
+    }
+
+    private String getName(RateLimitGroup rateLimitGroup) {
+        return rateLimitGroup == null ? "" : selectFirstValidOrEmptyText(rateLimitGroup.name(), rateLimitGroup.value());
     }
 
     private String selectFirstValidOrEmptyText(String ...candidates) {
@@ -94,7 +98,6 @@ public abstract class AnnotationProcessorImpl<S extends GenericDeclaration> impl
         if(rateLimits.length == 0) {
             return null;
         }else{
-//            RateLimitConfig rateLimitConfig = toRateLimitConfig(rateLimitGroup, rateLimits);
             return NodeUtil.createGroupNode(parentNode, name, new RateLimitConfig());
         }
     }
@@ -111,22 +114,23 @@ public abstract class AnnotationProcessorImpl<S extends GenericDeclaration> impl
     }
 
     private Node<NodeData> requireConsistentData(
-            Node<NodeData> rateLimitGroupNode, RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
+            Node<NodeData> rateLimitGroupNode, GenericDeclaration annotatedElement,
+            RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         if(rateLimitGroup != null && rateLimits.length != 0) {
             RateLimitConfig current = toRateLimitConfig(rateLimitGroup, rateLimits);
             rateLimitGroupNode.getChildren().stream()
                     .map(childNode -> childNode.getValueOptional().orElseThrow(NodeUtil::newExceptionForRequiredValue))
                     .map(NodeData::getConfig)
-                    .forEach(existing -> requireEqual(rateLimitGroupNode.getName(), current.getLogic(), existing.getLogic()));
+                    .forEach(existing -> requireEqual(annotatedElement, rateLimitGroup, current.getLogic(), existing.getLogic()));
         }
 
         return rateLimitGroupNode;
     }
 
-    private void requireEqual(String name, Logic lhs, Logic rhs) {
+    private void requireEqual(GenericDeclaration annotatedElement, RateLimitGroup rateLimitGroup, Logic lhs, Logic rhs) {
         if(!Objects.equals(lhs, rhs)) {
             throw new AnnotationProcessingException("Found inconsistent declaration of logic, for " +
-                    RateLimitGroup.class.getName() + ": " + name);
+                    rateLimitGroup + " declared at " + annotatedElement);
         }
     }
 

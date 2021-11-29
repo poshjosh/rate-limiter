@@ -1,21 +1,31 @@
 package com.looseboxes.ratelimiter.annotation;
 
 import com.looseboxes.ratelimiter.node.Node;
-import com.looseboxes.ratelimiter.node.NodeData;
 
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
-public final class ClassAnnotationProcessor extends AnnotationProcessorImpl<Class<?>>{
+public class ClassAnnotationProcessor extends AnnotationProcessorImpl<Class<?>>{
+
+    private final AnnotationProcessor<Method> methodAnnotationProcessor;
 
     public ClassAnnotationProcessor() {
-        super(new ClassNameProvider());
+        this(new ClassNameProvider());
     }
 
     public ClassAnnotationProcessor(IdProvider<Class<?>, String> idProvider) {
+        this(idProvider, new MethodAnnotationProcessor());
+    }
+
+    public ClassAnnotationProcessor(
+            IdProvider<Class<?>, String> idProvider, AnnotationProcessor<Method> methodAnnotationProcessor) {
         super(idProvider);
+        this.methodAnnotationProcessor = Objects.requireNonNull(methodAnnotationProcessor);
     }
 
     // We override this here so we can process the class and its super classes
@@ -37,16 +47,27 @@ public final class ClassAnnotationProcessor extends AnnotationProcessorImpl<Clas
         };
 
         do{
+
             Node<NodeData> node = super.process(root, element, collectSuperClassNodes.andThen(consumer));
+
+            processMethods(root, element, consumer);
+
             if(classNode == null) { // The first successfully processed node is the result
                 classNode = node;
             }
+
             element = element.getSuperclass();
+
         }while(element != null && !element.equals(Object.class));
 
         transferMethodNodesFromSuperClassNodes(classNode, superClassNodes);
 
         return classNode;
+    }
+
+    private void processMethods(Node<NodeData> root, Class<?> element, BiConsumer<Object, Node<NodeData>> consumer) {
+        Method[] methods = element.getDeclaredMethods();
+        methodAnnotationProcessor.process(root, Arrays.asList(methods), consumer);
     }
 
     /**
@@ -73,7 +94,7 @@ public final class ClassAnnotationProcessor extends AnnotationProcessorImpl<Clas
 
     protected Node<NodeData> getOrCreateParent(Node<NodeData> root, Class<?> element,
                                                RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
-        Node<NodeData> node = findOrCreateNodeForRateLimitGroupOrNull(root, root, rateLimitGroup, rateLimits);
+        Node<NodeData> node = findOrCreateNodeForRateLimitGroupOrNull(root, root, element, rateLimitGroup, rateLimits);
         return node == null ? root : node;
     }
 }

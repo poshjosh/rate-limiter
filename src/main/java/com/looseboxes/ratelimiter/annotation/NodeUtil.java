@@ -1,6 +1,7 @@
-package com.looseboxes.ratelimiter.node;
+package com.looseboxes.ratelimiter.annotation;
 
-import com.looseboxes.ratelimiter.annotation.AnnotationProcessingException;
+import com.looseboxes.ratelimiter.node.Node;
+import com.looseboxes.ratelimiter.node.NodeImpl;
 import com.looseboxes.ratelimiter.util.RateLimitConfig;
 
 import java.util.*;
@@ -48,7 +49,7 @@ public final class NodeUtil {
             if(name.equals(parent.getName())) {
                 throw new IllegalStateException("Parent and child nodes both have the same name: " + name);
             }
-            Node<NodeData> node = createNode(parent, name, sourceForPropertyNodes, entry.getValue());
+            createNode(parent, name, sourceForPropertyNodes, entry.getValue());
         }
     }
 
@@ -65,18 +66,6 @@ public final class NodeUtil {
 
     private static Node<NodeData> createNode(String name, NodeData nodeData, Node<NodeData> parent) {
         return new NodeImpl<>(name, nodeData, parent);
-    }
-
-    public static <T> String toString(Node<T> node) {
-        return appendIndents(node, new StringBuilder()).append(node).toString();
-    }
-
-    private static <T> StringBuilder appendIndents(Node<T> node, StringBuilder appendTo) {
-//        appendTo.append('\n');
-        for(int pos = node.getLevel(); pos > 0; --pos) {
-            appendTo.append('\t');
-        }
-        return appendTo;
     }
 
     public static AnnotationProcessingException newExceptionForRequiredValue() {

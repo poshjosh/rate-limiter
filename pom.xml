@@ -11,7 +11,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>rate-limiter</artifactId>
-    <version>0.0.703-DRAFT</version>
+    <version>0.0.703</version>
     <description>Light weight rate limiter library</description>
 
     <properties>

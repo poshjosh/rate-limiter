@@ -1,8 +1,7 @@
 package com.looseboxes.ratelimiter.annotation;
 
 import com.looseboxes.ratelimiter.node.Node;
-import com.looseboxes.ratelimiter.node.NodeData;
-import com.looseboxes.ratelimiter.node.NodeFormatter;
+import com.looseboxes.ratelimiter.node.formatters.NodeFormatters;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -27,7 +26,7 @@ class ClassAnnotationProcessorTest extends AbstractAnnotationProcessorTest<Class
 //        System.out.println("Found classes: " + classes);
         Node<NodeData> root = new ClassAnnotationProcessor(this::getId).process(classes);
         System.out.println();
-        System.out.println(new NodeFormatter().format(root));
+        System.out.println(NodeFormatters.indentedHeirarchy().format(root));
         assertThat(root.findFirstChild(node -> node.getName().equals("root")).isPresent()).isTrue();
         assertHasChildrenHavingNames(root, "ClassGroupOnlyAnon", "PrivateClass", "InternalClass");
         assertHasChildrenHavingNames(root, "Fire");
