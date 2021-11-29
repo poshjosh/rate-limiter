@@ -82,7 +82,7 @@ public class ClassesInPackageFinderImpl implements ClassesInPackageFinder{
             }    
         }
 
-        LOG.debug("In package: {}, found classes: {}", packageName, classes);
+        LOG.trace("In package: {}, found classes: {}", packageName, classes);
         
         return classes;
     }

@@ -15,8 +15,6 @@ public @interface RateLimit {
 
     TimeUnit timeUnit() default TimeUnit.MILLISECONDS;
 
-    String group() default "";
-
     @Documented
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.TYPE, ElementType.METHOD})

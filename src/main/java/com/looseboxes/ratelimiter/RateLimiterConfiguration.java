@@ -13,6 +13,8 @@ public class RateLimiterConfiguration<K> {
     public RateLimiterConfiguration() { }
 
     public RateLimiterConfiguration(RateLimiterConfiguration<K> rateLimiterConfiguration) {
+        // @TODO we are effectively sharing a this cache here
+        // It should be clear
         this.setRateCache(rateLimiterConfiguration.rateCache);
         this.setRateFactory(rateLimiterConfiguration.rateFactory);
         this.setRateRecordedListener(rateLimiterConfiguration.rateRecordedListener);

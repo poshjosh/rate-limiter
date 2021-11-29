@@ -1,12 +1,12 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.annotation.ClassAnnotationCollector;
-import com.looseboxes.ratelimiter.annotation.ClassAnnotationProcessor;
-import com.looseboxes.ratelimiter.annotation.RateLimit;
+import com.looseboxes.ratelimiter.annotation.*;
+import com.looseboxes.ratelimiter.node.Node;
+import com.looseboxes.ratelimiter.node.NodeData;
 import com.looseboxes.ratelimiter.util.RateConfig;
 import com.looseboxes.ratelimiter.util.RateLimitConfig;
-import com.looseboxes.ratelimiter.util.RateLimitGroupData;
 
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 // Limited to 3 invocations every 2 second OR 100 invocations every 1 minute
@@ -37,10 +37,11 @@ public class SampleUsage {
         // Using Annotations - See the annotations at the class declaration above
         //////////////////////////////////////////////////////////////////////////
 
-        RateLimitConfig rateLimitConfig = new ClassAnnotationProcessor()
-                .process(SampleUsage.class, new ClassAnnotationCollector())
-                .values().stream().findFirst()   // Only one method was annotated
-                .map(RateLimitGroupData::getConfig)
+        RateLimitConfig rateLimitConfig = new DefaultAnnotationProcessor()
+                .process(Collections.singletonList(SampleUsage.class))
+                .findFirstChild()
+                .flatMap(Node::getValueOptional)
+                .map(NodeData::getConfig)
                 .orElseThrow(() -> new RuntimeException("Failed to extract configuration from annotated class"));
 
         RateLimiter<Object> rateLimiterForClass = new DefaultRateLimiter<>(rateLimitConfig);

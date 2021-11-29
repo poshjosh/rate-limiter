@@ -15,7 +15,9 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultRateLimiter.class);
 
-    private final RateCache<K> cache;
+    private final RateLimiter<K> parent;
+
+    private final RateCache<Object> cache;
 
     private final RateFactory rateFactory;
 
@@ -26,19 +28,33 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
     private final RateRecordedListener rateRecordedListener;
 
     public DefaultRateLimiter(RateConfig rateConfig) {
-        this(new RateLimitConfig().addLimit(rateConfig));
+        this(RateLimiter.noop(), rateConfig);
+    }
+
+    public DefaultRateLimiter(RateLimiter<K> parent, RateConfig rateConfig) {
+        this(parent, new RateLimitConfig().addLimit(rateConfig));
     }
 
     public DefaultRateLimiter(RateLimitConfig rateLimitConfig) {
-        this(new RateLimiterConfiguration<K>()
+        this(RateLimiter.noop(), rateLimitConfig);
+    }
+
+    public DefaultRateLimiter(RateLimiter<K> parent, RateLimitConfig rateLimitConfig) {
+        this(parent, new RateLimiterConfiguration<>()
                 .rateCache(new InMemoryRateCache<>())
                 .rateFactory(new LimitWithinDurationFactory())
                 .rateRecordedListener(new RateExceededExceptionThrower())
                 .rateLimitConfig(rateLimitConfig));
     }
 
-    public DefaultRateLimiter(RateLimiterConfiguration<K> rateLimiterConfiguration) {
-        this.cache = Objects.requireNonNull(rateLimiterConfiguration.getRateCache());
+    public DefaultRateLimiter(RateLimiterConfiguration<Object> rateLimiterConfiguration) {
+        this(RateLimiter.noop(), rateLimiterConfiguration);
+    }
+
+    @SuppressWarnings("unchecked")
+    public DefaultRateLimiter(RateLimiter<K> parent, RateLimiterConfiguration<?> rateLimiterConfiguration) {
+        this.parent = Objects.requireNonNull(parent);
+        this.cache = Objects.requireNonNull((RateCache<Object>)rateLimiterConfiguration.getRateCache());
         this.rateFactory = Objects.requireNonNull(rateLimiterConfiguration.getRateFactory());
         this.logic = Objects.requireNonNull(rateLimiterConfiguration.getRateLimitConfig().getLogic());
         this.limits = rateLimiterConfiguration.getRateLimitConfig().toRateList().toArray(new Rate[0]);
@@ -93,10 +109,10 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
             cache.put(key, result);
         }
 
-        rateRecordedListener.onRateRecorded(key, result);
-
-        if(firstExceededLimit != null) {
-            rateRecordedListener.onRateExceeded(key, result, firstExceededLimit);
+        try {
+            rateRecordedListener.onRateRecorded(new RateRecordedEvent(this, key, result, firstExceededLimit));
+        }finally{
+            parent.record(key);
         }
 
         return result;
@@ -112,6 +128,18 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
 
     private Rate getInitialRate() {
         return Objects.requireNonNull(rateFactory.createNew());
+    }
+
+    public RateLimiter<K> getParent() {
+        return parent;
+    }
+
+    public Logic getLogic() {
+        return logic;
+    }
+
+    public Rate[] getLimits() {
+        return limits;
     }
 
     @Override

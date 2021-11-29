@@ -1,34 +1,17 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.rates.Rate;
-
 import java.util.Objects;
 
 public interface RateRecordedListener {
 
-    RateRecordedListener NO_OP = new RateRecordedListener() {
-        @Override
-        public void onRateRecorded(Object key, Rate rate) { }
-        @Override
-        public void onRateExceeded(Object key, Rate rate, Rate exceededRate) { }
-    };
+    RateRecordedListener NO_OP = rateRecordedEvent -> { };
 
     /**
      * Called when a rate is recorded
      *
-     * @param key The key
-     * @param rate The Rate which exceeded the limit
+     * @param rateRecordedEvent The event
      */
-    void onRateRecorded(Object key, Rate rate);
-
-    /**
-     * Called when a rate is exceeded
-     *
-     * @param key The key
-     * @param rate The Rate which exceeded the limit
-     * @param exceededRate The limit that was exceeded
-     */
-    void onRateExceeded(Object key, Rate rate, Rate exceededRate);
+    void onRateRecorded(RateRecordedEvent rateRecordedEvent);
 
     /**
      * Returns a composed {@code RateRecordedListener} that performs, in sequence, this
@@ -44,17 +27,9 @@ public interface RateRecordedListener {
      */
     default RateRecordedListener andThen(RateRecordedListener after) {
         Objects.requireNonNull(after);
-        return new RateRecordedListener() {
-            @Override
-            public void onRateRecorded(Object key, Rate rate) {
-                RateRecordedListener.this.onRateRecorded(key, rate);
-                after.onRateRecorded(key, rate);
-            }
-            @Override
-            public void onRateExceeded(Object key, Rate rate, Rate exceededRate) {
-                RateRecordedListener.this.onRateExceeded(key, rate, exceededRate);
-                after.onRateExceeded(key, rate, exceededRate);
-            }
+        return rateRecordedEvent -> {
+            RateRecordedListener.this.onRateRecorded(rateRecordedEvent);
+            after.onRateRecorded(rateRecordedEvent);
         };
     }
 }
