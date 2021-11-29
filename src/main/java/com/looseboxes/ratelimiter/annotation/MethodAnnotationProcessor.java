@@ -1,6 +1,7 @@
 package com.looseboxes.ratelimiter.annotation;
 
 import com.looseboxes.ratelimiter.node.Node;
+import com.looseboxes.ratelimiter.util.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.function.Predicate;
@@ -17,14 +18,15 @@ public class MethodAnnotationProcessor extends AnnotationProcessorImpl<Method>{
 
     @Override
     protected Node<NodeData> getOrCreateParent(
-            Node<NodeData> root, Method method, RateLimitGroup rateLimitGroup, RateLimit[] rateLimits) {
+            @Nullable Node<NodeData> root, Method method,
+            RateLimitGroup rateLimitGroup, RateLimit[] rateLimits) {
 
         Predicate<Node<NodeData>> testForDeclaringClass = node -> {
-            NodeData nodeData = node.getValueOrDefault(null);
+            NodeData nodeData = node == null ? null : node.getValueOrDefault(null);
             return nodeData != null && method.getDeclaringClass().equals(nodeData.getSource());
         };
 
-        Node<NodeData> nodeForDeclaringClass = root.findFirstChild(testForDeclaringClass).orElse(null);
+        Node<NodeData> nodeForDeclaringClass = root == null ? null : root.findFirstChild(testForDeclaringClass).orElse(null);
 
         Node<NodeData> nodeForRateLimitGroup = findOrCreateNodeForRateLimitGroupOrNull(
                 root, nodeForDeclaringClass, method, rateLimitGroup, rateLimits);

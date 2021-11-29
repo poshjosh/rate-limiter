@@ -2,6 +2,7 @@ package com.looseboxes.ratelimiter.annotation;
 
 import com.looseboxes.ratelimiter.node.formatters.NodeFormatters;
 import com.looseboxes.ratelimiter.rates.Logic;
+import com.looseboxes.ratelimiter.util.Nullable;
 import com.looseboxes.ratelimiter.util.RateConfig;
 import com.looseboxes.ratelimiter.util.RateLimitConfig;
 import com.looseboxes.ratelimiter.node.*;
@@ -21,22 +22,16 @@ public abstract class AnnotationProcessorImpl<S extends GenericDeclaration> impl
         this.idProvider = Objects.requireNonNull(idProvider);
     }
 
-    protected abstract Node<NodeData> getOrCreateParent(Node<NodeData> root, S element,
-                                                           RateLimitGroup rateLimitGroup, RateLimit [] rateLimits);
+    protected abstract Node<NodeData> getOrCreateParent(
+            @Nullable Node<NodeData> root, S element,
+            RateLimitGroup rateLimitGroup, RateLimit [] rateLimits);
 
     @Override
-    public Node<NodeData> process(List<S> elements){
-        Node<NodeData> rootNode = NodeUtil.getOrCreateRootNode();
-        process(rootNode, elements);
-        return rootNode;
-    }
-
-    @Override
-    public void process(Node<NodeData> root, List<S> elements, BiConsumer<Object, Node<NodeData>> consumer) {
+    public void process(@Nullable Node<NodeData> root, List<S> elements, BiConsumer<Object, Node<NodeData>> consumer) {
         elements.forEach(clazz -> process(root, clazz, consumer));
     }
 
-    protected Node<NodeData> process(Node<NodeData> root, S element, BiConsumer<Object, Node<NodeData>> consumer){
+    protected Node<NodeData> process(@Nullable Node<NodeData> root, S element, BiConsumer<Object, Node<NodeData>> consumer){
 
         final RateLimit [] rateLimits = element.getAnnotationsByType(RateLimit.class);
 
@@ -64,11 +59,11 @@ public abstract class AnnotationProcessorImpl<S extends GenericDeclaration> impl
     }
 
     protected Node<NodeData> findOrCreateNodeForRateLimitGroupOrNull(
-            Node<NodeData> root, Node<NodeData> parent,
+            @Nullable Node<NodeData> root, Node<NodeData> parent,
             GenericDeclaration annotatedElement, RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         String name = getName(rateLimitGroup);
         final Node<NodeData> node;
-        if(rateLimitGroup == null || name.isEmpty()) {
+        if(root == null || rateLimitGroup == null || name.isEmpty()) {
             node = null;
         }else{
             node = root.findFirstChild(n -> name.equals(n.getName()))
@@ -103,7 +98,7 @@ public abstract class AnnotationProcessorImpl<S extends GenericDeclaration> impl
     }
 
     protected Node<NodeData> createNodeForElementOrNull(
-            Node<NodeData> parentNode, String name, Object element,
+            @Nullable Node<NodeData> parentNode, String name, Object element,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         if(rateLimits.length == 0) {
             return null;

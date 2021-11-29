@@ -67,8 +67,7 @@ public final class RateLimiterBuilder {
 
     private static final AtomicLong nonce = new AtomicLong();
     private String randomUniqueId() {
-        return NodeUtil.ROOT_NODE_NAME + '-' +
-                Long.toHexString(System.currentTimeMillis()) + '-' + nonce.incrementAndGet();
+        return "root-" + Long.toHexString(System.currentTimeMillis()) + '-' + nonce.incrementAndGet();
     }
 
     public RateLimiterBuilder rootNodeName(String name) {

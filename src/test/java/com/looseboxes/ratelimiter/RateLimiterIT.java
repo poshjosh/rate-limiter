@@ -1,6 +1,8 @@
 package com.looseboxes.ratelimiter;
 
+import com.looseboxes.ratelimiter.cache.SingletonRateCache;
 import com.looseboxes.ratelimiter.util.RateConfig;
+import com.looseboxes.ratelimiter.util.RateLimitConfig;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.TimeUnit;
@@ -11,10 +13,14 @@ public class RateLimiterIT {
 
     @Test
     public void testPerformance() {
+
+//        testPerformance(1_000, 50, 9_000_000); // 29 Nov 2021
 //        testPerformance(1_000, 100, 3_000_000);
-        testPerformance(10_000, 160, 3_000_000);
+
+        testPerformance(10_000, 150, 58_000_000); // 29 Nov 2021
+//        testPerformance(10_000, 160, 3_000_000);
+
 //        testPerformance(100_000, 160, 10_000_000);
-//        testPerformance(1_000_000, 320, 60_000_000);
     }
 
     private void testPerformance(int count, long maxTime, long maxMemory) {
@@ -34,6 +40,16 @@ public class RateLimiterIT {
 
     public RateLimiter<Integer> getRateLimiter(int limit, int duration) {
         return new DefaultRateLimiter<>(new RateConfig().limit(limit).duration(duration).timeUnit(TimeUnit.MILLISECONDS));
+    }
+
+    public RateLimiter<Integer> getRateLimiterWithSingletonCache(int limit, int duration) {
+        RateConfig rateConfig = new RateConfig().limit(limit).duration(duration).timeUnit(TimeUnit.MILLISECONDS);
+        RateLimiterConfiguration rateLimiterConfiguration = new RateLimiterConfiguration<>()
+                .rateCache(new SingletonRateCache<>(null))
+                .rateRecordedListener(new RateExceededExceptionThrower())
+                .rateFactory(new LimitWithinDurationFactory())
+                .rateLimitConfig(new RateLimitConfig().addLimit(rateConfig));
+        return new DefaultRateLimiter<Integer>(rateLimiterConfiguration);
     }
 }
 

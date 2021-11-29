@@ -24,10 +24,12 @@ class ClassAnnotationProcessorTest extends AbstractAnnotationProcessorTest<Class
     public void nodeVisitingShouldBeAccurate() {
         List<Class<?>> classes = findClasses();
 //        System.out.println("Found classes: " + classes);
-        Node<NodeData> root = new ClassAnnotationProcessor(this::getId).process(classes);
+        final String rootNodeName = "sample-root-node";
+        Node<NodeData> root = NodeUtil.createNode(rootNodeName);
+        new ClassAnnotationProcessor(this::getId).process(root, classes);
         System.out.println();
         System.out.println(NodeFormatters.indentedHeirarchy().format(root));
-        assertThat(root.findFirstChild(node -> node.getName().equals("root")).isPresent()).isTrue();
+        assertThat(root.findFirstChild(node -> node.getName().equals(rootNodeName)).isPresent()).isTrue();
         assertHasChildrenHavingNames(root, "ClassGroupOnlyAnon", "PrivateClass", "InternalClass");
         assertHasChildrenHavingNames(root, "Fire");
         Node<NodeData> fire = root.findFirstChild(node -> "Fire".equals(node.getName())).orElse(null);

@@ -16,14 +16,10 @@
 
 package com.looseboxes.ratelimiter.node;
 
-import com.looseboxes.ratelimiter.util.Experimental;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
 
 /**
  * @author Chinomso Bassey Ikwuagwu on Oct 13, 2017 2:58:54 PM
@@ -31,15 +27,12 @@ import java.util.function.UnaryOperator;
  */
 public interface Node<V> {
 
-    /**
-     * Detach this node from its parent
-     *
-     * @return {code true} if this node had a parent in the first instance, otherwise return {code false}
-     * @deprecated Simply put - Do not use. Nodes are not intended to be mutable. This method will
-     * thus be removed in the future.
-     */
-    @Deprecated
-    boolean detach();
+    Node<Object> EMPTY = new EmptyNode<>();
+
+    @SuppressWarnings("unchecked")
+    static <T> Node<T> empty() {
+        return (Node<T>)EMPTY;
+    }
 
     /**
      * Copy this node and it's children onto the specified parent.
@@ -96,7 +89,7 @@ public interface Node<V> {
     default Node<V> getRoot() {
         Node<V> target = this;
         while(target.getParentOrDefault(null) != null) {
-            target = (Node)target.getParentOrDefault(null);
+            target = target.getParentOrDefault(null);
         }
         return target;
     }

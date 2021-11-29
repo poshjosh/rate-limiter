@@ -63,21 +63,6 @@ public class NodeImpl<V> implements Node<V>, Serializable {
         }
     }
 
-    /**
-     * Detach this node from its parent
-     *
-     * @return {code true} if this node had a parent in the first instance, otherwise return {code false}
-     * @deprecated Simply put - Do not use. Nodes are not intended to be mutable. This method will
-     * thus be removed in the future.
-     */
-    @Override
-    @Deprecated
-    public boolean detach() {
-        final boolean success = parent != null;
-        parent = null;
-        return success;
-    }
-
     public Node<V> copyTo(Node<V> parent) {
         final Node<V> newNode = new NodeImpl<>(name, value, parent);
         children.forEach(child -> child.copyTo(newNode));

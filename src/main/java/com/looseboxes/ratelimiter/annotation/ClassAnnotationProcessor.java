@@ -1,13 +1,10 @@
 package com.looseboxes.ratelimiter.annotation;
 
 import com.looseboxes.ratelimiter.node.Node;
+import com.looseboxes.ratelimiter.util.Nullable;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 public class ClassAnnotationProcessor extends AnnotationProcessorImpl<Class<?>>{
@@ -30,30 +27,31 @@ public class ClassAnnotationProcessor extends AnnotationProcessorImpl<Class<?>>{
 
     // We override this here so we can process the class and its super classes
     @Override
-    protected Node<NodeData> process(Node<NodeData> root, Class<?> element, BiConsumer<Object, Node<NodeData>> consumer){
+    protected Node<NodeData> process(@Nullable Node<NodeData> root, Class<?> element,
+                                     BiConsumer<Object, Node<NodeData>> consumer){
         Node<NodeData> classNode = null;
-        List<Node<NodeData>> superClassNodes = new LinkedList<>();
-        AtomicBoolean mainNodeCollected = new AtomicBoolean(false);
-
-        BiConsumer<Object, Node<NodeData>> collectSuperClassNodes = (e, node) -> {
-            if(node == null) {
-                return;
+        List<Class<?>> superClasses = new ArrayList<>();
+        List<Node<NodeData>> superClassNodes = new ArrayList<>();
+        BiConsumer<Object, Node<NodeData>> collectSuperClassNodes = (source, superClassNode) -> {
+            if(superClasses.contains(source)) {
+                superClassNodes.add(superClassNode);
             }
-            if(!mainNodeCollected.get()) {
-                mainNodeCollected.set(true);
-                return;
-            }
-            superClassNodes.add(node);
         };
-
         do{
 
             Node<NodeData> node = super.process(root, element, collectSuperClassNodes.andThen(consumer));
 
-            processMethods(root, element, consumer);
+            final boolean mainNode = classNode == null;
 
-            if(classNode == null) { // The first successfully processed node is the result
+            // If not main node, then it is a super class node, in which case we do not attach
+            // the super class node to the root by passing in null as its parent
+            // We will transfer all method nodes from each super class node to the main node
+            processMethods(mainNode ? root : null, element, consumer);
+
+            if(mainNode) { // The first successfully processed node is the base class
                 classNode = node;
+            }else{
+                superClasses.add(element);
             }
 
             element = element.getSuperclass();
@@ -65,7 +63,7 @@ public class ClassAnnotationProcessor extends AnnotationProcessorImpl<Class<?>>{
         return classNode;
     }
 
-    private void processMethods(Node<NodeData> root, Class<?> element, BiConsumer<Object, Node<NodeData>> consumer) {
+    private void processMethods(@Nullable Node<NodeData> root, Class<?> element, BiConsumer<Object, Node<NodeData>> consumer) {
         Method[] methods = element.getDeclaredMethods();
         methodAnnotationProcessor.process(root, Arrays.asList(methods), consumer);
     }
@@ -85,14 +83,11 @@ public class ClassAnnotationProcessor extends AnnotationProcessorImpl<Class<?>>{
 
                 // Transfer method nodes from the super class
                 superClassMethodNodes.forEach(node -> node.copyTo(classNode));
-
-                // Detach the transferred method nodes
-                superClassMethodNodes.forEach(Node::detach);
             }
         }
     }
 
-    protected Node<NodeData> getOrCreateParent(Node<NodeData> root, Class<?> element,
+    protected Node<NodeData> getOrCreateParent(@Nullable Node<NodeData> root, Class<?> element,
                                                RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         Node<NodeData> node = findOrCreateNodeForRateLimitGroupOrNull(root, root, element, rateLimitGroup, rateLimits);
         return node == null ? root : node;

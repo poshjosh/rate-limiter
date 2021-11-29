@@ -8,8 +8,6 @@ import java.util.function.BiConsumer;
 
 public interface AnnotationProcessor<S extends GenericDeclaration> {
 
-    Node<NodeData> process(List<S> elements);
-
     default void process(Node<NodeData> root, List<S> elements) {
         process(root, elements, (element, node) -> {});
     }
