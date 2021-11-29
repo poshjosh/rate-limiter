@@ -119,6 +119,8 @@ public interface Node<V> {
 
     Optional<Node<V>> findFirst(Node<V> offset, Predicate<Node<V>> nodeTest);
 
+    Node<V> getChild(int index);
+
     /**
      * @return An <b>un-modifiable</b> list view of this node's children
      */

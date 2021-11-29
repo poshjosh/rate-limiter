@@ -49,7 +49,7 @@ public class ClassAnnotationProcessor extends AnnotationProcessorImpl<Class<?>>{
         do{
 
             Node<NodeData> node = super.process(root, element, collectSuperClassNodes.andThen(consumer));
-
+            System.out.println(node);
             processMethods(root, element, consumer);
 
             if(classNode == null) { // The first successfully processed node is the result

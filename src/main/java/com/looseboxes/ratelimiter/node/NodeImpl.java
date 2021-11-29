@@ -16,8 +16,6 @@
 
 package com.looseboxes.ratelimiter.node;
 
-import com.looseboxes.ratelimiter.util.Experimental;
-
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.*;
@@ -124,9 +122,9 @@ public class NodeImpl<V> implements Node<V>, Serializable {
 
             final List<Node<V>> childNodes = offset.getChildren();
 
-            for(Node child : childNodes) {
+            for(Node<V> child : childNodes) {
 
-                final Optional<Node<V>> foundInChild = this.findFirst(child, nodeTest);
+                final Optional<Node<V>> foundInChild = findFirst(child, nodeTest);
 
                 if(foundInChild.isPresent()) {
 
@@ -162,6 +160,9 @@ public class NodeImpl<V> implements Node<V>, Serializable {
     public Node<V> getParentOrDefault(Node<V> outputIfNone) {
         return parent == null ? outputIfNone : parent;
     }
+
+    @Override
+    public Node<V> getChild(int index) { return children.get(index); }
 
     /**
      * @return An <b>un-modifiable</b> list view of this node's children
