@@ -10,9 +10,9 @@ public interface AnnotationProcessor<S extends GenericDeclaration> {
 
     Node<NodeData> process(List<S> elements);
 
-    default void process(Node<NodeData> parent, List<S> elements) {
-        process(parent, elements, (element, node) -> {});
+    default void process(Node<NodeData> root, List<S> elements) {
+        process(root, elements, (element, node) -> {});
     }
 
-    void process(Node<NodeData> parent, List<S> elements, BiConsumer<Object, Node<NodeData>> consumer);
+    void process(Node<NodeData> root, List<S> elements, BiConsumer<Object, Node<NodeData>> consumer);
 }

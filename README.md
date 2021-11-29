@@ -8,18 +8,12 @@ Limit how much a method is called, or a key is used within a given duration.
 
 ```java
 import com.looseboxes.ratelimiter.annotation.AnnotationProcessingException;
-import com.looseboxes.ratelimiter.annotation.ClassAnnotationProcessor;
 import com.looseboxes.ratelimiter.annotation.RateLimit;
-import com.looseboxes.ratelimiter.annotation.NodeData;
 import com.looseboxes.ratelimiter.util.RateConfig;
-import com.looseboxes.ratelimiter.util.RateLimitConfig;
 
-import java.util.Collections;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-// Limited to 3 invocations every 2 second OR 100 invocations every 1 minute
-@RateLimit(limit = 3, duration = 2000)
-@RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES)
 public class SampleUsage {
 
     public static void main(String... args) {
@@ -47,23 +41,41 @@ public class SampleUsage {
         //
         // Using Annotations - See the annotations at the class declaration above
         //
-        RateLimitConfig rateLimitConfig = new ClassAnnotationProcessor()
-                .process(Collections.singletonList(SampleUsage.class))
-                .getChild(0).getValueOptional()   // Only one class
-                .map(NodeData::getConfig)
+        final Class<?> targetClass = RateLimitedClass.class;
+        RateLimiter<Object> rateLimiterForClass = new RateLimiterBuilder()
+                .build(targetClass)
                 .orElseThrow(() -> new AnnotationProcessingException(
-                        "Failed to extract configuration from annotated class"));
+                        "Failed to build rate limiter for " + targetClass));
 
-        RateLimiter<Object> rateLimiterForClass = new DefaultRateLimiter<>(rateLimitConfig);
+        RateLimitedClass rateLimitedClass = new RateLimitedClass(rateLimiterForClass);
 
-        // Call this method as often as required to record usage
-        // Will throw an Exception, when the limit within the duration specified by the annotation, is exceeded.
-        for(int i=0; i<4; i++) {
-            // Will fail on the fourth invocation (i.e when i == 3)
-            rateLimiterForClass.record("sample-key");
+        for(int i = 0; i < (RateLimitedClass.LIMIT + 1); i++) {
+
+            rateLimitedClass.rateLimitedMethod();
+        }
+    }
+
+    static class RateLimitedClass{
+
+        static final int LIMIT = 3;
+
+        RateLimiter<Object> rateLimiter;
+        String rateLimitedMethodId;
+
+        RateLimitedClass(RateLimiter<Object> rateLimiter) {
+            this.rateLimiter = Objects.requireNonNull(rateLimiter);
+            this.rateLimitedMethodId = getClass().getName() + ".rateLimitedMethod";
+        }
+
+        // Limited to 3 invocations every 2 second OR 100 invocations every 1 minute
+        @RateLimit(limit = LIMIT, duration = 2000)
+        @RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES)
+        void rateLimitedMethod() {
+            rateLimiter.record(rateLimitedMethodId);
         }
     }
 }
+
 ```
 
 ### Build

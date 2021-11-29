@@ -32,8 +32,8 @@ public abstract class AnnotationProcessorImpl<S extends GenericDeclaration> impl
     }
 
     @Override
-    public void process(Node<NodeData> parent, List<S> elements, BiConsumer<Object, Node<NodeData>> consumer) {
-        elements.forEach(clazz -> process(parent, clazz, consumer));
+    public void process(Node<NodeData> root, List<S> elements, BiConsumer<Object, Node<NodeData>> consumer) {
+        elements.forEach(clazz -> process(root, clazz, consumer));
     }
 
     protected Node<NodeData> process(Node<NodeData> root, S element, BiConsumer<Object, Node<NodeData>> consumer){

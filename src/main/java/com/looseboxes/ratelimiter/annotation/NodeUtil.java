@@ -64,7 +64,7 @@ public final class NodeUtil {
         return createNode(name, nodeData, parent);
     }
 
-    private static Node<NodeData> createNode(String name, NodeData nodeData, Node<NodeData> parent) {
+    public static Node<NodeData> createNode(String name, NodeData nodeData, Node<NodeData> parent) {
         return new NodeImpl<>(name, nodeData, parent);
     }
 
