@@ -17,7 +17,9 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 // Limited to 3 invocations every 2 second OR 100 invocations every 1 minute
-@RateLimit(limit = 3, duration = 2, timeUnit = TimeUnit.SECONDS) @RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES) public class SampleUsage {
+@RateLimit(limit = 3, duration = 2, timeUnit = TimeUnit.SECONDS) 
+@RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES) 
+public class SampleUsage {
 
     public static void main(String... args) {
 
@@ -43,10 +45,11 @@ import java.util.concurrent.TimeUnit;
         //////////////////////////////////////////////////////////////////////////
 
         RateLimitConfig rateLimitConfig = new ClassAnnotationProcessor()
-                .process(Collections.singletonList(SampleUsage.class)).findFirstChild()
-                .flatMap(Node::getValueOptional).map(NodeData::getConfig).orElseThrow(
-                        () -> new RuntimeException(
-                                "Failed to extract configuration from annotated class"));
+                .process(Collections.singletonList(SampleUsage.class))
+                .findFirstChild()
+                .flatMap(Node::getValueOptional)
+                .map(NodeData::getConfig).orElseThrow(() -> 
+                        new RuntimeException("Failed to extract configuration from annotated class"));
 
         RateLimiter<Object> rateLimiterForClass = new DefaultRateLimiter<>(rateLimitConfig);
 
