@@ -1,6 +1,6 @@
 # Rate Limiter
 
-Light weight rate limiter library.
+Light-weight rate limiter library.
 
 Limit how much a method is called, or a key is used within a given duration.
 
@@ -39,30 +39,33 @@ public class SampleUsage {
         }
 
         //
-        // Using Annotations - See the annotations at the class declaration above
+        // Using Annotations - See the class with the rate limited method below
         //
-        final Class<?> targetClass = RateLimitedClass.class;
+        final Class<?> targetClass = RateLimitedResource.class;
         RateLimiter<Object> rateLimiterForClass = new RateLimiterBuilder()
                 .build(targetClass)
                 .orElseThrow(() -> new AnnotationProcessingException(
                         "Failed to build rate limiter for " + targetClass));
 
-        RateLimitedClass rateLimitedClass = new RateLimitedClass(rateLimiterForClass);
+        RateLimitedResource rateLimitedResource = new RateLimitedResource(rateLimiterForClass);
 
-        for(int i = 0; i < (RateLimitedClass.LIMIT + 1); i++) {
+        // This will make the last invocation of the method from within the for loop fail
+        final int exceedsLimitByOne = RateLimitedResource.LIMIT + 1;
 
-            rateLimitedClass.rateLimitedMethod();
+        for(int i = 0; i < exceedsLimitByOne; i++) {
+
+            rateLimitedResource.rateLimitedMethod();
         }
     }
 
-    static class RateLimitedClass{
+    static class RateLimitedResource {
 
         static final int LIMIT = 3;
 
-        RateLimiter<Object> rateLimiter;
-        String rateLimitedMethodId;
+        final RateLimiter<Object> rateLimiter;
+        final String rateLimitedMethodId;
 
-        RateLimitedClass(RateLimiter<Object> rateLimiter) {
+        RateLimitedResource(RateLimiter<Object> rateLimiter) {
             this.rateLimiter = Objects.requireNonNull(rateLimiter);
             this.rateLimitedMethodId = getClass().getName() + ".rateLimitedMethod";
         }
@@ -75,11 +78,26 @@ public class SampleUsage {
         }
     }
 }
-
 ```
 
+### Performance
+
+[See performance statistics](PERFORMANCE.md)
+
 ### Build
+
+__This is a maven based java project, so:__
+
+To package a jar file
+
+```sh
+mvn clean package
+```
+
+To install, thus making it referencable in other project's pom.xm
 
 ```sh
 mvn clean install
 ```
+
+Enjoy! :wink:

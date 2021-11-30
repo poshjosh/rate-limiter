@@ -27,7 +27,7 @@ public final class EmptyNode<V> implements Node<V>{
 
     @Override
     public Node<V> getChild(int index) {
-        throw new IndexOutOfBoundsException("Index: " + index + ", size: " + 0);
+        throw new IndexOutOfBoundsException("Index: " + index + ", size: 0");
     }
 
     @Override
