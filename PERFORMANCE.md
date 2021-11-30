@@ -4,7 +4,7 @@
 
 ### Summary
 
-Invocations/sec | 1k | 10k   | 100k  | 1000k  | 
+Invocations     | 1k | 10k   | 100k  | 1000k  | 
 ----------------|----|-------|-------|--------| 
 Time (millis)   | 3  | 9     | 25    | 150    |
 Memory (KB)     | 0  | 2,694 | 5,389 | 35,333 |
