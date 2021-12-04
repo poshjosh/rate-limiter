@@ -10,7 +10,7 @@ import com.looseboxes.ratelimiter.util.RateLimitConfig;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
+import java.util.function.BiFunction;
 
 public final class RateLimiterBuilder {
 
@@ -18,23 +18,27 @@ public final class RateLimiterBuilder {
     private Node<NodeData> rootNode;
     private AnnotationProcessor<Class<?>> annotationProcessor;
 
-    public RateLimiterBuilder() { }
-
-    public Optional<RateLimiter<Object>> build(Class<?> clazz) {
-        return build(Collections.singletonList(clazz)).stream().findFirst();
+    public Node<RateLimiter<Object>> build(Class<?> clazz) {
+        return build(Collections.singletonList(clazz));
     }
 
-    public List<RateLimiter<Object>> build(Class<?>... classes) {
+    public Node<RateLimiter<Object>> build(Class<?>... classes) {
         return build(Arrays.asList(classes));
     }
 
-    public List<RateLimiter<Object>> build(List<Class<?>> classes) {
-        return buildConfigs(classes).stream()
-                .map(DefaultRateLimiter::new)
-                .collect(Collectors.toList());
+    public Node<RateLimiter<Object>> build(List<Class<?>> classes) {
+
+        buildConfigs(classes);
+
+        BiFunction<String, NodeData, RateLimiter<Object>> valueConverter = (name, value) -> {
+            RateLimitConfig config = value.getConfig();
+            return config == null ? RateLimiter.noop() : new DefaultRateLimiter<>(config);
+        };
+
+        return rootNode.transform(null, (name, value) -> name, valueConverter);
     }
 
-    private List<RateLimitConfig> buildConfigs(List<Class<?>> classes) {
+    private void buildConfigs(List<Class<?>> classes) {
 
         requireBuildNotAttempted();
 
@@ -46,14 +50,7 @@ public final class RateLimiterBuilder {
             rootNodeName(randomUniqueId());
         }
 
-        List<Node<NodeData>> nodes = new ArrayList<>();
-        annotationProcessor.process(rootNode, classes, (source, node) -> nodes.add(node));
-        return nodes.stream()
-                .filter(Objects::nonNull)
-                .map(node -> node.getValueOrDefault(null))
-                .filter(Objects::nonNull)
-                .map(NodeData::getConfig)
-                .collect(Collectors.toList());
+        annotationProcessor.process(rootNode, classes);
     }
 
     private void requireBuildNotAttempted() {

@@ -1,5 +1,12 @@
 package com.looseboxes.ratelimiter.rates;
 
+/**
+ * Represents a rate.
+ *
+ * A rate is a ratio between 2 related quantities, each with their own unit of measurement.
+ * This interface represents a basic rate contract, which is only defines how it is compared
+ * to other rates (usually of the same kind), as well as how it is incremented.
+ */
 public interface Rate extends Comparable<Rate> {
 
     Rate NONE = new Rate() {

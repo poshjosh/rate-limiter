@@ -1,15 +1,13 @@
 package com.looseboxes.ratelimiter;
 
-public class RateExceededExceptionThrower implements RateRecordedListener {
+public class RateExceededExceptionThrower implements RateExceededListener {
 
     @Override
-    public void onRateRecorded(RateRecordedEvent rateRecordedEvent) {
-        if(rateRecordedEvent.isLimitExceeded()) {
-            throw new RateLimitExceededException(
-                    String.format("For: %s, rate: %s exceeds limit: %s",
-                    rateRecordedEvent.getKey(),
-                    rateRecordedEvent.getRate(),
-                    rateRecordedEvent.getExceededLimitOptional().orElse(null)));
-        }
+    public void onRateExceeded(RateExceededEvent rateExceededEvent) {
+        throw new RateLimitExceededException(
+                String.format("For: %s, rate: %s exceeds limit: %s",
+                        rateExceededEvent.getKey(),
+                        rateExceededEvent.getRate(),
+                        rateExceededEvent.getExceededLimit()));
     }
 }

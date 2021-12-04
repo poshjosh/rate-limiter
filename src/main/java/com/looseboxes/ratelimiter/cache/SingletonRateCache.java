@@ -54,6 +54,10 @@ public class SingletonRateCache<K> implements RateCache<K>{
         }
     }
 
+    @Override public <T> T unwrap(Class<T> clazz) {
+        throw new IllegalArgumentException();
+    }
+
     private boolean isMatchingKey(K key) {
         return this.key == null || this.key.equals(key);
     }

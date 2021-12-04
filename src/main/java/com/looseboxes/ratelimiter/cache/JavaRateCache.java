@@ -43,4 +43,12 @@ public class JavaRateCache<K> implements RateCache<K>{
             return delegate.remove(key);
         }
     }
+
+    @Override public <T> T unwrap(Class<T> clazz) {
+        if (clazz.isAssignableFrom(delegate.getClass())) {
+            return clazz.cast(delegate);
+        }
+        throw new IllegalArgumentException("Unwrapping to " + clazz + " is not " +
+                "supported by this implementation");
+    }
 }

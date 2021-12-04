@@ -3,9 +3,8 @@ package com.looseboxes.ratelimiter;
 import com.looseboxes.ratelimiter.rates.Rate;
 
 import java.util.Objects;
-import java.util.Optional;
 
-public final class RateRecordedEvent {
+public final class RateExceededEvent {
 
     /**
      * The source of the event
@@ -27,7 +26,7 @@ public final class RateRecordedEvent {
      */
     private final Rate exceededLimit;
 
-    public RateRecordedEvent(Object source, Object key, Rate rate, Rate exceededLimit) {
+    public RateExceededEvent(Object source, Object key, Rate rate, Rate exceededLimit) {
         this.source = Objects.requireNonNull(source);
         this.key = Objects.requireNonNull(key);
         this.rate = Objects.requireNonNull(rate);
@@ -46,11 +45,7 @@ public final class RateRecordedEvent {
         return rate;
     }
 
-    public boolean isLimitExceeded() {
-        return exceededLimit != null;
-    }
-
-    public Optional<Rate> getExceededLimitOptional() {
-        return Optional.ofNullable(exceededLimit);
+    public Rate getExceededLimit() {
+        return exceededLimit;
     }
 }

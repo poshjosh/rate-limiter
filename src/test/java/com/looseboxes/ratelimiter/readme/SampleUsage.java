@@ -1,12 +1,5 @@
-# Rate Limiter
+package com.looseboxes.ratelimiter.readme;
 
-Light-weight rate limiter library.
-
-Limit how much a method is called, or a key is used within a given duration.
-
-### Sample Usage
-
-```java
 import com.looseboxes.ratelimiter.RateLimiter;
 import com.looseboxes.ratelimiter.RateLimiterBuilder;
 import com.looseboxes.ratelimiter.annotation.RateLimit;
@@ -57,60 +50,3 @@ public class SampleUsage {
                 .getValueOptional().orElseThrow(RuntimeException::new); // Not expected
     }
 }
-```
-
-### Concept
-
-```java
-import com.looseboxes.ratelimiter.DefaultRateLimiter;
-import com.looseboxes.ratelimiter.RateLimitExceededException;
-import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.util.RateConfig;
-
-import java.util.concurrent.TimeUnit;
-
-public class Concept {
-
-    public static void main(String... args) {
-
-        // Only one recording is allowed within a minute (for each unique recording key)
-        RateConfig rateConfig = new RateConfig().limit(1).duration(1).timeUnit(TimeUnit.MINUTES);
-
-        RateLimiter<Integer> rateLimiter = new DefaultRateLimiter<>(rateConfig);
-
-        // We use numbers as recording keys
-        rateLimiter.record(1);
-        rateLimiter.record(2);
-        rateLimiter.record(3);
-
-        // This will fail, it is the second recording of the number 1
-        try {
-            rateLimiter.record(1);
-        }catch(RateLimitExceededException e) {
-            System.err.println(e);
-        }
-    }
-}
-```
-
-### Performance
-
-[See performance statistics](PERFORMANCE.md)
-
-### Build
-
-__This is a maven based java project, so:__
-
-To package a jar file
-
-```sh
-mvn clean package
-```
-
-To install, thus making it referencable in other project's pom.xm
-
-```sh
-mvn clean install
-```
-
-Enjoy! :wink:

@@ -39,4 +39,12 @@ public class InMemoryRateCache<K> implements RateCache<K>{
         Rate result = delegate.remove(key);
         return result != null;
     }
+
+    @Override public <T> T unwrap(Class<T> clazz) {
+        if (clazz.isAssignableFrom(delegate.getClass())) {
+            return clazz.cast(delegate);
+        }
+        throw new IllegalArgumentException("Unwrapping to " + clazz + " is not " +
+                "supported by this implementation");
+    }
 }

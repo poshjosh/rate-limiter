@@ -25,7 +25,7 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
 
     private final Rate [] limits;
 
-    private final RateRecordedListener rateRecordedListener;
+    private final RateExceededListener rateExceededListener;
 
     public DefaultRateLimiter(RateConfig rateConfig) {
         this(RateLimiter.noop(), rateConfig);
@@ -58,7 +58,7 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
         this.rateFactory = Objects.requireNonNull(rateLimiterConfiguration.getRateFactory());
         this.logic = Objects.requireNonNull(rateLimiterConfiguration.getRateLimitConfig().getLogic());
         this.limits = rateLimiterConfiguration.getRateLimitConfig().toRateList().toArray(new Rate[0]);
-        this.rateRecordedListener = Objects.requireNonNull(rateLimiterConfiguration.getRateRecordedListener());
+        this.rateExceededListener = Objects.requireNonNull(rateLimiterConfiguration.getRateRecordedListener());
     }
 
     @Override
@@ -110,7 +110,10 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
         }
 
         try {
-            rateRecordedListener.onRateRecorded(new RateRecordedEvent(this, key, result, firstExceededLimit));
+            if(firstExceededLimit != null) {
+                rateExceededListener
+                        .onRateExceeded(new RateExceededEvent(this, key, result, firstExceededLimit));
+            }
         }finally{
             parent.record(key);
         }
@@ -118,15 +121,15 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
         return result;
     }
 
-    private boolean isOr() {
+    protected boolean isOr() {
         return logic == Logic.OR;
     }
 
-    private boolean isAnd() {
+    protected boolean isAnd() {
         return logic == Logic.AND;
     }
 
-    private Rate getInitialRate() {
+    protected Rate getInitialRate() {
         return Objects.requireNonNull(rateFactory.createNew());
     }
 
@@ -140,6 +143,18 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
 
     public Rate[] getLimits() {
         return limits;
+    }
+
+    public RateCache<Object> getCache() {
+        return cache;
+    }
+
+    public RateFactory getRateFactory() {
+        return rateFactory;
+    }
+
+    public RateExceededListener getRateExceededListener() {
+        return rateExceededListener;
     }
 
     @Override

@@ -2,34 +2,34 @@ package com.looseboxes.ratelimiter;
 
 import java.util.Objects;
 
-public interface RateRecordedListener {
+public interface RateExceededListener {
 
-    RateRecordedListener NO_OP = rateRecordedEvent -> { };
+    RateExceededListener NO_OP = rateExceededEvent -> { };
 
     /**
      * Called when a rate is recorded
      *
-     * @param rateRecordedEvent The event
+     * @param rateExceededEvent The event
      */
-    void onRateRecorded(RateRecordedEvent rateRecordedEvent);
+    void onRateExceeded(RateExceededEvent rateExceededEvent);
 
     /**
-     * Returns a composed {@code RateRecordedListener} that performs, in sequence, this
+     * Returns a composed {@code RateExceededListener} that performs, in sequence, this
      * operation followed by the {@code after} operation. If performing either
      * operation throws an exception, it is relayed to the caller of the
      * composed operation.  If performing this operation throws an exception,
      * the {@code after} operation will not be performed.
      *
      * @param after the operation to perform after this operation
-     * @return a composed {@code RateRecordedListener} that performs in sequence this
+     * @return a composed {@code RateExceededListener} that performs in sequence this
      * operation followed by the {@code after} operation
      * @throws NullPointerException if {@code after} is null
      */
-    default RateRecordedListener andThen(RateRecordedListener after) {
+    default RateExceededListener andThen(RateExceededListener after) {
         Objects.requireNonNull(after);
-        return rateRecordedEvent -> {
-            RateRecordedListener.this.onRateRecorded(rateRecordedEvent);
-            after.onRateRecorded(rateRecordedEvent);
+        return rateExceededEvent -> {
+            RateExceededListener.this.onRateExceeded(rateExceededEvent);
+            after.onRateExceeded(rateExceededEvent);
         };
     }
 }
