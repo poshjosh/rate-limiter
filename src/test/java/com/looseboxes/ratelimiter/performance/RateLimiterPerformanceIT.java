@@ -41,11 +41,10 @@ public class RateLimiterPerformanceIT extends AbstractPerformanceTest{
 
     public RateLimiter<Integer> getRateLimiterWithSingletonCache(int limit, int duration) {
         RateConfig rateConfig = new RateConfig().limit(limit).duration(duration).timeUnit(TimeUnit.MILLISECONDS);
-        RateLimiterConfiguration rateLimiterConfiguration = new RateLimiterConfiguration<>()
+        RateLimiterConfiguration<Object> rateLimiterConfiguration = new RateLimiterConfiguration<>()
                 .rateCache(new SingletonRateCache<>(null))
                 .rateRecordedListener(new RateExceededExceptionThrower())
-                .rateFactory(new LimitWithinDurationFactory())
-                .rateLimitConfig(new RateLimitConfig().addLimit(rateConfig));
-        return new DefaultRateLimiter<Integer>(rateLimiterConfiguration);
+                .rateFactory(new LimitWithinDurationFactory());
+        return new DefaultRateLimiter<Integer>(rateLimiterConfiguration, new RateLimitConfig().addLimit(rateConfig));
     }
 }

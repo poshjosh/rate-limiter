@@ -1,24 +1,19 @@
 package com.looseboxes.ratelimiter;
 
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.util.RateLimitConfig;
 
 public class RateLimiterConfiguration<K> {
 
     private RateCache<K> rateCache;
     private RateFactory rateFactory;
     private RateExceededListener rateExceededListener;
-    private RateLimitConfig rateLimitConfig;
 
     public RateLimiterConfiguration() { }
 
     public RateLimiterConfiguration(RateLimiterConfiguration<K> rateLimiterConfiguration) {
-        // @TODO we are effectively sharing a this cache here
-        // It should be clear
         this.setRateCache(rateLimiterConfiguration.rateCache);
         this.setRateFactory(rateLimiterConfiguration.rateFactory);
         this.setRateRecordedListener(rateLimiterConfiguration.rateExceededListener);
-        this.setRateLimitConfig(rateLimiterConfiguration.rateLimitConfig == null ? null : new RateLimitConfig(rateLimiterConfiguration.rateLimitConfig));
     }
 
     public RateLimiterConfiguration<K> rateCache(RateCache<K> rateCache) {
@@ -59,18 +54,5 @@ public class RateLimiterConfiguration<K> {
 
     public void setRateRecordedListener(RateExceededListener rateExceededListener) {
         this.rateExceededListener = rateExceededListener;
-    }
-
-    public RateLimiterConfiguration<K> rateLimitConfig(RateLimitConfig rateLimitConfig) {
-        this.setRateLimitConfig(rateLimitConfig);
-        return this;
-    }
-
-    public RateLimitConfig getRateLimitConfig() {
-        return rateLimitConfig;
-    }
-
-    public void setRateLimitConfig(RateLimitConfig rateLimitConfig) {
-        this.rateLimitConfig = rateLimitConfig;
     }
 }
