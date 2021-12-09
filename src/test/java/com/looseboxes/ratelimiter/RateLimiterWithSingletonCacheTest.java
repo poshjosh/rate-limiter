@@ -13,6 +13,6 @@ public class RateLimiterWithSingletonCacheTest extends RateLimiterTest {
         return new DefaultRateLimiter<>(new RateLimiterConfiguration<>()
                 .rateCache(new SingletonRateCache<>(null))
                 .rateFactory(new LimitWithinDurationFactory())
-                .rateRecordedListener(new RateExceededExceptionThrower()), new RateLimitConfig().addLimits(limits));
+                .rateExceededListener(new RateExceededExceptionThrower()), new RateLimitConfig().addLimits(limits));
     }
 }

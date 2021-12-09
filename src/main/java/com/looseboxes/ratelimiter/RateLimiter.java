@@ -11,5 +11,5 @@ public interface RateLimiter<K> {
         return (RateLimiter<T>)NO_OP;
     }
 
-    Rate record(K key) throws RateLimitExceededException;
+    Rate record(K key);
 }

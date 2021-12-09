@@ -15,7 +15,7 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultRateLimiter.class);
 
-    private final RateCache<Object> cache;
+    private final RateCache<K> cache;
 
     private final RateFactory rateFactory;
 
@@ -30,22 +30,22 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
     }
 
     public DefaultRateLimiter(RateLimitConfig rateLimitConfig) {
-        this(new RateLimiterConfiguration<>()
+        this(new RateLimiterConfiguration<K>()
                 .rateCache(new InMemoryRateCache<>())
                 .rateFactory(new LimitWithinDurationFactory())
-                .rateRecordedListener(new RateExceededExceptionThrower()), rateLimitConfig);
+                .rateExceededListener(new RateExceededExceptionThrower()), rateLimitConfig);
     }
 
-    public DefaultRateLimiter(RateLimiterConfiguration<Object> rateLimiterConfiguration, RateLimitConfig rateLimitConfig) {
+    public DefaultRateLimiter(RateLimiterConfiguration<K> rateLimiterConfiguration, RateLimitConfig rateLimitConfig) {
         this.cache = Objects.requireNonNull(rateLimiterConfiguration.getRateCache());
         this.rateFactory = Objects.requireNonNull(rateLimiterConfiguration.getRateFactory());
-        this.rateExceededListener = Objects.requireNonNull(rateLimiterConfiguration.getRateRecordedListener());
+        this.rateExceededListener = Objects.requireNonNull(rateLimiterConfiguration.getRateExceededListener());
         this.logic = Objects.requireNonNull(rateLimitConfig.getLogic());
         this.limits = rateLimitConfig.toRateList().toArray(new Rate[0]);
     }
 
     @Override
-    public Rate record(K key) throws RateLimitExceededException {
+    public Rate record(K key) {
 
         Rate firstExceededLimit = null;
 
@@ -120,7 +120,7 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
         return limits;
     }
 
-    public RateCache<Object> getCache() {
+    public RateCache<K> getCache() {
         return cache;
     }
 

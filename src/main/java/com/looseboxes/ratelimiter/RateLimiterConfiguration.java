@@ -13,7 +13,7 @@ public class RateLimiterConfiguration<K> {
     public RateLimiterConfiguration(RateLimiterConfiguration<K> rateLimiterConfiguration) {
         this.setRateCache(rateLimiterConfiguration.rateCache);
         this.setRateFactory(rateLimiterConfiguration.rateFactory);
-        this.setRateRecordedListener(rateLimiterConfiguration.rateExceededListener);
+        this.setRateExceededListener(rateLimiterConfiguration.rateExceededListener);
     }
 
     public RateLimiterConfiguration<K> rateCache(RateCache<K> rateCache) {
@@ -42,17 +42,17 @@ public class RateLimiterConfiguration<K> {
         this.rateFactory = rateFactory;
     }
 
-    public RateLimiterConfiguration<K> rateRecordedListener(
+    public RateLimiterConfiguration<K> rateExceededListener(
             RateExceededListener rateExceededListener) {
-        this.setRateRecordedListener(rateExceededListener);
+        this.setRateExceededListener(rateExceededListener);
         return this;
     }
 
-    public RateExceededListener getRateRecordedListener() {
+    public RateExceededListener getRateExceededListener() {
         return rateExceededListener;
     }
 
-    public void setRateRecordedListener(RateExceededListener rateExceededListener) {
+    public void setRateExceededListener(RateExceededListener rateExceededListener) {
         this.rateExceededListener = rateExceededListener;
     }
 }
