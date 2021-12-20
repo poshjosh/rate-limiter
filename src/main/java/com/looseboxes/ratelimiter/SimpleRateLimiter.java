@@ -17,7 +17,7 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleRateLimiter.class);
 
-    private final RateCache<Object> cache;
+    private final RateCache<K> cache;
 
     private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
 
@@ -34,16 +34,16 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
     }
 
     public SimpleRateLimiter(RateLimitConfig rateLimitConfig) {
-        this(new RateLimiterConfiguration<>()
+        this(new RateLimiterConfiguration<K>()
                 .rateCache(new InMemoryRateCache<>())
                 .rateFactory(new LimitWithinDurationFactory())
-                .rateRecordedListener(new RateExceededExceptionThrower()), rateLimitConfig);
+                .rateExceededListener(new RateExceededExceptionThrower()), rateLimitConfig);
     }
 
-    public SimpleRateLimiter(RateLimiterConfiguration<Object> rateLimiterConfiguration, RateLimitConfig rateLimitConfig) {
+    public SimpleRateLimiter(RateLimiterConfiguration<K> rateLimiterConfiguration, RateLimitConfig rateLimitConfig) {
         this.cache = Objects.requireNonNull(rateLimiterConfiguration.getRateCache());
         this.rateFactory = Objects.requireNonNull(rateLimiterConfiguration.getRateFactory());
-        this.rateExceededListener = Objects.requireNonNull(rateLimiterConfiguration.getRateRecordedListener());
+        this.rateExceededListener = Objects.requireNonNull(rateLimiterConfiguration.getRateExceededListener());
         this.logic = Objects.requireNonNull(rateLimitConfig.getLogic());
         this.limits = rateLimitConfig.toRateList().toArray(new Rate[0]);
     }
@@ -144,7 +144,7 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
         return limits;
     }
 
-    public RateCache<Object> getCache() {
+    public RateCache<K> getCache() {
         return cache;
     }
 
