@@ -30,6 +30,11 @@ public class InMemoryRateCache<K> implements RateCache<K>{
     }
 
     @Override
+    public boolean putIfAbsent(K key, Rate value) {
+        return delegate.putIfAbsent(key, value) == null;
+    }
+
+    @Override
     public void put(K key, Rate value) {
         delegate.put(key, value);
     }

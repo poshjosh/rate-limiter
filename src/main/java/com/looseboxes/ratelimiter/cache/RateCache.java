@@ -10,6 +10,8 @@ public interface RateCache<K> {
 
     Rate get(K key);
 
+    boolean putIfAbsent(K key, Rate value);
+
     void put(K key, Rate value);
 
     boolean remove(K key);

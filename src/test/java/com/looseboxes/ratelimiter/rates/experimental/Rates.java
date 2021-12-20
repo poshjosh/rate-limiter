@@ -1,5 +1,7 @@
-package com.looseboxes.ratelimiter.rates;
+package com.looseboxes.ratelimiter.rates.experimental;
 
+import com.looseboxes.ratelimiter.rates.Logic;
+import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.util.Experimental;
 
 import java.util.Arrays;

@@ -5,9 +5,8 @@ public class RateExceededExceptionThrower implements RateExceededListener {
     @Override
     public void onRateExceeded(RateExceededEvent rateExceededEvent) {
         throw new RateLimitExceededException(
-                String.format("For: %s, rate: %s exceeds limit: %s",
+                String.format("For: %s, Limit exceeded: %s",
                         rateExceededEvent.getKey(),
-                        rateExceededEvent.getRate(),
                         rateExceededEvent.getExceededLimit()));
     }
 }

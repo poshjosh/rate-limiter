@@ -29,14 +29,14 @@ public class RateLimiterPerformanceIT extends AbstractPerformanceTest{
 
         final Integer key = Integer.valueOf(count);
         for(int i = 0; i < count; i++) {
-            rateLimiter.record(key);
+            rateLimiter.increment(key);
         }
         assertTimeSinceLastRecordIsLessThan(maxTime);
         assertMemorySinceLastRecordIsLessThan(maxMemory);
     }
 
     public RateLimiter<Integer> getRateLimiter(int limit, int duration) {
-        return new DefaultRateLimiter<>(new RateConfig().limit(limit).duration(duration).timeUnit(TimeUnit.MILLISECONDS));
+        return new SimpleRateLimiter<>(new RateConfig().limit(limit).duration(duration).timeUnit(TimeUnit.MILLISECONDS));
     }
 
     public RateLimiter<Integer> getRateLimiterWithSingletonCache(int limit, int duration) {
@@ -45,6 +45,6 @@ public class RateLimiterPerformanceIT extends AbstractPerformanceTest{
                 .rateCache(new SingletonRateCache<>(null))
                 .rateRecordedListener(new RateExceededExceptionThrower())
                 .rateFactory(new LimitWithinDurationFactory());
-        return new DefaultRateLimiter<Integer>(rateLimiterConfiguration, new RateLimitConfig().addLimit(rateConfig));
+        return new SimpleRateLimiter<Integer>(rateLimiterConfiguration, new RateLimitConfig().addLimit(rateConfig));
     }
 }

@@ -2,6 +2,7 @@ package com.looseboxes.ratelimiter.annotation;
 
 import com.looseboxes.ratelimiter.node.Node;
 import com.looseboxes.ratelimiter.util.Nullable;
+import com.looseboxes.ratelimiter.util.RateLimitConfig;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -27,19 +28,19 @@ public class ClassAnnotationProcessor extends AnnotationProcessorImpl<Class<?>>{
 
     // We override this here so we can process the class and its super classes
     @Override
-    protected Node<NodeData> process(@Nullable Node<NodeData> root, Class<?> element,
-                                     BiConsumer<Object, Node<NodeData>> consumer){
-        Node<NodeData> classNode = null;
+    protected Node<NodeValue<RateLimitConfig>> process(@Nullable Node<NodeValue<RateLimitConfig>> root, Class<?> element,
+                                                       BiConsumer<Object, Node<NodeValue<RateLimitConfig>>> consumer){
+        Node<NodeValue<RateLimitConfig>> classNode = null;
         List<Class<?>> superClasses = new ArrayList<>();
-        List<Node<NodeData>> superClassNodes = new ArrayList<>();
-        BiConsumer<Object, Node<NodeData>> collectSuperClassNodes = (source, superClassNode) -> {
+        List<Node<NodeValue<RateLimitConfig>>> superClassNodes = new ArrayList<>();
+        BiConsumer<Object, Node<NodeValue<RateLimitConfig>>> collectSuperClassNodes = (source, superClassNode) -> {
             if(superClasses.contains(source)) {
                 superClassNodes.add(superClassNode);
             }
         };
         do{
 
-            Node<NodeData> node = super.process(root, element, collectSuperClassNodes.andThen(consumer));
+            Node<NodeValue<RateLimitConfig>> node = super.process(root, element, collectSuperClassNodes.andThen(consumer));
 
             final boolean mainNode = classNode == null;
 
@@ -63,7 +64,7 @@ public class ClassAnnotationProcessor extends AnnotationProcessorImpl<Class<?>>{
         return classNode;
     }
 
-    private void processMethods(@Nullable Node<NodeData> root, Class<?> element, BiConsumer<Object, Node<NodeData>> consumer) {
+    private void processMethods(@Nullable Node<NodeValue<RateLimitConfig>> root, Class<?> element, BiConsumer<Object, Node<NodeValue<RateLimitConfig>>> consumer) {
         Method[] methods = element.getDeclaredMethods();
         methodAnnotationProcessor.process(root, Arrays.asList(methods), consumer);
     }
@@ -74,12 +75,12 @@ public class ClassAnnotationProcessor extends AnnotationProcessorImpl<Class<?>>{
      * @param classNode The receiving class
      * @param superClassNodes The giving class
      */
-    private void transferMethodNodesFromSuperClassNodes(Node<NodeData> classNode, List<Node<NodeData>> superClassNodes) {
+    private void transferMethodNodesFromSuperClassNodes(Node<NodeValue<RateLimitConfig>> classNode, List<Node<NodeValue<RateLimitConfig>>> superClassNodes) {
         if(classNode != null && !superClassNodes.isEmpty()) {
 
-            for(Node<NodeData> superClassNode : superClassNodes) {
+            for(Node<NodeValue<RateLimitConfig>> superClassNode : superClassNodes) {
 
-                List<Node<NodeData>> superClassMethodNodes = superClassNode.getChildren();
+                List<Node<NodeValue<RateLimitConfig>>> superClassMethodNodes = superClassNode.getChildren();
 
                 // Transfer method nodes from the super class
                 superClassMethodNodes.forEach(node -> node.copyTo(classNode));
@@ -87,9 +88,9 @@ public class ClassAnnotationProcessor extends AnnotationProcessorImpl<Class<?>>{
         }
     }
 
-    protected Node<NodeData> getOrCreateParent(@Nullable Node<NodeData> root, Class<?> element,
-                                               RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
-        Node<NodeData> node = findOrCreateNodeForRateLimitGroupOrNull(root, root, element, rateLimitGroup, rateLimits);
+    protected Node<NodeValue<RateLimitConfig>> getOrCreateParent(@Nullable Node<NodeValue<RateLimitConfig>> root, Class<?> element,
+                                                RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
+        Node<NodeValue<RateLimitConfig>> node = findOrCreateNodeForRateLimitGroupOrNull(root, root, element, rateLimitGroup, rateLimits);
         return node == null ? root : node;
     }
 }

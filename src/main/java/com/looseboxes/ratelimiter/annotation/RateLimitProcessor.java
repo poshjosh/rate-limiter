@@ -49,7 +49,7 @@ public class RateLimitProcessor extends AbstractProcessor {
         return false;
     }
 
-    public static String getErrorMessageIfInvalidLimit(int limit, String resultIfNone) {
+    public static String getErrorMessageIfInvalidLimit(long limit, String resultIfNone) {
         return limit < 0 ? "Invalid limit: " + limit : resultIfNone;
     }
 

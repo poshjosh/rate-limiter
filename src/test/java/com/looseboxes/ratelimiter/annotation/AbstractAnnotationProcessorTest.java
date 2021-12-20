@@ -2,6 +2,7 @@ package com.looseboxes.ratelimiter.annotation;
 
 import com.looseboxes.ratelimiter.node.Node;
 import com.looseboxes.ratelimiter.util.ClassesInPackageFinderImpl;
+import com.looseboxes.ratelimiter.util.RateLimitConfig;
 
 import java.lang.reflect.GenericDeclaration;
 import java.util.Arrays;
@@ -15,15 +16,15 @@ public abstract class AbstractAnnotationProcessorTest<S extends GenericDeclarati
         return new ClassesInPackageFinderImpl().findClasses(packageName, clazz -> true);
     }
 
-    void assertHasChildrenHavingNames(Node<NodeData> parent, S... classes) {
+    void assertHasChildrenHavingNames(Node<NodeValue<RateLimitConfig>> parent, S... classes) {
         assertHasChildrenHavingNames(parent, toNames(classes));
     }
 
-    void assertHasChildrenHavingNames(Node<NodeData> parent, String... names) {
+    void assertHasChildrenHavingNames(Node<NodeValue<RateLimitConfig>> parent, String... names) {
         parent.getChildren().stream().filter(node -> acceptNodeNames(node, names)).findFirst();
     }
 
-    boolean acceptNodeNames(Node<NodeData> node, S... classes) {
+    boolean acceptNodeNames(Node<NodeValue<RateLimitConfig>> node, S... classes) {
         return acceptNodeNames(node, toNames(classes));
     }
 
@@ -31,7 +32,7 @@ public abstract class AbstractAnnotationProcessorTest<S extends GenericDeclarati
         return Arrays.stream(classes).map(clazz -> getId(clazz)).collect(Collectors.toList()).toArray(new String[0]);
     }
 
-    boolean acceptNodeNames(Node<NodeData> node, String... names) {
+    boolean acceptNodeNames(Node<NodeValue<RateLimitConfig>> node, String... names) {
         for(String name : names) {
             if(name.equals(node.getName())) {
                 return true;

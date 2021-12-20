@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public final class LimitWithinDuration implements Rate, Serializable {
 
-    private final int limit;
+    private final long limit;
     private final long duration;
     private final long timeCreated;
 
@@ -15,11 +15,11 @@ public final class LimitWithinDuration implements Rate, Serializable {
         this(1);
     }
 
-    public LimitWithinDuration(int limit) {
+    public LimitWithinDuration(long limit) {
         this(limit, 0);
     }
 
-    public LimitWithinDuration(int limit, long duration) {
+    public LimitWithinDuration(long limit, long duration) {
         final String limitError = RateLimitProcessor.getErrorMessageIfInvalidLimit(limit, null);
         if(limitError != null) {
             throw new IllegalArgumentException(limitError);
@@ -35,12 +35,6 @@ public final class LimitWithinDuration implements Rate, Serializable {
 
     @Override
     public int compareTo(Rate other) {
-
-        if(other instanceof CompositeRate) {
-            CompositeRate compositeRate = (CompositeRate)other;
-            return - compositeRate.compareTo(this);
-        }
-
         LimitWithinDuration limitWithinDuration = (LimitWithinDuration) other;
         if(limit == limitWithinDuration.limit && duration == limitWithinDuration.duration) {
             return 0;
@@ -57,19 +51,19 @@ public final class LimitWithinDuration implements Rate, Serializable {
     }
 
     @Override
-    public Rate increment() {
-        return new LimitWithinDuration(incrementLimit(), incrementDuration());
+    public Rate increment(int amount) {
+        return new LimitWithinDuration(incrementLimit(amount), incrementDuration());
     }
 
-    private int incrementLimit() {
-        return limit + 1;
+    private long incrementLimit(int amount) {
+        return limit + amount;
     }
 
     private long incrementDuration() {
         return duration + (System.currentTimeMillis() - timeCreated);
     }
 
-    public int getLimit() {
+    public long getLimit() {
         return limit;
     }
 
@@ -82,7 +76,7 @@ public final class LimitWithinDuration implements Rate, Serializable {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o) {super.toString();
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LimitWithinDuration that = (LimitWithinDuration) o;
@@ -96,9 +90,6 @@ public final class LimitWithinDuration implements Rate, Serializable {
 
     @Override
     public String toString() {
-        return "LimitWithinDuration{" +
-                "limit=" + limit +
-                ", duration=" + duration +
-                '}';
+        return "LimitWithinDuration@" + Integer.toHexString(hashCode()) + "{limit=" + limit + ", duration=" + duration + '}';
     }
 }

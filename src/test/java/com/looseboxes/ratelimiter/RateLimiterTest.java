@@ -1,5 +1,6 @@
 package com.looseboxes.ratelimiter;
 
+import com.looseboxes.ratelimiter.cache.InMemoryRateCache;
 import com.looseboxes.ratelimiter.rates.LimitWithinDuration;
 import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.util.RateConfig;
@@ -17,50 +18,41 @@ public class RateLimiterTest {
 
     private final int durationMillis = 1_500;
 
-    private RateLimiter instance;
+    private RateLimiterConfiguration<Object> rateLimiterConfiguration;
+    private RateLimiter rateLimiter;
 
     @BeforeEach
     void setUp() {
-        instance = getRateLimiter(getDefaultLimits());
-    }
-
-    @Test
-    void firstRateShouldEqualBaseRate() {
-        final String key = getKey(0);
-        Rate result = instance.record(key);
-        assertEqualsBaseRate(result);
-    }
-
-    @Test
-    void firstRateShouldBeLessThanHigherRate() {
-        final String key = getKey(0);
-        instance.record(key);
-        assertThatThrownBy(() -> instance.record(key));
+        rateLimiterConfiguration = new RateLimiterConfiguration<>()
+                .rateCache(new InMemoryRateCache<>())
+                .rateFactory(new LimitWithinDurationFactory())
+                .rateRecordedListener(new RateExceededExceptionThrower());
+        rateLimiter = getRateLimiter(getDefaultLimits());
     }
 
     @Test
     void shouldResetWhenAtThreshold() throws Exception{
-        instance = getRateLimiter(getLimitsThatWillLeadToReset());
+        rateLimiter = getRateLimiter(getLimitsThatWillLeadToReset());
         final String key = getKey(0);
-        Rate result = instance.record(key);
+        incrementForResult(key);
 
         // Simulate some time before the next recording
         // This way we can have a reset
         Thread.sleep(durationMillis + 500);
 
-        result = instance.record(key);
-        assertEqualsBaseRate(result);
+        incrementForResult(key);
     }
 
     @Test
     void shouldFailWhenLimitExceeded() {
         final String key = getKey(0);
-        Rate result = instance.record(key);
-        assertThatThrownBy(() -> instance.record(key));
+        rateLimiter.increment(key);
+        assertThatThrownBy(() -> rateLimiter.increment(key));
     }
 
-    protected void assertEqualsBaseRate(Rate result) {
-        assertEquals(result, getBaseRate());
+    private Rate incrementForResult(String key) {
+        rateLimiter.increment(key);
+        return rateLimiterConfiguration.getRateCache().get(key);
     }
 
     protected void assertEquals(Rate result, RateConfig expected) {
@@ -70,7 +62,7 @@ public class RateLimiterTest {
     }
 
     public RateLimiter<Object> getRateLimiter(List<RateConfig> limits) {
-        return new DefaultRateLimiter<>(new RateLimitConfig().addLimits(limits));
+        return new SimpleRateLimiter<>(new RateLimitConfig().addLimits(limits));
     }
 
     protected String getKey(int index) {

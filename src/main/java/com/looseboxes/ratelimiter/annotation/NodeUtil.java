@@ -14,11 +14,11 @@ public final class NodeUtil {
 
     private NodeUtil(){}
 
-    public static boolean isPropertyNodeData(NodeData nodeData) {
-        return nodeData.getSource() == sourceForPropertyNodes;
+    public static boolean isPropertyNodeData(NodeValue nodeValue) {
+        return nodeValue.getSource() == sourceForPropertyNodes;
     }
 
-    public static void createNodes(Node<NodeData> parent, Map<String, RateLimitConfig> rateLimitConfigs) {
+    public static void createNodes(Node<NodeValue<RateLimitConfig>> parent, Map<String, RateLimitConfig> rateLimitConfigs) {
         Set<Map.Entry<String, RateLimitConfig>> entrySet = rateLimitConfigs.entrySet();
         for (Map.Entry<String, RateLimitConfig> entry : entrySet) {
             String name = entry.getKey();
@@ -29,23 +29,23 @@ public final class NodeUtil {
         }
     }
 
-    public static Node<NodeData> createGroupNode(Node<NodeData> parent, String name, RateLimitConfig rateLimitConfig) {
+    public static Node<NodeValue<RateLimitConfig>> createGroupNode(Node<NodeValue<RateLimitConfig>> parent, String name, RateLimitConfig rateLimitConfig) {
         return createNode(parent, name, sourceForGroupNodes, rateLimitConfig);
     }
 
-    public static Node<NodeData> createNode(
-            Node<NodeData> parent, String name,
+    public static Node<NodeValue<RateLimitConfig>> createNode(
+            Node<NodeValue<RateLimitConfig>> parent, String name,
             Object source, RateLimitConfig rateLimitConfig) {
-        NodeData nodeData = new NodeData(source, rateLimitConfig);
-        return createNode(name, nodeData, parent);
+        NodeValue nodeValue = new NodeValue(source, rateLimitConfig);
+        return createNode(name, nodeValue, parent);
     }
 
-    public static Node<NodeData> createNode(String name) {
+    public static Node<NodeValue<RateLimitConfig>> createNode(String name) {
         return createNode(name, null, null);
     }
 
-    public static Node<NodeData> createNode(String name, NodeData nodeData, Node<NodeData> parent) {
-        return new NodeImpl<>(name, nodeData, parent);
+    public static Node<NodeValue<RateLimitConfig>> createNode(String name, NodeValue nodeValue, Node<NodeValue<RateLimitConfig>> parent) {
+        return new NodeImpl<>(name, nodeValue, parent);
     }
 
     public static AnnotationProcessingException newExceptionForRequiredValue() {

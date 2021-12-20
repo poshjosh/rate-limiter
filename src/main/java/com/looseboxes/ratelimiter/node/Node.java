@@ -125,7 +125,7 @@ public interface Node<V> {
         return Optional.ofNullable(this.getValueOrDefault(null));
     }
     
-    V getValueOrDefault(V outpufIfNone);
+    V getValueOrDefault(V outputIfNone);
 
     default Optional<Node<V>> getParentOptional() {
         return Optional.ofNullable(this.getParentOrDefault(null));

@@ -31,6 +31,13 @@ public class JavaRateCache<K> implements RateCache<K>{
     }
 
     @Override
+    public boolean putIfAbsent(K key, Rate value) {
+        synchronized (delegate) {
+            return delegate.putIfAbsent(key, value);
+        }
+    }
+
+    @Override
     public void put(K key, Rate value) {
         synchronized (delegate) {
             delegate.put(key, value);

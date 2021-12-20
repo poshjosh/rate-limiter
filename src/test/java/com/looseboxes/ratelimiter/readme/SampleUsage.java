@@ -25,15 +25,15 @@ public class SampleUsage {
         @RateLimit(limit = LIMIT, duration = 2000)
         @RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES)
         void rateLimitedMethod() {
-            rateLimiter.record(rateLimitedMethodId);
+            rateLimiter.increment(rateLimitedMethodId);
         }
     }
 
     public static void main(String... args) {
 
-        RateLimiter<Object> rateLimiterForClass = buildRateLimiter(RateLimitedResource.class);
+        RateLimiter<Object> rateLimiter = buildRateLimiter(RateLimitedResource.class);
 
-        RateLimitedResource rateLimitedResource = new RateLimitedResource(rateLimiterForClass);
+        RateLimitedResource rateLimitedResource = new RateLimitedResource(rateLimiter);
 
         // This will make the last invocation of the method from within the for loop fail
         final int exceedsLimitByOne = RateLimitedResource.LIMIT + 1;

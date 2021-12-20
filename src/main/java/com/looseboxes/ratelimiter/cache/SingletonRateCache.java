@@ -35,6 +35,19 @@ public class SingletonRateCache<K> implements RateCache<K>{
     }
 
     @Override
+    public boolean putIfAbsent(K key, Rate value) {
+        if(isMatchingKey(key)) {
+            if(this.rate == null) {
+                this.rate = value;
+                return true;
+            }
+            return false;
+        }else{
+            throw invalidKey(key);
+        }
+    }
+
+    @Override
     public void put(K key, Rate value) {
         if(isMatchingKey(key)) {
             this.rate = value;

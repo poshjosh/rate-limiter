@@ -2,7 +2,7 @@ package com.looseboxes.ratelimiter;
 
 import com.looseboxes.ratelimiter.annotation.AnnotationProcessor;
 import com.looseboxes.ratelimiter.annotation.ClassAnnotationProcessor;
-import com.looseboxes.ratelimiter.annotation.NodeData;
+import com.looseboxes.ratelimiter.annotation.NodeValue;
 import com.looseboxes.ratelimiter.annotation.NodeUtil;
 import com.looseboxes.ratelimiter.node.Node;
 import com.looseboxes.ratelimiter.util.RateLimitConfig;
@@ -15,7 +15,7 @@ import java.util.function.BiFunction;
 public final class RateLimiterBuilder {
 
     private final AtomicBoolean buildAttempted = new AtomicBoolean();
-    private Node<NodeData> rootNode;
+    private Node<NodeValue<RateLimitConfig>> rootNode;
     private AnnotationProcessor<Class<?>> annotationProcessor;
 
     public Node<RateLimiter<Object>> build(Class<?> clazz) {
@@ -30,9 +30,9 @@ public final class RateLimiterBuilder {
 
         buildConfigs(classes);
 
-        BiFunction<String, NodeData, RateLimiter<Object>> valueConverter = (name, value) -> {
-            RateLimitConfig config = value.getConfig();
-            return config == null ? RateLimiter.noop() : new DefaultRateLimiter<>(config);
+        BiFunction<String, NodeValue<RateLimitConfig>, RateLimiter<Object>> valueConverter = (name, value) -> {
+            RateLimitConfig config = value.getValue();
+            return config == null ? RateLimiter.noop() : new SimpleRateLimiter<>(config);
         };
 
         return rootNode.transform(null, (name, value) -> name, valueConverter);
@@ -71,7 +71,7 @@ public final class RateLimiterBuilder {
         return rootNode(NodeUtil.createNode(name, null, null));
     }
 
-    public RateLimiterBuilder rootNode(Node<NodeData> rootNode) {
+    public RateLimiterBuilder rootNode(Node<NodeValue<RateLimitConfig>> rootNode) {
         this.rootNode = rootNode;
         return this;
     }

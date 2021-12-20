@@ -11,7 +11,7 @@ public interface Rate extends Comparable<Rate> {
 
     Rate NONE = new Rate() {
         @Override
-        public Rate increment() {
+        public Rate increment(int amount) {
             return this;
         }
         @Override
@@ -24,7 +24,11 @@ public interface Rate extends Comparable<Rate> {
         }
     };
 
-    Rate increment();
+    default Rate increment() {
+        return increment(1);
+    }
+
+    Rate increment(int amount);
 
     /**
      * Compare this to another.

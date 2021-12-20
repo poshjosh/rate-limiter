@@ -1,6 +1,7 @@
-package com.looseboxes.ratelimiter.rates;
+package com.looseboxes.ratelimiter.rates.experimental;
 
 
+import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.util.Experimental;
 
 /**
@@ -9,6 +10,6 @@ import com.looseboxes.ratelimiter.util.Experimental;
  * Any operation on this object will affect all the composite members.
  */
 @Experimental
-public interface CompositeRate extends Rate{
+public interface CompositeRate extends Rate {
     Rate[] getRates();
 }

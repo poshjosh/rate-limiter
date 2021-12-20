@@ -17,19 +17,13 @@ public final class RateExceededEvent {
     private final Object key;
 
     /**
-     * The rate recorded by this event
-     */
-    private final Rate rate;
-
-    /**
      * The rate (limit) which was exceeded
      */
     private final Rate exceededLimit;
 
-    public RateExceededEvent(Object source, Object key, Rate rate, Rate exceededLimit) {
+    public RateExceededEvent(Object source, Object key, Rate exceededLimit) {
         this.source = Objects.requireNonNull(source);
         this.key = Objects.requireNonNull(key);
-        this.rate = Objects.requireNonNull(rate);
         this.exceededLimit = exceededLimit;
     }
 
@@ -39,10 +33,6 @@ public final class RateExceededEvent {
 
     public Object getKey() {
         return key;
-    }
-
-    public Rate getRate() {
-        return rate;
     }
 
     public Rate getExceededLimit() {

@@ -41,8 +41,8 @@ public final class EmptyNode<V> implements Node<V>{
     }
 
     @Override
-    public V getValueOrDefault(V outpufIfNone) {
-        return outpufIfNone;
+    public V getValueOrDefault(V outputIfNone) {
+        return outputIfNone;
     }
 
     @Override
