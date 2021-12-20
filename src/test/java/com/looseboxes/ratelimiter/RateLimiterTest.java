@@ -26,7 +26,7 @@ public class RateLimiterTest {
         rateLimiterConfiguration = new RateLimiterConfiguration<>()
                 .rateCache(new InMemoryRateCache<>())
                 .rateFactory(new LimitWithinDurationFactory())
-                .rateRecordedListener(new RateExceededExceptionThrower());
+                .rateExceededListener(new RateExceededExceptionThrower());
         rateLimiter = getRateLimiter(getDefaultLimits());
     }
 
