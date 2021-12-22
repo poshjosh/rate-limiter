@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 public class RateConfig {
 
-    private int limit;
+    private long limit;
     private long duration;
     private TimeUnit timeUnit = TimeUnit.MILLISECONDS;
 
@@ -21,16 +21,16 @@ public class RateConfig {
         return new LimitWithinDuration(limit, timeUnit.toMillis(duration));
     }
 
-    public RateConfig limit(int limit) {
+    public RateConfig limit(long limit) {
         this.setLimit(limit);
         return this;
     }
 
-    public int getLimit() {
+    public long getLimit() {
         return limit;
     }
 
-    public void setLimit(int limit) {
+    public void setLimit(long limit) {
         this.limit = limit;
     }
 

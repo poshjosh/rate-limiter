@@ -1,18 +1,16 @@
 package com.looseboxes.ratelimiter.cache;
 
-import com.looseboxes.ratelimiter.rates.Rate;
-
 import java.util.function.BiConsumer;
 
-public interface RateCache<K> {
+public interface RateCache<K, V> {
 
-    void forEach(BiConsumer<K, Rate> consumer);
+    void forEach(BiConsumer<K, V> consumer);
 
-    Rate get(K key);
+    V get(K key);
 
-    boolean putIfAbsent(K key, Rate value);
+    boolean putIfAbsent(K key, V value);
 
-    void put(K key, Rate value);
+    void put(K key, V value);
 
     boolean remove(K key);
 

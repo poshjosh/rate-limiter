@@ -7,30 +7,31 @@ import com.looseboxes.ratelimiter.annotation.NodeUtil;
 import com.looseboxes.ratelimiter.node.Node;
 import com.looseboxes.ratelimiter.util.RateLimitConfig;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 
-public final class RateLimiterBuilder {
+public final class RateLimiterFromAnnotationsBuilder {
 
     private final AtomicBoolean buildAttempted = new AtomicBoolean();
     private Node<NodeValue<RateLimitConfig>> rootNode;
     private AnnotationProcessor<Class<?>> annotationProcessor;
 
-    public Node<RateLimiter<Object>> build(Class<?> clazz) {
+    public Node<RateLimiter<Serializable>> build(Class<?> clazz) {
         return build(Collections.singletonList(clazz));
     }
 
-    public Node<RateLimiter<Object>> build(Class<?>... classes) {
+    public Node<RateLimiter<Serializable>> build(Class<?>... classes) {
         return build(Arrays.asList(classes));
     }
 
-    public Node<RateLimiter<Object>> build(List<Class<?>> classes) {
+    public Node<RateLimiter<Serializable>> build(List<Class<?>> classes) {
 
         buildConfigs(classes);
 
-        BiFunction<String, NodeValue<RateLimitConfig>, RateLimiter<Object>> valueConverter = (name, value) -> {
+        BiFunction<String, NodeValue<RateLimitConfig>, RateLimiter<Serializable>> valueConverter = (name, value) -> {
             RateLimitConfig config = value.getValue();
             return config == null ? RateLimiter.noop() : new SimpleRateLimiter<>(config);
         };
@@ -67,16 +68,16 @@ public final class RateLimiterBuilder {
         return "root-" + Long.toHexString(System.currentTimeMillis()) + '-' + nonce.incrementAndGet();
     }
 
-    public RateLimiterBuilder rootNodeName(String name) {
+    public RateLimiterFromAnnotationsBuilder rootNodeName(String name) {
         return rootNode(NodeUtil.createNode(name, null, null));
     }
 
-    public RateLimiterBuilder rootNode(Node<NodeValue<RateLimitConfig>> rootNode) {
+    public RateLimiterFromAnnotationsBuilder rootNode(Node<NodeValue<RateLimitConfig>> rootNode) {
         this.rootNode = rootNode;
         return this;
     }
 
-    public RateLimiterBuilder annotationProcessor(AnnotationProcessor<Class<?>> annotationProcessor) {
+    public RateLimiterFromAnnotationsBuilder annotationProcessor(AnnotationProcessor<Class<?>> annotationProcessor) {
         this.annotationProcessor = annotationProcessor;
         return this;
     }

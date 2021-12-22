@@ -2,6 +2,7 @@ package com.looseboxes.ratelimiter.cache;
 
 import com.looseboxes.ratelimiter.rates.Rate;
 
+import java.io.Serializable;
 import java.util.function.BiConsumer;
 
 /**
@@ -10,23 +11,23 @@ import java.util.function.BiConsumer;
  * A {code null} key will match any/all keys.
  * @param <K> The type of the key which this Cache holds
  */
-public class SingletonRateCache<K> implements RateCache<K>{
+public class SingletonRateCache<K extends Serializable, V extends Serializable> implements RateCache<K, V>{
 
     private final K key;
 
-    private Rate rate;
+    private V rate;
 
     public SingletonRateCache(K key) {
         this.key = key;
     }
 
     @Override
-    public void forEach(BiConsumer<K, Rate> consumer) {
+    public void forEach(BiConsumer<K, V> consumer) {
         consumer.accept(key, rate);
     }
 
     @Override
-    public Rate get(K key) {
+    public V get(K key) {
         if(isMatchingKey(key)) {
             return rate;
         }else{
@@ -35,7 +36,7 @@ public class SingletonRateCache<K> implements RateCache<K>{
     }
 
     @Override
-    public boolean putIfAbsent(K key, Rate value) {
+    public boolean putIfAbsent(K key, V value) {
         if(isMatchingKey(key)) {
             if(this.rate == null) {
                 this.rate = value;
@@ -48,7 +49,7 @@ public class SingletonRateCache<K> implements RateCache<K>{
     }
 
     @Override
-    public void put(K key, Rate value) {
+    public void put(K key, V value) {
         if(isMatchingKey(key)) {
             this.rate = value;
         }else{
@@ -59,7 +60,7 @@ public class SingletonRateCache<K> implements RateCache<K>{
     @Override
     public boolean remove(K key) {
         if(isMatchingKey(key)) {
-            final Rate previous = this.rate;
+            final V previous = this.rate;
             this.rate = null;
             return previous != null;
         }else{

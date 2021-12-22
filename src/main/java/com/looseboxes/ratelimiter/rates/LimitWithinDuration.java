@@ -76,7 +76,7 @@ public final class LimitWithinDuration implements Rate, Serializable {
     }
 
     @Override
-    public boolean equals(Object o) {super.toString();
+    public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LimitWithinDuration that = (LimitWithinDuration) o;

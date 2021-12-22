@@ -3,7 +3,6 @@ package com.looseboxes.ratelimiter.performance;
 import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.cache.SingletonRateCache;
 import com.looseboxes.ratelimiter.util.RateConfig;
-import com.looseboxes.ratelimiter.util.RateLimitConfig;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.TimeUnit;
@@ -41,10 +40,6 @@ public class RateLimiterPerformanceIT extends AbstractPerformanceTest{
 
     public RateLimiter<Integer> getRateLimiterWithSingletonCache(int limit, int duration) {
         RateConfig rateConfig = new RateConfig().limit(limit).duration(duration).timeUnit(TimeUnit.MILLISECONDS);
-        RateLimiterConfiguration<Integer> rateLimiterConfiguration = new RateLimiterConfiguration<Integer>()
-                .rateCache(new SingletonRateCache<>(null))
-                .rateExceededListener(new RateExceededExceptionThrower())
-                .rateFactory(new LimitWithinDurationFactory());
-        return new SimpleRateLimiter<Integer>(rateLimiterConfiguration, new RateLimitConfig().addLimit(rateConfig));
+        return new SimpleRateLimiter<Integer>(rateConfig).withRateCache(new SingletonRateCache<>(null));
     }
 }

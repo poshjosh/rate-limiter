@@ -4,6 +4,7 @@ import com.looseboxes.ratelimiter.rates.Logic;
 import com.looseboxes.ratelimiter.rates.Rate;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,7 +33,7 @@ public class RateLimitConfig {
         }
     }
 
-    public RateLimitConfig addLimits(List<RateConfig> rateConfigs) {
+    public RateLimitConfig addLimits(Collection<RateConfig> rateConfigs) {
         rateConfigs.forEach(this::addLimit);
         return this;
     }

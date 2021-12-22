@@ -9,15 +9,16 @@ import com.looseboxes.ratelimiter.util.RateLimitConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class SimpleRateLimiter<K> implements RateLimiter<K> {
+public class SimpleRateLimiter<K extends Serializable> implements RateLimiter<K> {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleRateLimiter.class);
 
-    private final RateCache<K> cache;
+    private final RateCache<K, Serializable> rateCache;
 
     private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
 
@@ -33,19 +34,44 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
         this(new RateLimitConfig().addLimit(rateConfig));
     }
 
-    public SimpleRateLimiter(RateLimitConfig rateLimitConfig) {
-        this(new RateLimiterConfiguration<K>()
-                .rateCache(new InMemoryRateCache<>())
-                .rateFactory(new LimitWithinDurationFactory())
-                .rateExceededListener(new RateExceededExceptionThrower()), rateLimitConfig);
+    public SimpleRateLimiter(Collection<RateConfig> rateConfig) {
+        this(new RateLimitConfig().addLimits(rateConfig));
     }
 
-    public SimpleRateLimiter(RateLimiterConfiguration<K> rateLimiterConfiguration, RateLimitConfig rateLimitConfig) {
-        this.cache = Objects.requireNonNull(rateLimiterConfiguration.getRateCache());
-        this.rateFactory = Objects.requireNonNull(rateLimiterConfiguration.getRateFactory());
-        this.rateExceededListener = Objects.requireNonNull(rateLimiterConfiguration.getRateExceededListener());
-        this.logic = Objects.requireNonNull(rateLimitConfig.getLogic());
-        this.limits = rateLimitConfig.toRateList().toArray(new Rate[0]);
+    public SimpleRateLimiter(RateLimitConfig rateLimitConfig) {
+        this(new InMemoryRateCache<>(), new LimitWithinDurationFactory(),
+                new RateExceededExceptionThrower(), rateLimitConfig);
+    }
+
+    public SimpleRateLimiter(RateCache<K, ? extends Serializable> rateCache, RateFactory rateFactory,
+                             RateExceededListener rateExceededListener, RateLimitConfig rateLimitConfig) {
+        this(rateCache, rateFactory, rateExceededListener, rateLimitConfig.getLogic(), rateLimitConfig.toRateList().toArray(new Rate[0]));
+    }
+
+    public SimpleRateLimiter(RateCache<K, ? extends Serializable> rateCache, RateFactory rateFactory,
+                             RateExceededListener rateExceededListener, Logic logic, Rate [] limits) {
+        this.rateCache = (RateCache<K, Serializable>)Objects.requireNonNull(rateCache);
+        this.rateFactory = Objects.requireNonNull(rateFactory);
+        this.rateExceededListener = Objects.requireNonNull(rateExceededListener);
+        this.logic = Objects.requireNonNull(logic);
+        this.limits = new Rate[limits.length];
+        System.arraycopy(limits, 0, this.limits, 0, limits.length);
+    }
+
+    public SimpleRateLimiter<K> withRateCache(RateCache<K, ? extends Serializable> rateCache) {
+        return new SimpleRateLimiter<K>(rateCache, this.rateFactory, this.rateExceededListener, this.logic, this.limits);
+    }
+
+    public SimpleRateLimiter<K> withRateFactory(RateFactory rateFactory) {
+        return new SimpleRateLimiter<K>(this.rateCache, rateFactory, this.rateExceededListener, this.logic, this.limits);
+    }
+
+    public SimpleRateLimiter<K> withRateExceededListener(RateExceededListener rateExceededListener) {
+        return new SimpleRateLimiter<K>(this.rateCache, this.rateFactory, rateExceededListener, this.logic, this.limits);
+    }
+
+    public SimpleRateLimiter<K> withRateLimitConfig(RateLimitConfig rateLimitConfig) {
+        return new SimpleRateLimiter<K>(this.rateCache, this.rateFactory, rateExceededListener, rateLimitConfig);
     }
 
     @Override
@@ -55,7 +81,7 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
 
         final Rate existingRate = getRateFromCache(key);
 
-        final Rate next = existingRate == null ? getInitialRate() : existingRate.increment(amount);
+        final Rate next = existingRate == null ? newInitialRate() : existingRate.increment(amount);
 
         boolean reset = false;
 
@@ -85,12 +111,12 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
             }
         }
 
-        if(LOG.isInfoEnabled()) {
-            LOG.info("For: {}, limit exceeded: {}, rate: {}, limits: {}",
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("For: {}, limit exceeded: {}, rate: {}, limits: {}",
                     key, firstExceededLimit != null, next, Arrays.toString(limits));
         }
 
-        final Rate result = reset ? getInitialRate() : next;
+        final Rate result = reset ? newInitialRate() : next;
         if(existingRate != result) {
             final boolean putOnlyIfAbsent = existingRate == null;
             addRateToCache(key, result, putOnlyIfAbsent);
@@ -104,7 +130,7 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
     private Rate getRateFromCache(K key) {
         try{
             cacheLock.readLock().lock();
-            return cache.get(key);
+            return (Rate)rateCache.get(key);
         }finally {
             cacheLock.readLock().unlock();
         }
@@ -115,9 +141,9 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
             cacheLock.writeLock().lock();
             if (onlyIfAbsent) {
                 // This should mitigate different threads attempting to put a new rate, at the same time
-                cache.putIfAbsent(key, rate);
+                rateCache.putIfAbsent(key, rate);
             } else {
-                cache.put(key, rate);
+                rateCache.put(key, rate);
             }
         }finally {
             cacheLock.writeLock().unlock();
@@ -132,7 +158,7 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
         return logic == Logic.AND;
     }
 
-    protected Rate getInitialRate() {
+    protected Rate newInitialRate() {
         return Objects.requireNonNull(rateFactory.createNew());
     }
 
@@ -144,8 +170,8 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
         return limits;
     }
 
-    public RateCache<K> getCache() {
-        return cache;
+    public RateCache<K, ? extends Serializable> getRateCache() {
+        return rateCache;
     }
 
     public RateFactory getRateFactory() {

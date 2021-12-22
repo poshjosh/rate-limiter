@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface RateLimit {
 
-    int limit() default Integer.MAX_VALUE;
+    long limit() default Long.MAX_VALUE;
 
     long duration() default 0;
 

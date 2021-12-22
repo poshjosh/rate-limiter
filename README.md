@@ -8,7 +8,7 @@ Limit how much a method is called, or a key is used within a given duration.
 
 ```java
 import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.RateLimiterBuilder;
+import com.looseboxes.ratelimiter.RateLimiterFromAnnotationsBuilder;
 import com.looseboxes.ratelimiter.annotation.RateLimit;
 
 import java.util.Objects;
@@ -52,7 +52,7 @@ public class SampleUsage {
     }
 
     private static RateLimiter<Object> buildRateLimiter(Class<?> clazz) {
-        return new RateLimiterBuilder().build(clazz)
+        return new RateLimiterFromAnnotationsBuilder().build(clazz)
                 .getChild(0) // Only one endpoint is rate limited
                 .getValueOptional().orElseThrow(RuntimeException::new); // Not expected
     }

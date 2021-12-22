@@ -1,5 +1,7 @@
 package com.looseboxes.ratelimiter.rates;
 
+import java.io.Serializable;
+
 /**
  * Represents a rate.
  *
@@ -7,7 +9,7 @@ package com.looseboxes.ratelimiter.rates;
  * This interface represents a basic rate contract, which is only defines how it is compared
  * to other rates (usually of the same kind), as well as how it is incremented.
  */
-public interface Rate extends Comparable<Rate> {
+public interface Rate extends Comparable<Rate>, Serializable {
 
     Rate NONE = new Rate() {
         @Override

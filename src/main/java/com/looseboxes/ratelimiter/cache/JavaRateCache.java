@@ -1,44 +1,43 @@
 package com.looseboxes.ratelimiter.cache;
 
-import com.looseboxes.ratelimiter.rates.Rate;
-
 import javax.cache.Cache;
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-public class JavaRateCache<K> implements RateCache<K>{
+public class JavaRateCache<K extends Serializable, V extends Serializable> implements RateCache<K, V>{
 
-    private final Cache<K, Rate> delegate;
+    private final Cache<K, V> delegate;
 
-    public JavaRateCache(Cache<K, Rate> delegate) {
+    public JavaRateCache(Cache<K, V> delegate) {
         this.delegate = Objects.requireNonNull(delegate);
     }
 
     @Override
-    public void forEach(BiConsumer<K, Rate> consumer) {
+    public void forEach(BiConsumer<K, V> consumer) {
         synchronized (delegate) {
-            for (Cache.Entry<K, Rate> entry : delegate) {
+            for (Cache.Entry<K, V> entry : delegate) {
                 consumer.accept(entry.getKey(), entry.getValue());
             }
         }
     }
 
     @Override
-    public Rate get(K key) {
+    public V get(K key) {
         synchronized (delegate) {
             return delegate.get(key);
         }
     }
 
     @Override
-    public boolean putIfAbsent(K key, Rate value) {
+    public boolean putIfAbsent(K key, V value) {
         synchronized (delegate) {
             return delegate.putIfAbsent(key, value);
         }
     }
 
     @Override
-    public void put(K key, Rate value) {
+    public void put(K key, V value) {
         synchronized (delegate) {
             delegate.put(key, value);
         }
