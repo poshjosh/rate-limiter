@@ -1,6 +1,6 @@
 # Bucket4j Examples
 
-### Example to create a RateLimiter based on bucket4j-jcache.
+### To create a RateLimiter based on bucket4j-jcache.
 
 pom.xml
 
@@ -52,7 +52,7 @@ public class Bucket4jJCacheRateLimiterProvider<K extends Serializable>{
 }
 ```
 
-### Example to create a RateLimiter based on bucket4j-hazelcast.
+### To create a RateLimiter based on bucket4j-hazelcast.
 
 pom.xml
 
@@ -109,7 +109,7 @@ public class Bucket4jHazelcastRateLimiterProvider<K extends Serializable>{
 }
 ```
 
-### Example to create a RateLimiter based on bucket4j-ignite.
+### To create a RateLimiter based on bucket4j-ignite.
 
 ```xml
         <dependency>
@@ -169,6 +169,10 @@ public class Bucket4jIgniteRateLimiterProvider<K extends Serializable>{
 }
 ```
 
-### Example to create a RateLimiter based on bucket4j-infinispan.
+### To create a RateLimiter based on bucket4j-infinispan.
 
-### Example to create a RateLimiter based on bucket4j-coherence.
+TODO
+
+### To create a RateLimiter based on bucket4j-coherence.
+
+TODO
