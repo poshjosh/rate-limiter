@@ -1,21 +1,19 @@
 package com.looseboxes.ratelimiter.cache;
 
-import java.io.Serializable;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
-public class InMemoryRateCache<K extends Serializable, V extends Serializable> implements RateCache<K, V>{
+public class MapRateCache<K, V> implements RateCache<K, V>{
 
     private final Map<K, V> delegate;
 
-    public InMemoryRateCache() {
+    public MapRateCache() {
         this(new ConcurrentHashMap<>());
     }
 
-    public InMemoryRateCache(Map<K, V> delegate) {
-        this.delegate = Objects.requireNonNull(delegate);
+    public MapRateCache(Map<K, V> delegate) {
+        this.delegate = new ConcurrentHashMap<>(delegate);
     }
 
     @Override

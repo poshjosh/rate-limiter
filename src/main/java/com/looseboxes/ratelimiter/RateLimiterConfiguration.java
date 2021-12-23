@@ -1,21 +1,28 @@
 package com.looseboxes.ratelimiter;
 
+import com.looseboxes.ratelimiter.cache.MapRateCache;
 import com.looseboxes.ratelimiter.cache.RateCache;
 
-import java.io.Serializable;
+import java.util.Objects;
 
-public class RateLimiterConfiguration<K extends Serializable, V extends Serializable> {
+public class RateLimiterConfiguration<K, V> {
 
     private RateCache<K, V> rateCache;
     private RateFactory rateFactory;
     private RateExceededListener rateExceededListener;
 
-    public RateLimiterConfiguration() { }
+    public RateLimiterConfiguration() {
+        this(new MapRateCache<>(), new LimitWithinDurationFactory(), new RateExceededExceptionThrower());
+    }
 
     public RateLimiterConfiguration(RateLimiterConfiguration<K, V> rateLimiterConfiguration) {
-        this.setRateCache(rateLimiterConfiguration.rateCache);
-        this.setRateFactory(rateLimiterConfiguration.rateFactory);
-        this.setRateExceededListener(rateLimiterConfiguration.rateExceededListener);
+        this(rateLimiterConfiguration.rateCache, rateLimiterConfiguration.rateFactory, rateLimiterConfiguration.rateExceededListener);
+    }
+
+    public RateLimiterConfiguration(RateCache<K, V> rateCache, RateFactory rateFactory, RateExceededListener rateExceededListener) {
+        this.rateCache = Objects.requireNonNull(rateCache);
+        this.rateFactory = Objects.requireNonNull(rateFactory);
+        this.rateExceededListener = Objects.requireNonNull(rateExceededListener);
     }
 
     public RateLimiterConfiguration<K, V> rateCache(RateCache<K, V> rateCache) {

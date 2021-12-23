@@ -1,18 +1,14 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.cache.InMemoryRateCache;
-import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.rates.LimitWithinDuration;
 import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.util.RateConfig;
-import com.looseboxes.ratelimiter.util.RateLimitConfig;
+import com.looseboxes.ratelimiter.util.RateConfigList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -55,7 +51,7 @@ public class RateLimiterTest {
     }
 
     public RateLimiter<String> getRateLimiter(List<RateConfig> limits) {
-        return new SimpleRateLimiter<>(new RateLimitConfig().addLimits(limits));
+        return new SimpleRateLimiter<>(new RateConfigList().addLimits(limits));
     }
 
     protected String getKey(int index) {

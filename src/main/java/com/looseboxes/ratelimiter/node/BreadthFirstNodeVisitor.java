@@ -37,17 +37,19 @@ public class BreadthFirstNodeVisitor<T> implements Consumer<Node<T>>{
     
     private final int depth;
 
-    public BreadthFirstNodeVisitor(
-            Predicate<Node<T>> filter,
-            Consumer<Node<T>> consumer) {
-        
+    public BreadthFirstNodeVisitor(Consumer<Node<T>> consumer) {
+        this(node -> true, consumer);
+    }
+
+    public BreadthFirstNodeVisitor(Predicate<Node<T>> filter, Consumer<Node<T>> consumer) {
         this(filter, consumer, Integer.MAX_VALUE);
     }
-    
-    public BreadthFirstNodeVisitor(
-            Predicate<Node<T>> filter,
-            Consumer<Node<T>> consumer,
-            int depth) {
+
+    public BreadthFirstNodeVisitor(Consumer<Node<T>> consumer, int depth) {
+        this(node -> true, consumer, depth);
+    }
+
+    public BreadthFirstNodeVisitor(Predicate<Node<T>> filter, Consumer<Node<T>> consumer, int depth) {
         this.filter = Objects.requireNonNull(filter);
         this.consumer = Objects.requireNonNull(consumer);
         this.depth = depth;

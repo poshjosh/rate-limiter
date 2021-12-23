@@ -1,7 +1,7 @@
 package com.looseboxes.ratelimiter.readme;
 
+import com.looseboxes.ratelimiter.RateExceededException;
 import com.looseboxes.ratelimiter.SimpleRateLimiter;
-import com.looseboxes.ratelimiter.RateLimitExceededException;
 import com.looseboxes.ratelimiter.RateLimiter;
 import com.looseboxes.ratelimiter.util.RateConfig;
 
@@ -24,7 +24,7 @@ public class Concept {
         // This will fail, it is the second recording of the number 1
         try {
             rateLimiter.increment(1);
-        }catch(RateLimitExceededException e) {
+        }catch(RateExceededException e) {
             System.err.println(e);
         }
     }

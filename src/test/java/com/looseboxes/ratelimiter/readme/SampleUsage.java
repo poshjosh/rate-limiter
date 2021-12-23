@@ -1,7 +1,7 @@
 package com.looseboxes.ratelimiter.readme;
 
 import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.RateLimiterFromAnnotationsBuilder;
+import com.looseboxes.ratelimiter.builder.RateLimiterListBuilder;
 import com.looseboxes.ratelimiter.annotation.RateLimit;
 
 import java.util.Objects;
@@ -21,10 +21,12 @@ public class SampleUsage {
             this.rateLimitedMethodId = getClass().getName() + ".rateLimitedMethod";
         }
 
-        // Limited to 3 invocations every 2 second OR 100 invocations every 1 minute
+        // Limited to 3 invocations every 2 seconds OR 100 invocations every 1 minute
         @RateLimit(limit = LIMIT, duration = 2000)
         @RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES)
         void rateLimitedMethod() {
+
+            // VERY IMPORTANT to record usage
             rateLimiter.increment(rateLimitedMethodId);
         }
     }
@@ -45,8 +47,6 @@ public class SampleUsage {
     }
 
     private static RateLimiter<Object> buildRateLimiter(Class<?> clazz) {
-        return new RateLimiterFromAnnotationsBuilder().build(clazz)
-                .getChild(0) // Only one endpoint is rate limited
-                .getValueOptional().orElseThrow(RuntimeException::new); // Not expected
+        return new RateLimiterListBuilder<>().build(clazz).get(0); // Only one class/method is rate limited
     }
 }

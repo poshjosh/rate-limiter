@@ -1,11 +1,10 @@
 package com.looseboxes.ratelimiter.cache;
 
 import javax.cache.Cache;
-import java.io.Serializable;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-public class JavaRateCache<K extends Serializable, V extends Serializable> implements RateCache<K, V>{
+public class JavaRateCache<K, V> implements RateCache<K, V>{
 
     private final Cache<K, V> delegate;
 

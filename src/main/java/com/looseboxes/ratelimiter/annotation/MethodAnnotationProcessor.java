@@ -2,7 +2,7 @@ package com.looseboxes.ratelimiter.annotation;
 
 import com.looseboxes.ratelimiter.node.Node;
 import com.looseboxes.ratelimiter.util.Nullable;
-import com.looseboxes.ratelimiter.util.RateLimitConfig;
+import com.looseboxes.ratelimiter.util.RateConfigList;
 
 import java.lang.reflect.Method;
 import java.util.function.Predicate;
@@ -18,18 +18,18 @@ public class MethodAnnotationProcessor extends AnnotationProcessorImpl<Method>{
     }
 
     @Override
-    protected Node<NodeValue<RateLimitConfig>> getOrCreateParent(
-            @Nullable Node<NodeValue<RateLimitConfig>> root, Method method,
+    protected Node<NodeValue<RateConfigList>> getOrCreateParent(
+            @Nullable Node<NodeValue<RateConfigList>> root, Method method,
             RateLimitGroup rateLimitGroup, RateLimit[] rateLimits) {
 
-        Predicate<Node<NodeValue<RateLimitConfig>>> testForDeclaringClass = node -> {
+        Predicate<Node<NodeValue<RateConfigList>>> testForDeclaringClass = node -> {
             NodeValue nodeValue = node == null ? null : node.getValueOrDefault(null);
             return nodeValue != null && method.getDeclaringClass().equals(nodeValue.getSource());
         };
 
-        Node<NodeValue<RateLimitConfig>> nodeForDeclaringClass = root == null ? null : root.findFirstChild(testForDeclaringClass).orElse(null);
+        Node<NodeValue<RateConfigList>> nodeForDeclaringClass = root == null ? null : root.findFirstChild(testForDeclaringClass).orElse(null);
 
-        Node<NodeValue<RateLimitConfig>> nodeForRateLimitGroup = findOrCreateNodeForRateLimitGroupOrNull(
+        Node<NodeValue<RateConfigList>> nodeForRateLimitGroup = findOrCreateNodeForRateLimitGroupOrNull(
                 root, nodeForDeclaringClass, method, rateLimitGroup, rateLimits);
 
         return nodeForRateLimitGroup == null ? nodeForDeclaringClass : nodeForRateLimitGroup;

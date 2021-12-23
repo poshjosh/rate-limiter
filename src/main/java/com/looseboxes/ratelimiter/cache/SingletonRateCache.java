@@ -1,8 +1,5 @@
 package com.looseboxes.ratelimiter.cache;
 
-import com.looseboxes.ratelimiter.rates.Rate;
-
-import java.io.Serializable;
 import java.util.function.BiConsumer;
 
 /**
@@ -11,7 +8,7 @@ import java.util.function.BiConsumer;
  * A {code null} key will match any/all keys.
  * @param <K> The type of the key which this Cache holds
  */
-public class SingletonRateCache<K extends Serializable, V extends Serializable> implements RateCache<K, V>{
+public class SingletonRateCache<K, V> implements RateCache<K, V>{
 
     private final K key;
 

@@ -120,11 +120,15 @@ public interface Node<V> {
     List<Node<V>> getChildren();
 
     String getName();
-    
+
+    default boolean hasNodeValue() {
+        return getValueOrDefault(null) != null;
+    }
+
     default Optional<V> getValueOptional() {
         return Optional.ofNullable(this.getValueOrDefault(null));
     }
-    
+
     V getValueOrDefault(V outputIfNone);
 
     default Optional<Node<V>> getParentOptional() {

@@ -9,17 +9,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class RateLimitConfig {
+public class RateConfigList {
 
     private Logic logic = Logic.OR;
 
     private List<RateConfig> limits;
 
-    public RateLimitConfig() { }
+    public RateConfigList() { }
 
-    public RateLimitConfig(RateLimitConfig rateLimitConfig) {
-        this.logic = rateLimitConfig.logic;
-        this.limits = rateLimitConfig.limits == null ? null : rateLimitConfig.limits.stream()
+    public RateConfigList(RateConfigList rateConfigList) {
+        this.logic = rateConfigList.logic;
+        this.limits = rateConfigList.limits == null ? null : rateConfigList.limits.stream()
                 .map(RateConfig::new).collect(Collectors.toList());
     }
 
@@ -33,12 +33,12 @@ public class RateLimitConfig {
         }
     }
 
-    public RateLimitConfig addLimits(Collection<RateConfig> rateConfigs) {
+    public RateConfigList addLimits(Collection<RateConfig> rateConfigs) {
         rateConfigs.forEach(this::addLimit);
         return this;
     }
 
-    public RateLimitConfig addLimit(RateConfig rateConfig) {
+    public RateConfigList addLimit(RateConfig rateConfig) {
         if(limits == null) {
             limits = new ArrayList<>();
         }
@@ -46,7 +46,7 @@ public class RateLimitConfig {
         return this;
     }
 
-    public RateLimitConfig logic(Logic logic) {
+    public RateConfigList logic(Logic logic) {
         setLogic(logic);
         return this;
     }
@@ -59,7 +59,7 @@ public class RateLimitConfig {
         this.logic = logic;
     }
 
-    public RateLimitConfig limits(List<RateConfig> limits) {
+    public RateConfigList limits(List<RateConfig> limits) {
         setLimits(limits);
         return this;
     }
@@ -74,9 +74,6 @@ public class RateLimitConfig {
 
     @Override
     public String toString() {
-        return "RateLimitConfig{" +
-                "logic=" + logic +
-                ", limits=" + limits +
-                '}';
+        return "RateConfigList{" + "logic=" + logic + ", limits=" + limits + '}';
     }
 }

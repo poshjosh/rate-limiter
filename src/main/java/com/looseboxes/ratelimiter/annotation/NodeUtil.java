@@ -2,7 +2,7 @@ package com.looseboxes.ratelimiter.annotation;
 
 import com.looseboxes.ratelimiter.node.Node;
 import com.looseboxes.ratelimiter.node.NodeImpl;
-import com.looseboxes.ratelimiter.util.RateLimitConfig;
+import com.looseboxes.ratelimiter.util.RateConfigList;
 
 import java.util.*;
 
@@ -18,9 +18,9 @@ public final class NodeUtil {
         return nodeValue.getSource() == sourceForPropertyNodes;
     }
 
-    public static void createNodes(Node<NodeValue<RateLimitConfig>> parent, Map<String, RateLimitConfig> rateLimitConfigs) {
-        Set<Map.Entry<String, RateLimitConfig>> entrySet = rateLimitConfigs.entrySet();
-        for (Map.Entry<String, RateLimitConfig> entry : entrySet) {
+    public static void createNodes(Node<NodeValue<RateConfigList>> parent, Map<String, RateConfigList> rateLimitConfigs) {
+        Set<Map.Entry<String, RateConfigList>> entrySet = rateLimitConfigs.entrySet();
+        for (Map.Entry<String, RateConfigList> entry : entrySet) {
             String name = entry.getKey();
             if(name.equals(parent.getName())) {
                 throw new IllegalStateException("Parent and child nodes both have the same name: " + name);
@@ -29,22 +29,22 @@ public final class NodeUtil {
         }
     }
 
-    public static Node<NodeValue<RateLimitConfig>> createGroupNode(Node<NodeValue<RateLimitConfig>> parent, String name, RateLimitConfig rateLimitConfig) {
-        return createNode(parent, name, sourceForGroupNodes, rateLimitConfig);
+    public static Node<NodeValue<RateConfigList>> createGroupNode(Node<NodeValue<RateConfigList>> parent, String name, RateConfigList rateConfigList) {
+        return createNode(parent, name, sourceForGroupNodes, rateConfigList);
     }
 
-    public static Node<NodeValue<RateLimitConfig>> createNode(
-            Node<NodeValue<RateLimitConfig>> parent, String name,
-            Object source, RateLimitConfig rateLimitConfig) {
-        NodeValue nodeValue = new NodeValue(source, rateLimitConfig);
+    public static Node<NodeValue<RateConfigList>> createNode(
+            Node<NodeValue<RateConfigList>> parent, String name,
+            Object source, RateConfigList rateConfigList) {
+        NodeValue nodeValue = new NodeValue(source, rateConfigList);
         return createNode(name, nodeValue, parent);
     }
 
-    public static Node<NodeValue<RateLimitConfig>> createNode(String name) {
+    public static Node<NodeValue<RateConfigList>> createNode(String name) {
         return createNode(name, null, null);
     }
 
-    public static Node<NodeValue<RateLimitConfig>> createNode(String name, NodeValue nodeValue, Node<NodeValue<RateLimitConfig>> parent) {
+    public static Node<NodeValue<RateConfigList>> createNode(String name, NodeValue nodeValue, Node<NodeValue<RateConfigList>> parent) {
         return new NodeImpl<>(name, nodeValue, parent);
     }
 

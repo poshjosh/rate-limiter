@@ -4,7 +4,7 @@ import com.looseboxes.ratelimiter.node.formatters.NodeFormatters;
 import com.looseboxes.ratelimiter.rates.Logic;
 import com.looseboxes.ratelimiter.util.Nullable;
 import com.looseboxes.ratelimiter.util.RateConfig;
-import com.looseboxes.ratelimiter.util.RateLimitConfig;
+import com.looseboxes.ratelimiter.util.RateConfigList;
 import com.looseboxes.ratelimiter.node.*;
 
 import java.lang.reflect.GenericDeclaration;
@@ -22,27 +22,27 @@ public abstract class AnnotationProcessorImpl<S extends GenericDeclaration> impl
         this.idProvider = Objects.requireNonNull(idProvider);
     }
 
-    protected abstract Node<NodeValue<RateLimitConfig>> getOrCreateParent(
-            @Nullable Node<NodeValue<RateLimitConfig>> root, S element,
+    protected abstract Node<NodeValue<RateConfigList>> getOrCreateParent(
+            @Nullable Node<NodeValue<RateConfigList>> root, S element,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits);
 
     @Override
-    public void process(@Nullable Node<NodeValue<RateLimitConfig>> root, List<S> elements, BiConsumer<Object, Node<NodeValue<RateLimitConfig>>> consumer) {
+    public void process(@Nullable Node<NodeValue<RateConfigList>> root, List<S> elements, BiConsumer<Object, Node<NodeValue<RateConfigList>>> consumer) {
         elements.forEach(clazz -> process(root, clazz, consumer));
     }
 
-    protected Node<NodeValue<RateLimitConfig>> process(@Nullable Node<NodeValue<RateLimitConfig>> root, S element, BiConsumer<Object, Node<NodeValue<RateLimitConfig>>> consumer){
+    protected Node<NodeValue<RateConfigList>> process(@Nullable Node<NodeValue<RateConfigList>> root, S element, BiConsumer<Object, Node<NodeValue<RateConfigList>>> consumer){
 
         final RateLimit [] rateLimits = element.getAnnotationsByType(RateLimit.class);
 
-        final Node<NodeValue<RateLimitConfig>> node;
+        final Node<NodeValue<RateConfigList>> node;
 
         if(rateLimits.length > 0 ) {
 
             RateLimitGroup rateLimitGroup = element.getAnnotation(RateLimitGroup.class);
-            Node<NodeValue<RateLimitConfig>> created = getOrCreateParent(root, element, rateLimitGroup, rateLimits);
+            Node<NodeValue<RateConfigList>> created = getOrCreateParent(root, element, rateLimitGroup, rateLimits);
 
-            Node<NodeValue<RateLimitConfig>> parentNode = created == null ? root : created;
+            Node<NodeValue<RateConfigList>> parentNode = created == null ? root : created;
             String name = idProvider.getId(element);
             node = createNodeForElementOrNull(parentNode, name, element, rateLimitGroup, rateLimits);
 
@@ -58,11 +58,11 @@ public abstract class AnnotationProcessorImpl<S extends GenericDeclaration> impl
         return node;
     }
 
-    protected Node<NodeValue<RateLimitConfig>> findOrCreateNodeForRateLimitGroupOrNull(
-            @Nullable Node<NodeValue<RateLimitConfig>> root, Node<NodeValue<RateLimitConfig>> parent,
+    protected Node<NodeValue<RateConfigList>> findOrCreateNodeForRateLimitGroupOrNull(
+            @Nullable Node<NodeValue<RateConfigList>> root, Node<NodeValue<RateConfigList>> parent,
             GenericDeclaration annotatedElement, RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         String name = getName(rateLimitGroup);
-        final Node<NodeValue<RateLimitConfig>> node;
+        final Node<NodeValue<RateConfigList>> node;
         if(root == null || rateLimitGroup == null || name.isEmpty()) {
             node = null;
         }else{
@@ -87,32 +87,32 @@ public abstract class AnnotationProcessorImpl<S extends GenericDeclaration> impl
         return "";
     }
 
-    private Node<NodeValue<RateLimitConfig>> createNodeForGroupOrNull(
-            Node<NodeValue<RateLimitConfig>> parentNode, String name,
+    private Node<NodeValue<RateConfigList>> createNodeForGroupOrNull(
+            Node<NodeValue<RateConfigList>> parentNode, String name,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         if(rateLimits.length == 0) {
             return null;
         }else{
-            return NodeUtil.createGroupNode(parentNode, name, new RateLimitConfig());
+            return NodeUtil.createGroupNode(parentNode, name, new RateConfigList());
         }
     }
 
-    protected Node<NodeValue<RateLimitConfig>> createNodeForElementOrNull(
-            @Nullable Node<NodeValue<RateLimitConfig>> parentNode, String name, Object element,
+    protected Node<NodeValue<RateConfigList>> createNodeForElementOrNull(
+            @Nullable Node<NodeValue<RateConfigList>> parentNode, String name, Object element,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         if(rateLimits.length == 0) {
             return null;
         }else{
-            RateLimitConfig rateLimitConfig = toRateLimitConfig(rateLimitGroup, rateLimits);
-            return NodeUtil.createNode(parentNode, name, element, rateLimitConfig);
+            RateConfigList rateConfigList = toRateLimitConfig(rateLimitGroup, rateLimits);
+            return NodeUtil.createNode(parentNode, name, element, rateConfigList);
         }
     }
 
-    private Node<NodeValue<RateLimitConfig>> requireConsistentData(
-            Node<NodeValue<RateLimitConfig>> rateLimitGroupNode, GenericDeclaration annotatedElement,
+    private Node<NodeValue<RateConfigList>> requireConsistentData(
+            Node<NodeValue<RateConfigList>> rateLimitGroupNode, GenericDeclaration annotatedElement,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         if(rateLimitGroup != null && rateLimits.length != 0) {
-            RateLimitConfig current = toRateLimitConfig(rateLimitGroup, rateLimits);
+            RateConfigList current = toRateLimitConfig(rateLimitGroup, rateLimits);
             rateLimitGroupNode.getChildren().stream()
                     .map(childNode -> childNode.getValueOptional().orElseThrow(NodeUtil::newExceptionForRequiredValue))
                     .map(NodeValue::getValue)
@@ -129,13 +129,13 @@ public abstract class AnnotationProcessorImpl<S extends GenericDeclaration> impl
         }
     }
 
-    private RateLimitConfig toRateLimitConfig(RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
-        RateLimitConfig rateLimitConfig = new RateLimitConfig();
+    private RateConfigList toRateLimitConfig(RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
+        RateConfigList rateConfigList = new RateConfigList();
         for (RateLimit rateLimit : rateLimits) {
             RateConfig rateConfig = createRate(rateLimit);
-            rateLimitConfig.addLimit(rateConfig);
+            rateConfigList.addLimit(rateConfig);
         }
-        return rateLimitConfig.logic(rateLimitGroup == null ? Logic.OR : rateLimitGroup.logic());
+        return rateConfigList.logic(rateLimitGroup == null ? Logic.OR : rateLimitGroup.logic());
     }
 
     private RateConfig createRate(RateLimit rateLimit) {

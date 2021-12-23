@@ -4,9 +4,7 @@
 
 - Multi threaded tests
   
-- Implement RateLimiterProvider
-  
-- Implement rate-limiter-spring and rate-limiter-javaee with bucket4j as an optional dependency
+- Implement `ProxyManagerProvider` for other bucket4j extensions.
   
 - Test large amount of classes with @RateLimit annotation
 
