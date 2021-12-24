@@ -1,16 +1,28 @@
 # TODO
 
-- Add `TimeUnit` related tests for `@RateLimit`
-
-- Multi threaded tests
+- Do we need to have a rate with 2 quantities returned by methods e.g
+  `getLimit` and `getDuration` or do we stick to our current `Rate` interface.
   
-- Implement `ProxyManagerProvider` for other bucket4j extensions.
+- We want to be able to pass request (`HttpServletRequest`/`ContainerRequestContext`) to `RateRecordedListener`.
+  * We pass the request as the key argument to both `onRateExceeded` and `onRateRecorded`
+  * By having access to the request, the user has more flexibility to respond to rate recorded/exceed events.
+
+- Test Bucket4j rate limiters
+- Test usage with javax.cache.Cache and other grid implementations.
+
+- Test multiple limits being exceeded
   
-- Test large amount of classes with @RateLimit annotation
+- Test `TimeUnit` for `@RateLimit`.
 
-- Test the use of `Rates.Logic.AND` for `RateLimiterImpl`
+- Multi threaded tests.
+  
+- For README, implement `ProxyManagerProvider` for other bucket4j extensions.
+  
+- Test large amount of classes with @RateLimit annotation.
 
-- Use a supply for `RateCache` rather than directly use `RateCache`, 
+- Test the use of `Rates.Logic.AND` for `RateLimiterImpl`.
+
+- Find and treat all TODO
 
 
 
