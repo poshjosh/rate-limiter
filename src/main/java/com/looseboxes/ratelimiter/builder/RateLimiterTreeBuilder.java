@@ -19,11 +19,11 @@ public class RateLimiterTreeBuilder<K> implements
     private final AtomicBoolean buildAttempted = new AtomicBoolean();
     private AnnotationProcessor<Class<?>> annotationProcessor;
     private Node<NodeValue<RateConfigList>> rootNode;
-    private RateLimiterConfiguration<K, ?> rateLimiterConfiguration;
+    private RateLimiterConfig<K, ?> rateLimiterConfig;
     private RateLimiterFactory<K> rateLimiterFactory;
 
     public RateLimiterTreeBuilder() {
-        this.rateLimiterConfiguration = new RateLimiterConfiguration<>();
+        this.rateLimiterConfig = new RateLimiterConfig<>();
     }
 
     @Override public Node<RateLimiter<K>> build(Class<?> clazz) {
@@ -42,14 +42,14 @@ public class RateLimiterTreeBuilder<K> implements
     }
 
     private RateLimiter<K> createRateLimiter(RateConfigList rateConfigList) {
-        Objects.requireNonNull(rateLimiterConfiguration);
+        Objects.requireNonNull(rateLimiterConfig);
         if(rateConfigList == null) {
             return RateLimiter.noop();
         }
         if(rateLimiterFactory == null) {
             rateLimiterFactory = new DefaultRateLimiterFactory<>();
         }
-        return rateLimiterFactory.createRateLimiter(rateLimiterConfiguration, rateConfigList);
+        return rateLimiterFactory.createRateLimiter(rateLimiterConfig, rateConfigList);
     }
 
     private void buildConfigs(List<Class<?>> classes) {
@@ -84,17 +84,17 @@ public class RateLimiterTreeBuilder<K> implements
     }
 
     public RateLimiterTreeBuilder<K> rateCache(RateCache<K, ?> rateCache) {
-        this.rateLimiterConfiguration.rateCache((RateCache)rateCache);
+        this.rateLimiterConfig.rateCache((RateCache)rateCache);
         return this;
     }
 
     public RateLimiterTreeBuilder<K> rateFactory(RateFactory rateFactory) {
-        this.rateLimiterConfiguration.rateFactory(rateFactory);
+        this.rateLimiterConfig.rateFactory(rateFactory);
         return this;
     }
 
-    public RateLimiterTreeBuilder<K> rateExceededListener(RateExceededListener rateExceededListener) {
-        this.rateLimiterConfiguration.rateExceededListener(rateExceededListener);
+    public RateLimiterTreeBuilder<K> rateExceededListener(RateRecordedListener rateRecordedListener) {
+        this.rateLimiterConfig.rateExceededListener(rateRecordedListener);
         return this;
     }
 

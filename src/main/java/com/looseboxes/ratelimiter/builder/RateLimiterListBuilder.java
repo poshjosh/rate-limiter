@@ -1,6 +1,6 @@
 package com.looseboxes.ratelimiter.builder;
 
-import com.looseboxes.ratelimiter.RateExceededListener;
+import com.looseboxes.ratelimiter.RateRecordedListener;
 import com.looseboxes.ratelimiter.RateFactory;
 import com.looseboxes.ratelimiter.RateLimiter;
 import com.looseboxes.ratelimiter.RateLimiterFactory;
@@ -73,8 +73,8 @@ public class RateLimiterListBuilder<K> implements
         return this;
     }
 
-    public RateLimiterListBuilder<K> rateExceededListener(RateExceededListener rateExceededListener) {
-        this.rateLimiterTreeBuilder.rateExceededListener(rateExceededListener);
+    public RateLimiterListBuilder<K> rateExceededListener(RateRecordedListener rateRecordedListener) {
+        this.rateLimiterTreeBuilder.rateExceededListener(rateRecordedListener);
         return this;
     }
 
