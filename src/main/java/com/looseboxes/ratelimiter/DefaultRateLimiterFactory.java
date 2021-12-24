@@ -6,10 +6,10 @@ public class DefaultRateLimiterFactory<K> implements RateLimiterFactory<K> {
 
     @Override
     public RateLimiter<K> createRateLimiter(
-            RateLimiterConfiguration<K, ?> rateLimiterConfiguration, RateConfigList rateConfigList) {
+            RateLimiterConfig<K, ?> rateLimiterConfig, RateConfigList rateConfigList) {
         return new SimpleRateLimiter<>(
-                rateLimiterConfiguration.getRateCache(),
-                rateLimiterConfiguration.getRateFactory(),
-                rateLimiterConfiguration.getRateExceededListener(), rateConfigList);
+                rateLimiterConfig.getRateCache(),
+                rateLimiterConfig.getRateFactory(),
+                rateLimiterConfig.getRateExceededListener(), rateConfigList);
     }
 }
