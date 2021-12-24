@@ -2,7 +2,6 @@ package com.looseboxes.ratelimiter.cache;
 
 import javax.cache.Cache;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 
 public class JavaRateCache<K, V> implements RateCache<K, V>{
 
@@ -10,15 +9,6 @@ public class JavaRateCache<K, V> implements RateCache<K, V>{
 
     public JavaRateCache(Cache<K, V> delegate) {
         this.delegate = Objects.requireNonNull(delegate);
-    }
-
-    @Override
-    public void forEach(BiConsumer<K, V> consumer) {
-        synchronized (delegate) {
-            for (Cache.Entry<K, V> entry : delegate) {
-                consumer.accept(entry.getKey(), entry.getValue());
-            }
-        }
     }
 
     @Override
@@ -53,7 +43,6 @@ public class JavaRateCache<K, V> implements RateCache<K, V>{
         if (clazz.isAssignableFrom(delegate.getClass())) {
             return clazz.cast(delegate);
         }
-        throw new IllegalArgumentException("Unwrapping to " + clazz + " is not " +
-                "supported by this implementation");
+        throw new IllegalArgumentException("Unwrapping to " + clazz + " is not supported by this implementation");
     }
 }

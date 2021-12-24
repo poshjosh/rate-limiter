@@ -1,7 +1,5 @@
 package com.looseboxes.ratelimiter.cache;
 
-import java.util.function.BiConsumer;
-
 /**
  * A cache to hold a single entry
  *
@@ -16,11 +14,6 @@ public class SingletonRateCache<K, V> implements RateCache<K, V>{
 
     public SingletonRateCache(K key) {
         this.key = key;
-    }
-
-    @Override
-    public void forEach(BiConsumer<K, V> consumer) {
-        consumer.accept(key, rate);
     }
 
     @Override
@@ -66,7 +59,7 @@ public class SingletonRateCache<K, V> implements RateCache<K, V>{
     }
 
     @Override public <T> T unwrap(Class<T> clazz) {
-        throw new IllegalArgumentException();
+        throw new UnsupportedOperationException("Operation not supported");
     }
 
     private boolean isMatchingKey(K key) {

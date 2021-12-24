@@ -2,7 +2,6 @@ package com.looseboxes.ratelimiter.cache;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
 
 public class MapRateCache<K, V> implements RateCache<K, V>{
 
@@ -14,11 +13,6 @@ public class MapRateCache<K, V> implements RateCache<K, V>{
 
     public MapRateCache(Map<K, V> delegate) {
         this.delegate = new ConcurrentHashMap<>(delegate);
-    }
-
-    @Override
-    public void forEach(BiConsumer<K, V> consumer) {
-        delegate.forEach(consumer);
     }
 
     @Override
@@ -46,7 +40,6 @@ public class MapRateCache<K, V> implements RateCache<K, V>{
         if (clazz.isAssignableFrom(delegate.getClass())) {
             return clazz.cast(delegate);
         }
-        throw new IllegalArgumentException("Unwrapping to " + clazz + " is not " +
-                "supported by this implementation");
+        throw new IllegalArgumentException("Unwrapping to " + clazz + " is not supported by this implementation");
     }
 }
