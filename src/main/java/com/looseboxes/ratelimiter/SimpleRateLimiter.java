@@ -6,6 +6,7 @@ import com.looseboxes.ratelimiter.rates.Logic;
 import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.util.RateConfig;
 import com.looseboxes.ratelimiter.util.RateConfigList;
+import com.looseboxes.ratelimiter.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +28,7 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
 
     private final Rate [] limits;
 
-    private final RateExceededListener rateExceededListener;
+    private final RateRecordedListener rateRecordedListener;
 
     public SimpleRateLimiter(RateConfig rateConfig) {
         this(new RateConfigList().addLimit(rateConfig));
@@ -43,88 +44,95 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
     }
 
     public SimpleRateLimiter(RateCache<K, ?> rateCache, RateFactory rateFactory,
-                             RateExceededListener rateExceededListener, RateConfigList rateConfigList) {
-        this(rateCache, rateFactory, rateExceededListener, rateConfigList.getLogic(), rateConfigList
+                             RateRecordedListener rateRecordedListener, RateConfigList rateConfigList) {
+        this(rateCache, rateFactory, rateRecordedListener, rateConfigList.getLogic(), rateConfigList
                 .toRateList().toArray(new Rate[0]));
     }
 
     public SimpleRateLimiter(RateCache<K, ?> rateCache, RateFactory rateFactory,
-                             RateExceededListener rateExceededListener, Logic logic, Rate [] limits) {
+                             RateRecordedListener rateRecordedListener, Logic logic, Rate [] limits) {
         this.rateCache = (RateCache<K, Object>)Objects.requireNonNull(rateCache);
         this.rateFactory = Objects.requireNonNull(rateFactory);
-        this.rateExceededListener = Objects.requireNonNull(rateExceededListener);
+        this.rateRecordedListener = Objects.requireNonNull(rateRecordedListener);
         this.logic = Objects.requireNonNull(logic);
         this.limits = new Rate[limits.length];
         System.arraycopy(limits, 0, this.limits, 0, limits.length);
     }
 
     public SimpleRateLimiter<K> withRateCache(RateCache<K, ?> rateCache) {
-        return new SimpleRateLimiter<>(rateCache, this.rateFactory, this.rateExceededListener, this.logic, this.limits);
+        return new SimpleRateLimiter<>(rateCache, this.rateFactory, this.rateRecordedListener, this.logic, this.limits);
     }
 
     public SimpleRateLimiter<K> withRateFactory(RateFactory rateFactory) {
-        return new SimpleRateLimiter<>(this.rateCache, rateFactory, this.rateExceededListener, this.logic, this.limits);
+        return new SimpleRateLimiter<>(this.rateCache, rateFactory, this.rateRecordedListener, this.logic, this.limits);
     }
 
-    public SimpleRateLimiter<K> withRateExceededListener(RateExceededListener rateExceededListener) {
-        return new SimpleRateLimiter<>(this.rateCache, this.rateFactory, rateExceededListener, this.logic, this.limits);
+    public SimpleRateLimiter<K> withRateExceededListener(RateRecordedListener rateRecordedListener) {
+        return new SimpleRateLimiter<>(this.rateCache, this.rateFactory, rateRecordedListener, this.logic, this.limits);
     }
 
     public SimpleRateLimiter<K> withRateLimitConfig(RateConfigList rateConfigList) {
-        return new SimpleRateLimiter<>(this.rateCache, this.rateFactory, rateExceededListener,
+        return new SimpleRateLimiter<>(this.rateCache, this.rateFactory, rateRecordedListener,
                 rateConfigList);
     }
 
     @Override
-    public void increment(K key, int amount) {
-
-        Rate firstExceededLimit = null;
+    public boolean increment(K key, int amount) {
 
         final Rate existingRate = getRateFromCache(key);
 
         final Rate next = existingRate == null ? newInitialRate() : existingRate.increment(amount);
 
-        boolean reset = false;
+        int resetCount = 0;
+        int failCount = 0;
+        List<Rate> exceededLimits = null; // Initialize only when needed
 
-        if(limits.length > 0) {
-            int resetCount = 0;
-            for(Rate limit : limits) {
-                final int n = next.compareTo(limit);
-                if(n == 0) {
-                    ++resetCount;
-                }else if(n > 0) {
-                    if(firstExceededLimit == null) {
-                        firstExceededLimit = limit;
-                    }
-                    if(isOr()) {
-                        break;
-                    }
-                }else {
-                    if(isAnd()) {
-                        firstExceededLimit = null;
-                        break;
-                    }
+        for(Rate limit : limits) {
+
+            final int n = next.compareTo(limit);
+
+            if(n == 0) {
+
+                ++resetCount;
+
+            }else if(n > 0) {
+
+                ++failCount;
+
+                if(exceededLimits == null) {
+                    exceededLimits = new ArrayList<>(limits.length);
                 }
+                exceededLimits.add(limit);
             }
-            if((isAnd() && resetCount == limits.length) || (isOr() && resetCount > 0)) {
-                reset = true;
-            }
+        }
+
+        if(exceededLimits == null){
+            exceededLimits = Collections.emptyList();
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("For: {}, limit exceeded: {}, rate: {}, limits: {}",
-                    key, firstExceededLimit != null, next, Arrays.toString(limits));
+            LOG.debug("For: {}, limit exceeded: {}, rate: {}, exceeded limits: {}",
+                    key, !exceededLimits.isEmpty(), next, exceededLimits);
         }
 
-        final Rate result = reset ? newInitialRate() : next;
+        final Rate result = shouldReset(resetCount) ? newInitialRate() : next;
         if(existingRate != result) {
             final boolean putOnlyIfAbsent = existingRate == null;
             addRateToCache(key, result, putOnlyIfAbsent);
         }
 
-        if(firstExceededLimit != null) {
-            rateExceededListener.onRateExceeded(new RateExceededEvent(this, key, firstExceededLimit));
+        rateRecordedListener.onRateRecorded(this, key, amount, exceededLimits);
+
+        if(Util.isLimitExceeded(failCount, logic, limits)) {
+            rateRecordedListener.onRateExceeded(this, key, amount, exceededLimits);
+            return false;
+        }else{
+            return true;
         }
+    }
+
+    private boolean shouldReset(int resetCount) {
+        return Util.isLimitExceeded(resetCount, logic, limits);
     }
 
     private Rate getRateFromCache(K key) {
@@ -150,14 +158,6 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
         }
     }
 
-    protected boolean isOr() {
-        return logic == Logic.OR;
-    }
-
-    protected boolean isAnd() {
-        return logic == Logic.AND;
-    }
-
     protected Rate newInitialRate() {
         return Objects.requireNonNull(rateFactory.createNew());
     }
@@ -178,8 +178,8 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
         return rateFactory;
     }
 
-    public RateExceededListener getRateExceededListener() {
-        return rateExceededListener;
+    public RateRecordedListener getRateExceededListener() {
+        return rateRecordedListener;
     }
 
     @Override

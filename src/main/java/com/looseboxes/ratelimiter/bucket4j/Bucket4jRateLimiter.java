@@ -1,12 +1,12 @@
 package com.looseboxes.ratelimiter.bucket4j;
 
-import com.looseboxes.ratelimiter.RateExceededEvent;
-import com.looseboxes.ratelimiter.RateExceededListener;
+import com.looseboxes.ratelimiter.RateRecordedListener;
 import com.looseboxes.ratelimiter.RateLimiter;
 import com.looseboxes.ratelimiter.rates.Logic;
 import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.util.RateConfig;
 import com.looseboxes.ratelimiter.util.RateConfigList;
+import com.looseboxes.ratelimiter.util.Util;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bucket4j;
@@ -17,10 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Supplier;
 
 /**
@@ -36,17 +33,17 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
     private final Logic logic;
     private final Rate [] limits;
     private final Supplier<BucketConfiguration>[] configurationSuppliers;
-    private final RateExceededListener rateExceededListener;
+    private final RateRecordedListener rateRecordedListener;
 
-    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, RateExceededListener rateExceededListener, RateConfig rateConfig) {
-        this(proxyManager, rateExceededListener, new RateConfigList().addLimit(rateConfig));
+    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, RateRecordedListener rateRecordedListener, RateConfig rateConfig) {
+        this(proxyManager, rateRecordedListener, new RateConfigList().addLimit(rateConfig));
     }
 
-    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, RateExceededListener rateExceededListener, Collection<RateConfig> rateConfigs) {
-        this(proxyManager, rateExceededListener, new RateConfigList().addLimits(rateConfigs));
+    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, RateRecordedListener rateRecordedListener, Collection<RateConfig> rateConfigs) {
+        this(proxyManager, rateRecordedListener, new RateConfigList().addLimits(rateConfigs));
     }
 
-    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, RateExceededListener rateExceededListener, RateConfigList rateLimitConfig) {
+    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, RateRecordedListener rateRecordedListener, RateConfigList rateLimitConfig) {
         this.buckets = Objects.requireNonNull(proxyManager);
         this.logic = rateLimitConfig.getLogic();
         this.limits = rateLimitConfig.toRateList().toArray(new Rate[0]);
@@ -57,7 +54,7 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
             BucketConfiguration configuration = getSimpleBucketConfiguration(rateConfig);
             this.configurationSuppliers[i] = () -> configuration;
         }
-        this.rateExceededListener = Objects.requireNonNull(rateExceededListener);
+        this.rateRecordedListener = Objects.requireNonNull(rateRecordedListener);
     }
 
     private BucketConfiguration getSimpleBucketConfiguration(RateConfig rateConfig) {
@@ -71,35 +68,46 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
     }
 
     @Override
-    public void increment(K key, int amount) {
+    public boolean increment(K key, int amount) {
 
         int failCount = 0;
 
-        Rate firstExceededLimit = null;
+        List<Rate> exceededLimits = null; // Initialize only when needed
 
         for (int i = 0; i < configurationSuppliers.length; i++) {
 
             Bucket bucket = buckets.getProxy(key, configurationSuppliers[i]);
 
-            if(!bucket.tryConsume(1)) {
+            if(!bucket.tryConsume(amount)) {
 
-                if(firstExceededLimit == null) {
-                    firstExceededLimit = limits[i];
+                if(exceededLimits == null) {
+                    exceededLimits = new ArrayList<>(limits.length);
                 }
+                exceededLimits.add(limits[i]);
 
                 ++failCount;
             }
         }
 
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("For: {}, exceeded limit: {}, limits: {}",
-                    key, firstExceededLimit != null ? firstExceededLimit : false, Arrays.toString(limits));
+        if(exceededLimits == null){
+            exceededLimits = Collections.emptyList();
         }
 
-        if((Logic.OR.equals(logic) && failCount > 0) ||
-                (Logic.AND.equals(logic) && failCount == configurationSuppliers.length)) {
+        if(LOG.isDebugEnabled()) {
+            LOG.debug("For: {}, limit exceeded: {}, exceeded limits: {}", key, !exceededLimits.isEmpty(), exceededLimits);
+        }
 
-            rateExceededListener.onRateExceeded(new RateExceededEvent(this, key, firstExceededLimit));
+        rateRecordedListener.onRateRecorded(this, key, amount, exceededLimits);
+
+        if(Util.isLimitExceeded(failCount, logic, limits)) {
+
+            rateRecordedListener.onRateExceeded(this, key, amount, exceededLimits);
+
+            return false;
+
+        }else{
+
+            return true;
         }
     }
 }
