@@ -1,8 +1,8 @@
 package com.looseboxes.ratelimiter.bucket4j;
 
-import com.looseboxes.ratelimiter.RateExceededListener;
+import com.looseboxes.ratelimiter.RateRecordedListener;
 import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.RateLimiterConfiguration;
+import com.looseboxes.ratelimiter.RateLimiterConfig;
 import com.looseboxes.ratelimiter.RateLimiterFactory;
 import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.util.RateConfigList;
@@ -20,15 +20,15 @@ public class Bucket4jRateLimiterFactory<K extends Serializable> implements RateL
 
     @Override
     public RateLimiter<K> createRateLimiter(
-            RateLimiterConfiguration<K, ?> rateLimiterConfiguration,
+            RateLimiterConfig<K, ?> rateLimiterConfig,
             RateConfigList rateConfigList) {
 
-        RateCache<K, ?> rateCache = rateLimiterConfiguration.getRateCache();
+        RateCache<K, ?> rateCache = rateLimiterConfig.getRateCache();
 
         ProxyManager<K> proxyManager = proxyManagerProvider.getProxyManager(rateCache);
 
-        RateExceededListener rateExceededListener = rateLimiterConfiguration.getRateExceededListener();
+        RateRecordedListener rateRecordedListener = rateLimiterConfig.getRateExceededListener();
 
-        return new Bucket4jRateLimiter<>(proxyManager, rateExceededListener, rateConfigList);
+        return new Bucket4jRateLimiter<>(proxyManager, rateRecordedListener, rateConfigList);
     }
 }

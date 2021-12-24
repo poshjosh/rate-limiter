@@ -5,8 +5,8 @@ import com.looseboxes.ratelimiter.util.RateConfigList;
 public interface RateLimiterFactory<K> {
 
     default RateLimiter<K> createRateLimiter(RateConfigList rateConfigList) {
-        return createRateLimiter(new RateLimiterConfiguration<>(), rateConfigList);
+        return createRateLimiter(new RateLimiterConfig<>(), rateConfigList);
     }
 
-    RateLimiter<K> createRateLimiter(RateLimiterConfiguration<K, ?> rateLimiterConfiguration, RateConfigList rateConfigList);
+    RateLimiter<K> createRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, RateConfigList rateConfigList);
 }
