@@ -12,13 +12,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-public abstract class AnnotationProcessorImpl<S extends GenericDeclaration> implements AnnotationProcessor<S> {
+public abstract class AbstractAnnotationProcessor<S extends GenericDeclaration> implements AnnotationProcessor<S> {
 
-    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(AnnotationProcessorImpl.class);
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(AbstractAnnotationProcessor.class);
 
     private final IdProvider<S, String> idProvider;
 
-    public AnnotationProcessorImpl(IdProvider<S, String> idProvider) {
+    public AbstractAnnotationProcessor(IdProvider<S, String> idProvider) {
         this.idProvider = Objects.requireNonNull(idProvider);
     }
 

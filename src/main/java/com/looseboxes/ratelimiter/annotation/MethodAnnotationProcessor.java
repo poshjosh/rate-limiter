@@ -7,7 +7,7 @@ import com.looseboxes.ratelimiter.util.RateConfigList;
 import java.lang.reflect.Method;
 import java.util.function.Predicate;
 
-public class MethodAnnotationProcessor extends AnnotationProcessorImpl<Method>{
+public class MethodAnnotationProcessor extends AbstractAnnotationProcessor<Method> {
 
     public MethodAnnotationProcessor() {
         this(new MethodNameProvider());

@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-public class ClassAnnotationProcessor extends AnnotationProcessorImpl<Class<?>>{
+public class ClassAnnotationProcessor extends AbstractAnnotationProcessor<Class<?>> {
 
     private final AnnotationProcessor<Method> methodAnnotationProcessor;
 
@@ -88,6 +88,7 @@ public class ClassAnnotationProcessor extends AnnotationProcessorImpl<Class<?>>{
         }
     }
 
+    @Override
     protected Node<NodeValue<RateConfigList>> getOrCreateParent(@Nullable Node<NodeValue<RateConfigList>> root, Class<?> element,
                                                 RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         Node<NodeValue<RateConfigList>> node = findOrCreateNodeForRateLimitGroupOrNull(root, root, element, rateLimitGroup, rateLimits);

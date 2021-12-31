@@ -26,12 +26,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
-            <version>${bucket4j.version}</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.29</version>
@@ -41,13 +35,19 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.2.6</version>
-            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>${bucket4j.version}</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>javax.cache</groupId>
             <artifactId>cache-api</artifactId>
             <version>1.1.1</version>
-            <scope>compile</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>

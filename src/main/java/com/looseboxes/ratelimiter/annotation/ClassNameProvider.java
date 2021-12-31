@@ -1,7 +1,7 @@
 package com.looseboxes.ratelimiter.annotation;
 
-public final class ClassNameProvider implements IdProvider<Class<?>, String>{
-    @Override public String getId(Class<?> aClass) {
+public final class ClassNameProvider<E> implements IdProvider<Class<E>, String>{
+    @Override public String getId(Class<E> aClass) {
         return aClass.getName();
     }
 }
