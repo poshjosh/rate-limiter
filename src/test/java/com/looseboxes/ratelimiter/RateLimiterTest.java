@@ -7,6 +7,7 @@ import com.looseboxes.ratelimiter.util.RateConfigList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
@@ -47,7 +48,7 @@ public class RateLimiterTest {
     protected void assertEquals(Rate result, RateConfig expected) {
         LimitWithinDuration rate = (LimitWithinDuration)result;
         assertThat(rate.getLimit()).isEqualTo(expected.getLimit());
-        assertThat(rate.getDuration()).isEqualTo(expected.getTimeUnit().toMillis(expected.getDuration()));
+        assertThat(rate.getDuration()).isEqualTo(expected.getDuration().toMillis());
     }
 
     public RateLimiter<String> getRateLimiter(List<RateConfig> limits) {
@@ -65,7 +66,7 @@ public class RateLimiterTest {
     }
 
     protected RateConfig getDefaultLimit() {
-        return new RateConfig().limit(1).duration(durationMillis);
+        return new RateConfig().limit(1).duration(Duration.ofMillis(durationMillis));
     }
 
     protected List<RateConfig> getLimitsThatWillLeadToReset() {
@@ -73,6 +74,6 @@ public class RateLimiterTest {
     }
 
     private RateConfig getBaseRate() {
-        return new RateConfig().limit(1).duration(0);
+        return new RateConfig().limit(1).duration(Duration.ZERO);
     }
 }

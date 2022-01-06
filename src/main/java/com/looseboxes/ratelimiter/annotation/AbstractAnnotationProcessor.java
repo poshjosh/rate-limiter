@@ -8,8 +8,10 @@ import com.looseboxes.ratelimiter.util.RateConfigList;
 import com.looseboxes.ratelimiter.node.*;
 
 import java.lang.reflect.GenericDeclaration;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
 public abstract class AbstractAnnotationProcessor<S extends GenericDeclaration> implements AnnotationProcessor<S> {
@@ -141,8 +143,11 @@ public abstract class AbstractAnnotationProcessor<S extends GenericDeclaration> 
     private RateConfig createRate(RateLimit rateLimit) {
         RateConfig rateConfig = new RateConfig();
         rateConfig.setLimit(rateLimit.limit());
-        rateConfig.setDuration(rateLimit.duration());
-        rateConfig.setTimeUnit(rateLimit.timeUnit());
+        rateConfig.setDuration(toDuration(rateLimit.duration(), rateLimit.timeUnit()));
         return rateConfig;
+    }
+
+    private Duration toDuration(long duration, TimeUnit timeUnit) {
+        return Duration.ofNanos(timeUnit.toNanos(duration));
     }
 }

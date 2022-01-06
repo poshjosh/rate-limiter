@@ -17,6 +17,7 @@ import io.github.bucket4j.grid.jcache.JCache;
 
 import javax.cache.Cache;
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.List;
 
 public class Bucket4jJCacheRateLimiterProvider<K extends Serializable>{
@@ -37,7 +38,7 @@ public class Bucket4jJCacheRateLimiterProvider<K extends Serializable>{
         ProxyManager<K> proxyManager = Bucket4j.extension(JCache.class).proxyManagerForCache(cache);
 
         // Limited to one invocation every second
-        RateConfigList limits = new RateConfigList().addLimit(new RateConfig().limit(1).duration(1000));
+        RateConfigList limits = new RateConfigList().addLimit(new RateConfig().limit(1).duration(Duration.ofSeconds(1)));
 
         return new Bucket4jRateLimiter<>(proxyManager, new RateExceededExceptionThrower(), limits);
     }

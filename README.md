@@ -193,7 +193,7 @@ public class Concept {
   public static void main(String... args) {
 
     // Only one recording is allowed within a minute (for each unique recording key)
-    RateConfig rateConfig = new RateConfig().limit(1).duration(1).timeUnit(TimeUnit.MINUTES);
+    RateConfig rateConfig = new RateConfig().limit(1).duration(Duration.ofMinutes(1));
 
     RateLimiter<Integer> rateLimiter = new SimpleRateLimiter<>(rateConfig);
 

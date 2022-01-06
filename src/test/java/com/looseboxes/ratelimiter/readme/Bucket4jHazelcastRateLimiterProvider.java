@@ -16,6 +16,7 @@ import io.github.bucket4j.grid.ProxyManager;
 import io.github.bucket4j.grid.hazelcast.Hazelcast;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.List;
 
 public class Bucket4jHazelcastRateLimiterProvider<K extends Serializable>{
@@ -36,7 +37,7 @@ public class Bucket4jHazelcastRateLimiterProvider<K extends Serializable>{
         ProxyManager<K> proxyManager = Bucket4j.extension(Hazelcast.class).proxyManagerForMap(cache);
 
         // Limited to one invocation every second
-        RateConfigList limits = new RateConfigList().addLimit(new RateConfig().limit(1).duration(1000));
+        RateConfigList limits = new RateConfigList().addLimit(new RateConfig().limit(1).duration(Duration.ofSeconds(1)));
 
         return new Bucket4jRateLimiter<>(proxyManager, new RateExceededExceptionThrower(), limits);
     }

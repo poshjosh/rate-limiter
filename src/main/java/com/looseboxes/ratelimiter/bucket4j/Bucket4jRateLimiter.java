@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.time.Duration;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -59,12 +58,8 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
 
     private BucketConfiguration getSimpleBucketConfiguration(RateConfig rateConfig) {
         return Bucket4j.configurationBuilder()
-                .addLimit(Bandwidth.simple(rateConfig.getLimit(), getDuration(rateConfig)))
+                .addLimit(Bandwidth.simple(rateConfig.getLimit(), rateConfig.getDuration()))
                 .build();
-    }
-
-    private Duration getDuration(RateConfig rateConfig) {
-        return Duration.ofMillis(rateConfig.getTimeUnit().toMillis(rateConfig.getDuration()));
     }
 
     @Override
