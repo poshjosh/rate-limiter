@@ -4,7 +4,7 @@ import com.looseboxes.ratelimiter.RateLimiter;
 import com.looseboxes.ratelimiter.builder.RateLimiterTreeBuilder;
 import com.looseboxes.ratelimiter.node.Node;
 import com.looseboxes.ratelimiter.node.formatters.NodeFormatters;
-import com.looseboxes.ratelimiter.util.ClassesInPackageFinderImpl;
+import com.looseboxes.ratelimiter.util.DefaultClassesInPackageFinder;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -22,7 +22,7 @@ public class AnnotationProcessingPerformanceIT extends AbstractPerformanceTest{
     }
 
     Node<RateLimiter<Object>> buildRateLimiters() {
-        List<Class<?>> classList = new ClassesInPackageFinderImpl().findClasses(
+        List<Class<?>> classList = new DefaultClassesInPackageFinder().findClasses(
                 Collections.singletonList(getClass().getPackage().getName()),
                 clazz -> true);
         return new RateLimiterTreeBuilder<>().build(classList);
