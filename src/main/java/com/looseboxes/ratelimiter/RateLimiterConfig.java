@@ -1,6 +1,5 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.cache.MapRateCache;
 import com.looseboxes.ratelimiter.cache.RateCache;
 
 import java.util.Objects;
@@ -10,10 +9,6 @@ public class RateLimiterConfig<K, V> {
     private RateCache<K, V> rateCache;
     private RateFactory rateFactory;
     private RateRecordedListener rateRecordedListener;
-
-    public RateLimiterConfig() {
-        this(new MapRateCache<>(), new LimitWithinDurationFactory(), new RateExceededExceptionThrower());
-    }
 
     public RateLimiterConfig(RateLimiterConfig<K, V> rateLimiterConfig) {
         this(rateLimiterConfig.rateCache, rateLimiterConfig.rateFactory, rateLimiterConfig.rateRecordedListener);
@@ -51,17 +46,16 @@ public class RateLimiterConfig<K, V> {
         this.rateFactory = rateFactory;
     }
 
-    public RateLimiterConfig<K, V> rateExceededListener(
-            RateRecordedListener rateRecordedListener) {
-        this.setRateExceededListener(rateRecordedListener);
+    public RateLimiterConfig<K, V> rateRecordedListener(RateRecordedListener rateRecordedListener) {
+        this.setRateRecordedListener(rateRecordedListener);
         return this;
     }
 
-    public RateRecordedListener getRateExceededListener() {
+    public RateRecordedListener getRateRecordedListener() {
         return rateRecordedListener;
     }
 
-    public void setRateExceededListener(RateRecordedListener rateRecordedListener) {
+    public void setRateRecordedListener(RateRecordedListener rateRecordedListener) {
         this.rateRecordedListener = rateRecordedListener;
     }
 }

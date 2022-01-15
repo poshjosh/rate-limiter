@@ -27,7 +27,7 @@ public class Bucket4jRateLimiterFactory<K extends Serializable> implements RateL
 
         ProxyManager<K> proxyManager = proxyManagerProvider.getProxyManager(rateCache);
 
-        RateRecordedListener rateRecordedListener = rateLimiterConfig.getRateExceededListener();
+        RateRecordedListener rateRecordedListener = rateLimiterConfig.getRateRecordedListener();
 
         return new Bucket4jRateLimiter<>(proxyManager, rateRecordedListener, rateConfigList);
     }

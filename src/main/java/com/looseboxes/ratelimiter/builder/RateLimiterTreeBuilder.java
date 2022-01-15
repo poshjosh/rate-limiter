@@ -23,7 +23,7 @@ public class RateLimiterTreeBuilder<K> implements
     private RateLimiterFactory<K> rateLimiterFactory;
 
     public RateLimiterTreeBuilder() {
-        this.rateLimiterConfig = new RateLimiterConfig<>();
+        this.rateLimiterConfig = new DefaultRateLimiterConfig<>();
     }
 
     @Override public Node<RateLimiter<K>> build(Class<?> clazz) {
@@ -94,7 +94,7 @@ public class RateLimiterTreeBuilder<K> implements
     }
 
     public RateLimiterTreeBuilder<K> rateExceededListener(RateRecordedListener rateRecordedListener) {
-        this.rateLimiterConfig.rateExceededListener(rateRecordedListener);
+        this.rateLimiterConfig.rateRecordedListener(rateRecordedListener);
         return this;
     }
 

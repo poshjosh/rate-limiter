@@ -10,6 +10,6 @@ public class DefaultRateLimiterFactory<K> implements RateLimiterFactory<K> {
         return new SimpleRateLimiter<>(
                 rateLimiterConfig.getRateCache(),
                 rateLimiterConfig.getRateFactory(),
-                rateLimiterConfig.getRateExceededListener(), rateConfigList);
+                rateLimiterConfig.getRateRecordedListener(), rateConfigList);
     }
 }
