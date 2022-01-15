@@ -1,5 +1,18 @@
 # TODO
 
+- Test A Matcher added to existing ElementPatternMatcher. A composed matcher is created. See Matcher.andThen
+  
+- Test that RateLimiter is not enabled when DynamicFeature is not extended
+  
+- Create a branch to try getRateCache(Class keyType, Class valueType)
+  Start from SimpleRateLimiter and Bucket4jRateLimiter  
+
+- ||| webstore ||| Document need for stickiness and group-level-stickiness in README
+  
+- Handle and test case where a class has: 1. no path; 2. empty path pattern; but one or more methods of the class has path patterns.
+
+- Test that RateLimiter is Priority(0) in javaee version
+
 - Do we need to have a rate with 2 quantities returned by methods e.g
   `getLimit` and `getDuration` or do we stick to our current `Rate` interface.
   
