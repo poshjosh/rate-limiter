@@ -1,7 +1,7 @@
 package com.looseboxes.ratelimiter.annotation;
 
 import com.looseboxes.ratelimiter.node.Node;
-import com.looseboxes.ratelimiter.util.ClassesInPackageFinderImpl;
+import com.looseboxes.ratelimiter.util.DefaultClassesInPackageFinder;
 import com.looseboxes.ratelimiter.util.RateConfigList;
 
 import java.lang.reflect.GenericDeclaration;
@@ -13,7 +13,7 @@ public abstract class AbstractAnnotationProcessorTest<S extends GenericDeclarati
 
     List<Class<?>> findClasses() {
         String packageName = this.getClass().getPackage().getName();
-        return new ClassesInPackageFinderImpl().findClasses(packageName, clazz -> true);
+        return new DefaultClassesInPackageFinder().findClasses(packageName, clazz -> true);
     }
 
     void assertHasChildrenHavingNames(Node<NodeValue<RateConfigList>> parent, S... classes) {
