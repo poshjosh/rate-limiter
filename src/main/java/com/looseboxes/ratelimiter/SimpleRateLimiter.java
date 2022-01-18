@@ -111,8 +111,8 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("For: {}, limit exceeded: {}, rate: {}, exceeded limits: {}",
-                    key, !exceededLimits.isEmpty(), next, exceededLimits);
+            LOG.debug("For: {}, limit exceeded: {}, rate: {}, exceeded limits: {}, all limits: {}",
+                    key, !exceededLimits.isEmpty(), next, exceededLimits, limits);
         }
 
         final Rate result = shouldReset(resetCount) ? newInitialRate() : next;

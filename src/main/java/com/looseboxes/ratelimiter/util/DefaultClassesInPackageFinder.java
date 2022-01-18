@@ -34,7 +34,9 @@ public class DefaultClassesInPackageFinder implements ClassesInPackageFinder{
     @Override
     public List<Class<?>> findClasses(String packageName, ClassFilter classFilter) {
         try{
-            return Collections.unmodifiableList(getClasses(packageName, classFilter));
+            List<Class<?>> classes = Collections.unmodifiableList(getClasses(packageName, classFilter));
+            LOG.debug("Package: {}, classes: {}", packageName, classes);
+            return classes;
         }catch(IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }

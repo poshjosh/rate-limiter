@@ -89,7 +89,8 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("For: {}, limit exceeded: {}, exceeded limits: {}", key, !exceededLimits.isEmpty(), exceededLimits);
+            LOG.debug("For: {}, limit exceeded: {}, exceeded limits: {}, all limits: {}",
+                    key, !exceededLimits.isEmpty(), exceededLimits, limits);
         }
 
         rateRecordedListener.onRateRecorded(this, key, amount, exceededLimits);

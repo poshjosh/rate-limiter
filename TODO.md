@@ -1,6 +1,6 @@
 # TODO
 
-- Test A Matcher added to existing ElementPatternMatcher. A composed matcher is created. See Matcher.andThen
+- Research and add @Inherited to all annotations?
   
 - Test that RateLimiter is not enabled when DynamicFeature is not extended
   
