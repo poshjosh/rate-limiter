@@ -3,12 +3,12 @@ package com.looseboxes.ratelimiter.annotation;
 import java.io.Serializable;
 import java.util.Objects;
 
-public final class NodeValue<V> implements Serializable {
+public final class NodeData<V> implements Serializable {
 
     private final Object source;
     private final V value;
 
-    public NodeValue(Object source, V value) {
+    public NodeData(Object source, V value) {
         this.source = Objects.requireNonNull(source);
         this.value = Objects.requireNonNull(value);
     }
@@ -25,8 +25,8 @@ public final class NodeValue<V> implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        NodeValue nodeValue = (NodeValue) o;
-        return source.equals(nodeValue.source) && value.equals(nodeValue.value);
+        NodeData nodeData = (NodeData) o;
+        return source.equals(nodeData.source) && value.equals(nodeData.value);
     }
 
     @Override
@@ -35,6 +35,6 @@ public final class NodeValue<V> implements Serializable {
     }
 
     @Override public String toString() {
-        return "NodeValue{" + "source=" + source.getClass().getSimpleName() + ", value=" + value + '}';
+        return "NodeData{" + "source=" + source.getClass().getSimpleName() + ", value=" + value + '}';
     }
 }

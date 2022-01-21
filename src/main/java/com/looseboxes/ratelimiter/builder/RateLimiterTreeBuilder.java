@@ -3,8 +3,8 @@ package com.looseboxes.ratelimiter.builder;
 import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.annotation.AnnotationProcessor;
 import com.looseboxes.ratelimiter.annotation.ClassAnnotationProcessor;
+import com.looseboxes.ratelimiter.annotation.NodeData;
 import com.looseboxes.ratelimiter.annotation.NodeUtil;
-import com.looseboxes.ratelimiter.annotation.NodeValue;
 import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.node.Node;
 import com.looseboxes.ratelimiter.util.RateConfigList;
@@ -18,7 +18,7 @@ public class RateLimiterTreeBuilder<K> implements
 
     private final AtomicBoolean buildAttempted = new AtomicBoolean();
     private AnnotationProcessor<Class<?>> annotationProcessor;
-    private Node<NodeValue<RateConfigList>> rootNode;
+    private Node<NodeData<RateConfigList>> rootNode;
     private RateLimiterConfig<K, ?> rateLimiterConfig;
     private RateLimiterFactory<K> rateLimiterFactory;
 
@@ -38,7 +38,7 @@ public class RateLimiterTreeBuilder<K> implements
 
         buildConfigs(classes);
 
-        return rootNode.transform(null, (name, value) -> name, (name, value) -> createRateLimiter(value.getValue()));
+        return rootNode.transform(null, (name, value) -> createRateLimiter(value.getValue()));
     }
 
     private RateLimiter<K> createRateLimiter(RateConfigList rateConfigList) {
@@ -78,7 +78,7 @@ public class RateLimiterTreeBuilder<K> implements
         return rootNode(NodeUtil.createNode(name, null, null));
     }
 
-    public RateLimiterTreeBuilder<K> rootNode(Node<NodeValue<RateConfigList>> rootNode) {
+    public RateLimiterTreeBuilder<K> rootNode(Node<NodeData<RateConfigList>> rootNode) {
         this.rootNode = rootNode;
         return this;
     }

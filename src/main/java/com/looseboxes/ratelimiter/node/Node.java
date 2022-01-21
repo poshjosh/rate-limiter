@@ -42,10 +42,23 @@ public interface Node<V> {
      *
      * @param parent The parent to copy this node and it's children to
      * @return The copy version of this node
-     * @see #transform(Node, BiFunction, BiFunction)
+     * @see #transform(Node, BiFunction)
      */
     default Node<V> copyTo(Node<V> parent) {
-        return transform(parent, (name, value) -> name, (name, value) -> value);
+        return transform(parent, (name, value) -> value);
+    }
+
+    /**
+     * Copy a transformed version of this node and it's children onto the specified parent.
+     *
+     * @param newParent The parent to copy a transformed version of this node and it's children to
+     * @param valueConverter The converter which will be applied to produce a new value for each node in this tree
+     * @param <T> The type of the value of the transformed copy
+     * @return The transformed copy of this node
+     * @see #transform(Node, BiFunction, BiFunction)
+     */
+    default <T> Node<T> transform(Node<T> newParent, BiFunction<String, V, T> valueConverter) {
+        return transform(newParent, (name, value) -> name, valueConverter);
     }
 
     /**
@@ -56,6 +69,7 @@ public interface Node<V> {
      * @param valueConverter The converter which will be applied to produce a new value for each node in this tree
      * @param <T> The type of the value of the transformed copy
      * @return The transformed copy of this node
+     * @see #transform(Node, BiFunction)
      */
     <T> Node<T> transform(Node<T> newParent, BiFunction<String, V, String> nameConverter, BiFunction<String, V, T> valueConverter);
 

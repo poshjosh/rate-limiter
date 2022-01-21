@@ -9,9 +9,9 @@ import java.util.function.BiConsumer;
 
 public interface AnnotationProcessor<S extends GenericDeclaration> {
 
-    default void process(Node<NodeValue<RateConfigList>> root, List<S> elements) {
+    default void process(Node<NodeData<RateConfigList>> root, List<S> elements) {
         process(root, elements, (element, node) -> {});
     }
 
-    void process(Node<NodeValue<RateConfigList>> root, List<S> elements, BiConsumer<Object, Node<NodeValue<RateConfigList>>> consumer);
+    void process(Node<NodeData<RateConfigList>> root, List<S> elements, BiConsumer<Object, Node<NodeData<RateConfigList>>> consumer);
 }

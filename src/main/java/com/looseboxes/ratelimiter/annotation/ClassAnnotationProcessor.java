@@ -28,19 +28,19 @@ public class ClassAnnotationProcessor extends AbstractAnnotationProcessor<Class<
 
     // We override this here so we can process the class and its super classes
     @Override
-    protected Node<NodeValue<RateConfigList>> process(@Nullable Node<NodeValue<RateConfigList>> root, Class<?> element,
-                                                       BiConsumer<Object, Node<NodeValue<RateConfigList>>> consumer){
-        Node<NodeValue<RateConfigList>> classNode = null;
+    protected Node<NodeData<RateConfigList>> process(@Nullable Node<NodeData<RateConfigList>> root, Class<?> element,
+                                                       BiConsumer<Object, Node<NodeData<RateConfigList>>> consumer){
+        Node<NodeData<RateConfigList>> classNode = null;
         List<Class<?>> superClasses = new ArrayList<>();
-        List<Node<NodeValue<RateConfigList>>> superClassNodes = new ArrayList<>();
-        BiConsumer<Object, Node<NodeValue<RateConfigList>>> collectSuperClassNodes = (source, superClassNode) -> {
+        List<Node<NodeData<RateConfigList>>> superClassNodes = new ArrayList<>();
+        BiConsumer<Object, Node<NodeData<RateConfigList>>> collectSuperClassNodes = (source, superClassNode) -> {
             if(superClasses.contains(source)) {
                 superClassNodes.add(superClassNode);
             }
         };
         do{
 
-            Node<NodeValue<RateConfigList>> node = super.process(root, element, collectSuperClassNodes.andThen(consumer));
+            Node<NodeData<RateConfigList>> node = super.process(root, element, collectSuperClassNodes.andThen(consumer));
 
             final boolean mainNode = classNode == null;
 
@@ -64,7 +64,7 @@ public class ClassAnnotationProcessor extends AbstractAnnotationProcessor<Class<
         return classNode;
     }
 
-    private void processMethods(@Nullable Node<NodeValue<RateConfigList>> root, Class<?> element, BiConsumer<Object, Node<NodeValue<RateConfigList>>> consumer) {
+    private void processMethods(@Nullable Node<NodeData<RateConfigList>> root, Class<?> element, BiConsumer<Object, Node<NodeData<RateConfigList>>> consumer) {
         Method[] methods = element.getDeclaredMethods();
         methodAnnotationProcessor.process(root, Arrays.asList(methods), consumer);
     }
@@ -75,12 +75,12 @@ public class ClassAnnotationProcessor extends AbstractAnnotationProcessor<Class<
      * @param classNode The receiving class
      * @param superClassNodes The giving class
      */
-    private void transferMethodNodesFromSuperClassNodes(Node<NodeValue<RateConfigList>> classNode, List<Node<NodeValue<RateConfigList>>> superClassNodes) {
+    private void transferMethodNodesFromSuperClassNodes(Node<NodeData<RateConfigList>> classNode, List<Node<NodeData<RateConfigList>>> superClassNodes) {
         if(classNode != null && !superClassNodes.isEmpty()) {
 
-            for(Node<NodeValue<RateConfigList>> superClassNode : superClassNodes) {
+            for(Node<NodeData<RateConfigList>> superClassNode : superClassNodes) {
 
-                List<Node<NodeValue<RateConfigList>>> superClassMethodNodes = superClassNode.getChildren();
+                List<Node<NodeData<RateConfigList>>> superClassMethodNodes = superClassNode.getChildren();
 
                 // Transfer method nodes from the super class
                 superClassMethodNodes.forEach(node -> node.copyTo(classNode));
@@ -89,9 +89,9 @@ public class ClassAnnotationProcessor extends AbstractAnnotationProcessor<Class<
     }
 
     @Override
-    protected Node<NodeValue<RateConfigList>> getOrCreateParent(@Nullable Node<NodeValue<RateConfigList>> root, Class<?> element,
+    protected Node<NodeData<RateConfigList>> getOrCreateParent(@Nullable Node<NodeData<RateConfigList>> root, Class<?> element,
                                                 RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
-        Node<NodeValue<RateConfigList>> node = findOrCreateNodeForRateLimitGroupOrNull(root, root, element, rateLimitGroup, rateLimits);
+        Node<NodeData<RateConfigList>> node = findOrCreateNodeForRateLimitGroupOrNull(root, root, element, rateLimitGroup, rateLimits);
         return node == null ? root : node;
     }
 }
