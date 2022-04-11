@@ -1,5 +1,7 @@
 # TODO
 
+- Matcher related logic e.g MatcherRegistry, should be in its own library.
+  
 - Test null path pattern at class level, then at one or more method levels.
   
 - Test Large volume of annotations and properties
