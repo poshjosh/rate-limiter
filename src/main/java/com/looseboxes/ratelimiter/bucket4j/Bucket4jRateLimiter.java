@@ -63,7 +63,7 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
     }
 
     @Override
-    public boolean increment(K key, int amount) {
+    public boolean increment(Object resource, K resourceId, int amount) {
 
         int failCount = 0;
 
@@ -71,7 +71,7 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
 
         for (int i = 0; i < configurationSuppliers.length; i++) {
 
-            Bucket bucket = buckets.getProxy(key, configurationSuppliers[i]);
+            Bucket bucket = buckets.getProxy(resourceId, configurationSuppliers[i]);
 
             if(!bucket.tryConsume(amount)) {
 
@@ -90,14 +90,14 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("For: {}, limit exceeded: {}, exceeded limits: {}, all limits: {}",
-                    key, !exceededLimits.isEmpty(), exceededLimits, limits);
+                    resourceId, !exceededLimits.isEmpty(), exceededLimits, limits);
         }
 
-        rateRecordedListener.onRateRecorded(this, key, amount, exceededLimits);
+        rateRecordedListener.onRateRecorded(resource, resourceId, amount, exceededLimits);
 
         if(Util.isLimitExceeded(failCount, logic, limits)) {
 
-            rateRecordedListener.onRateExceeded(this, key, amount, exceededLimits);
+            rateRecordedListener.onRateExceeded(resource, resourceId, amount, exceededLimits);
 
             return false;
 

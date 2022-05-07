@@ -77,9 +77,9 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
     }
 
     @Override
-    public boolean increment(K key, int amount) {
+    public boolean increment(Object resource, K resourceId, int amount) {
 
-        final Rate existingRate = getRateFromCache(key);
+        final Rate existingRate = getRateFromCache(resourceId);
 
         final Rate next = existingRate == null ? newInitialRate() : existingRate.increment(amount);
 
@@ -112,19 +112,19 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("For: {}, limit exceeded: {}, rate: {}, exceeded limits: {}, all limits: {}",
-                    key, !exceededLimits.isEmpty(), next, exceededLimits, limits);
+                    resourceId, !exceededLimits.isEmpty(), next, exceededLimits, limits);
         }
 
         final Rate result = shouldReset(resetCount) ? newInitialRate() : next;
         if(existingRate != result) {
             final boolean putOnlyIfAbsent = existingRate == null;
-            addRateToCache(key, result, putOnlyIfAbsent);
+            addRateToCache(resourceId, result, putOnlyIfAbsent);
         }
 
-        rateRecordedListener.onRateRecorded(this, key, amount, exceededLimits);
+        rateRecordedListener.onRateRecorded(resource, resourceId, amount, exceededLimits);
 
         if(Util.isLimitExceeded(failCount, logic, limits)) {
-            rateRecordedListener.onRateExceeded(this, key, amount, exceededLimits);
+            rateRecordedListener.onRateExceeded(resource, resourceId, amount, exceededLimits);
             return false;
         }else{
             return true;

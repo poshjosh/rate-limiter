@@ -17,10 +17,6 @@
 - Do we need to have a rate with 2 quantities returned by methods e.g
   `getLimit` and `getDuration` or do we stick to our current `Rate` interface.
   
-- We want to be able to pass request (`HttpServletRequest`/`ContainerRequestContext`) to `RateRecordedListener`.
-  * We pass the request as the key argument to both `onRateExceeded` and `onRateRecorded`
-  * By having access to the request, the user has more flexibility to respond to rate recorded/exceed events.
-  
 - For README, implement `ProxyManagerProvider` for other bucket4j extensions.
 
 - Find and treat all TODO
