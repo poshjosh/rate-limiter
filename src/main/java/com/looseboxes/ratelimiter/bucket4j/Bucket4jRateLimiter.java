@@ -89,11 +89,11 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
         }
 
         if(LOG.isTraceEnabled()) {
-            LOG.trace("For: {}, limit exceeded: {}, exceeded limits: {}, all limits: {}",
-                    resourceId, !exceededLimits.isEmpty(), exceededLimits, limits);
+            LOG.trace("Limit exceeded: {}, for: {}, exceeded limits: {}, all limits: {}",
+                    !exceededLimits.isEmpty(), resourceId, exceededLimits, limits);
         }
 
-        rateRecordedListener.onRateRecorded(resource, resourceId, amount, exceededLimits);
+        rateRecordedListener.onRateRecorded(resource, resourceId, amount);
 
         if(Util.isLimitExceeded(failCount, logic, limits)) {
 

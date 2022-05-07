@@ -111,8 +111,8 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
         }
 
         if(LOG.isTraceEnabled()) {
-            LOG.trace("For: {}, limit exceeded: {}, rate: {}, exceeded limits: {}, all limits: {}",
-                    resourceId, !exceededLimits.isEmpty(), next, exceededLimits, limits);
+            LOG.trace("Limit exceeded: {}, for: {}, rate: {}, exceeded limits: {}, all limits: {}",
+                    !exceededLimits.isEmpty(), resourceId, next, exceededLimits, limits);
         }
 
         final Rate result = shouldReset(resetCount) ? newInitialRate() : next;
@@ -121,7 +121,7 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
             addRateToCache(resourceId, result, putOnlyIfAbsent);
         }
 
-        rateRecordedListener.onRateRecorded(resource, resourceId, amount, exceededLimits);
+        rateRecordedListener.onRateRecorded(resource, resourceId, amount);
 
         if(Util.isLimitExceeded(failCount, logic, limits)) {
             rateRecordedListener.onRateExceeded(resource, resourceId, amount, exceededLimits);

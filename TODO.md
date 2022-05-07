@@ -1,5 +1,7 @@
 # TODO
 
+- Investigate why request matcher named 'amoeba' does not get called but one called 'default' gets called
+  
 - Handle and test case where a class has: 1. no path; 2. empty path pattern; but one or more methods of the class has path patterns.
 
 - Make the entire thing modular, so some libraries are added as needed.
