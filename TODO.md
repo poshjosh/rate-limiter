@@ -1,13 +1,11 @@
 # TODO
 
-- Investigate why request matcher named 'amoeba' does not get called but one called 'default' gets called
-  
 - Handle and test case where a class has: 1. no path; 2. empty path pattern; but one or more methods of the class has path patterns.
+
+- Research and add @Inherited to all annotations? This needs some thinking
 
 - Make the entire thing modular, so some libraries are added as needed.
   Matcher related logic e.g MatcherRegistry, should be in its own library.
-  
-- Research and add @Inherited to all annotations? This needs some thinking
   
 - Create a branch to try getRateCache(Class keyType, Class valueType)
   Start from SimpleRateLimiter and Bucket4jRateLimiter  
