@@ -110,8 +110,8 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
             exceededLimits = Collections.emptyList();
         }
 
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("For: {}, limit exceeded: {}, rate: {}, exceeded limits: {}, all limits: {}",
+        if(LOG.isTraceEnabled()) {
+            LOG.trace("For: {}, limit exceeded: {}, rate: {}, exceeded limits: {}, all limits: {}",
                     resourceId, !exceededLimits.isEmpty(), next, exceededLimits, limits);
         }
 
@@ -184,6 +184,7 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
 
     @Override
     public String toString() {
-        return "SimpleRateLimiter@" + Integer.toHexString(hashCode()) + "{logic=" + logic + ", limits=" + Arrays.toString(limits) + '}';
+        return SimpleRateLimiter.class.getSimpleName()+ "@" + Integer.toHexString(hashCode()) +
+                "{logic=" + logic + ", limits=" + Arrays.toString(limits) + '}';
     }
 }

@@ -88,8 +88,8 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
             exceededLimits = Collections.emptyList();
         }
 
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("For: {}, limit exceeded: {}, exceeded limits: {}, all limits: {}",
+        if(LOG.isTraceEnabled()) {
+            LOG.trace("For: {}, limit exceeded: {}, exceeded limits: {}, all limits: {}",
                     resourceId, !exceededLimits.isEmpty(), exceededLimits, limits);
         }
 
@@ -105,5 +105,11 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
 
             return true;
         }
+    }
+
+    @Override
+    public String toString() {
+        return Bucket4jRateLimiter.class.getSimpleName() + "@" + Integer.toHexString(hashCode()) +
+                "{logic=" + logic + ", limits=" + Arrays.toString(limits) + '}';
     }
 }
