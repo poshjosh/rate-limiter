@@ -12,7 +12,7 @@ public interface RateRecordedListener {
     /**
      * Called when a rate is recorded
      */
-    default void onRateRecorded(Object resource, Object resourceId, int hitsToRecord) { }
+    default void onRateRecorded(Object resource, Object resourceId, int hitsToRecord, Collection<Rate> exceededLimits) { }
 
     /**
      * Called when a rate is exceeded
@@ -35,14 +35,14 @@ public interface RateRecordedListener {
         Objects.requireNonNull(after);
         return new RateRecordedListener() {
             @Override
-            public void onRateRecorded(Object resource, Object resourceId, int hitsToRecord) {
-                RateRecordedListener.this.onRateRecorded(resource, resourceId, hitsToRecord);
-                after.onRateRecorded(resource, resourceId, hitsToRecord);
+            public void onRateRecorded(Object resource, Object resourceId, int hitsToRecord, Collection<Rate> exceededLimits) {
+                RateRecordedListener.this.onRateRecorded(resource, resourceId, hitsToRecord, exceededLimits);
+                after.onRateRecorded(resource, resourceId, hitsToRecord, exceededLimits);
             }
             @Override
-            public void onRateExceeded(Object resource, Object resourceId, int hitsToRecord, Collection<Rate> exceededLimits) {
-                RateRecordedListener.this.onRateExceeded(resource, resourceId, hitsToRecord, exceededLimits);
-                after.onRateExceeded(resource, resourceId, hitsToRecord, exceededLimits);
+            public void onRateExceeded(Object resource, Object resourceId, int amount, Collection<Rate> exceededLimits) {
+                RateRecordedListener.this.onRateExceeded(resource, resourceId, amount, exceededLimits);
+                after.onRateExceeded(resource, resourceId, amount, exceededLimits);
             }
         };
     }

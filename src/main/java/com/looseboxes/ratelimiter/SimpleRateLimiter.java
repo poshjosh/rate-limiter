@@ -121,7 +121,7 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
             addRateToCache(resourceId, result, putOnlyIfAbsent);
         }
 
-        rateRecordedListener.onRateRecorded(resource, resourceId, amount);
+        rateRecordedListener.onRateRecorded(resource, resourceId, amount, exceededLimits);
 
         if(Util.isLimitExceeded(failCount, logic, limits)) {
             rateRecordedListener.onRateExceeded(resource, resourceId, amount, exceededLimits);
