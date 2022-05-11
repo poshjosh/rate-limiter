@@ -12,12 +12,12 @@ public interface RateRecordedListener {
     /**
      * Called when a rate is recorded
      */
-    default void onRateRecorded(Object resource, Object resourceId, int hitsToRecord, Collection<Rate> exceededLimits) { }
+    default void onRateRecorded(Object resource, Object resourceId, int recordedHits, Collection<Rate> exceededLimits) { }
 
     /**
      * Called when a rate is exceeded
      */
-    default void onRateExceeded(Object resource, Object resourceId, int hitsToRecord, Collection<Rate> exceededLimits) { }
+    default void onRateExceeded(Object resource, Object resourceId, int recordedHits, Collection<Rate> exceededLimits) { }
 
     /**
      * Returns a composed {@code RateRecordedListener} that performs, in sequence, this
@@ -35,14 +35,14 @@ public interface RateRecordedListener {
         Objects.requireNonNull(after);
         return new RateRecordedListener() {
             @Override
-            public void onRateRecorded(Object resource, Object resourceId, int hitsToRecord, Collection<Rate> exceededLimits) {
-                RateRecordedListener.this.onRateRecorded(resource, resourceId, hitsToRecord, exceededLimits);
-                after.onRateRecorded(resource, resourceId, hitsToRecord, exceededLimits);
+            public void onRateRecorded(Object resource, Object resourceId, int recordedHits, Collection<Rate> exceededLimits) {
+                RateRecordedListener.this.onRateRecorded(resource, resourceId, recordedHits, exceededLimits);
+                after.onRateRecorded(resource, resourceId, recordedHits, exceededLimits);
             }
             @Override
-            public void onRateExceeded(Object resource, Object resourceId, int amount, Collection<Rate> exceededLimits) {
-                RateRecordedListener.this.onRateExceeded(resource, resourceId, amount, exceededLimits);
-                after.onRateExceeded(resource, resourceId, amount, exceededLimits);
+            public void onRateExceeded(Object resource, Object resourceId, int recordedHits, Collection<Rate> exceededLimits) {
+                RateRecordedListener.this.onRateExceeded(resource, resourceId, recordedHits, exceededLimits);
+                after.onRateExceeded(resource, resourceId, recordedHits, exceededLimits);
             }
         };
     }
