@@ -1,5 +1,7 @@
 # TODO
 
+- Read this: https://devblogs.microsoft.com/dotnet/announcing-rate-limiting-for-dotnet/
+  
 - Handle and test case where a class has: 1. no path; 2. empty path pattern; but one or more methods of the class has path patterns.
 
 - Research and add @Inherited to all annotations? This needs some thinking
