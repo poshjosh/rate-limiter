@@ -15,7 +15,6 @@
  */
 package com.looseboxes.ratelimiter.node;
 
-import com.looseboxes.ratelimiter.node.formatters.NodeFormatters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,10 +42,6 @@ public class BreadthFirstNodeVisitor<T> implements Consumer<Node<T>>{
 
     public BreadthFirstNodeVisitor(Predicate<Node<T>> filter, Consumer<Node<T>> consumer) {
         this(filter, consumer, Integer.MAX_VALUE);
-    }
-
-    public BreadthFirstNodeVisitor(Consumer<Node<T>> consumer, int depth) {
-        this(node -> true, consumer, depth);
     }
 
     public BreadthFirstNodeVisitor(Predicate<Node<T>> filter, Consumer<Node<T>> consumer, int depth) {

@@ -64,6 +64,10 @@ public class RateConfigList {
         return this;
     }
 
+    public boolean hasLimits() {
+        return limits != null && !limits.isEmpty();
+    }
+
     public List<RateConfig> getLimits() {
         return limits;
     }

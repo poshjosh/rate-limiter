@@ -19,7 +19,7 @@ public class RateLimiterTreeBuilder<K> implements
     private final AtomicBoolean buildAttempted = new AtomicBoolean();
     private AnnotationProcessor<Class<?>> annotationProcessor;
     private Node<NodeData<RateConfigList>> rootNode;
-    private RateLimiterConfig<K, ?> rateLimiterConfig;
+    private DefaultRateLimiterConfig<K, ?> rateLimiterConfig;
     private RateLimiterFactory<K> rateLimiterFactory;
 
     public RateLimiterTreeBuilder() {

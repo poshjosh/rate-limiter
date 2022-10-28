@@ -1,5 +1,7 @@
 package com.looseboxes.ratelimiter;
 
+import java.util.Objects;
+
 public interface RateLimiter<K> {
 
     RateLimiter<Object> NO_OP = (resource, resourceId, amount) -> false;
@@ -33,4 +35,29 @@ public interface RateLimiter<K> {
     }
 
     boolean increment(Object resource, K resourceId, int amount);
+
+    /**
+     * Returns a composed RateLimiter that first calls this RateLimiter's increment function,
+     * and then calls the increment function of the {@code after} RateLimiter.
+     * If evaluation of either increment function throws an exception, it is relayed to
+     * the caller of the composed function. Best effort is made to call both increment functions
+     * before relaying the thrown exception.
+     *
+     * @param after The RateLimiter to increment after this RateLimiter is incremented
+     * @return a composed RateLimiter that first increments this and then the {@code after} RateLimiter
+     * @throws NullPointerException if after is null
+     */
+    default RateLimiter<K> andThen(RateLimiter<K> after) {
+        Objects.requireNonNull(after);
+        return (resource, resourceId, amount) -> {
+            boolean a;
+            boolean b;
+            try {
+                a = increment(resource, resourceId, amount);
+            } finally {
+                b = after.increment(resource, resourceId, amount);
+            }
+            return a && b;
+        };
+    }
 }
