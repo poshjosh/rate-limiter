@@ -2,6 +2,10 @@ package com.looseboxes.ratelimiter.cache;
 
 public interface RateCache<K, V> {
 
+    void clear();
+
+    boolean containsKey(K key);
+
     V get(K key);
 
     boolean putIfAbsent(K key, V value);

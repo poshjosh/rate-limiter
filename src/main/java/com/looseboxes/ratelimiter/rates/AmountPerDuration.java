@@ -20,6 +20,10 @@ public final class AmountPerDuration implements Rate, Serializable {
     }
 
     public AmountPerDuration(long amount, long duration) {
+        this(amount, duration, System.currentTimeMillis());
+    }
+
+    public AmountPerDuration(long amount, long duration, long timeCreated) {
         final String limitError = RateLimitProcessor.getErrorMessageIfInvalidLimit(amount, null);
         if(limitError != null) {
             throw new IllegalArgumentException(limitError);
@@ -30,7 +34,7 @@ public final class AmountPerDuration implements Rate, Serializable {
         }
         this.amount = amount;
         this.duration = duration;
-        this.timeCreated = System.currentTimeMillis();
+        this.timeCreated = timeCreated;
     }
 
     @Override

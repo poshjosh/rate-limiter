@@ -17,6 +17,16 @@ public class SingletonRateCache<K, V> implements RateCache<K, V>{
     }
 
     @Override
+    public void clear() {
+        this.rate = null;
+    }
+
+    @Override
+    public boolean containsKey(K key) {
+        return isMatchingKey(key);
+    }
+
+    @Override
     public V get(K key) {
         if(isMatchingKey(key)) {
             return rate;

@@ -16,6 +16,16 @@ public class MapRateCache<K, V> implements RateCache<K, V>{
     }
 
     @Override
+    public void clear() {
+        delegate.clear();
+    }
+
+    @Override
+    public boolean containsKey(K key) {
+        return delegate.containsKey(key);
+    }
+
+    @Override
     public V get(K key) {
         return delegate.get(key);
     }

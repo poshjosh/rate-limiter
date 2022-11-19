@@ -12,6 +12,16 @@ public class JavaRateCache<K, V> implements RateCache<K, V>{
     }
 
     @Override
+    public void clear() {
+        delegate.clear();
+    }
+
+    @Override
+    public boolean containsKey(K key) {
+        return delegate.containsKey(key);
+    }
+
+    @Override
     public V get(K key) {
         synchronized (delegate) {
             return delegate.get(key);
