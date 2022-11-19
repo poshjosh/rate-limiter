@@ -6,8 +6,15 @@ import java.io.Serializable;
  * Represents a rate.
  *
  * A rate is a ratio between 2 related quantities, each with their own unit of measurement.
- * This interface represents a basic rate contract, which is only defines how it is compared
- * to other rates (usually of the same kind), as well as how it is incremented.
+ * This interface represents a basic rate contract, which is defines, how a rate is:
+ * <ul>
+ *     <li>Compared to another rate (of the same type)</li>
+ *     <li>Incremented</li>
+ * </ul>
+ * Some examples of rate related quantities:
+ * Distance and time
+ * Count and time
+ * Memory and time
  */
 public interface Rate extends Comparable<Rate>, Serializable {
 

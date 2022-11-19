@@ -1,6 +1,6 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.rates.LimitWithinDuration;
+import com.looseboxes.ratelimiter.rates.AmountPerDuration;
 import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.util.RateConfig;
 import com.looseboxes.ratelimiter.util.RateConfigList;
@@ -46,8 +46,8 @@ public class RateLimiterTest {
     }
 
     protected void assertEquals(Rate result, RateConfig expected) {
-        LimitWithinDuration rate = (LimitWithinDuration)result;
-        assertThat(rate.getLimit()).isEqualTo(expected.getLimit());
+        AmountPerDuration rate = (AmountPerDuration)result;
+        assertThat(rate.getAmount()).isEqualTo(expected.getLimit());
         assertThat(rate.getDuration()).isEqualTo(expected.getDuration().toMillis());
     }
 

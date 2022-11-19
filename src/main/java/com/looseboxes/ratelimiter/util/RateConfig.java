@@ -1,6 +1,6 @@
 package com.looseboxes.ratelimiter.util;
 
-import com.looseboxes.ratelimiter.rates.LimitWithinDuration;
+import com.looseboxes.ratelimiter.rates.AmountPerDuration;
 import com.looseboxes.ratelimiter.rates.Rate;
 
 import java.time.Duration;
@@ -17,7 +17,7 @@ public class RateConfig {
     }
 
     public Rate toRate() {
-        return new LimitWithinDuration(limit, duration.toMillis());
+        return new AmountPerDuration(limit, duration.toMillis());
     }
 
     public RateConfig limit(long limit) {

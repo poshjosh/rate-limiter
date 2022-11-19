@@ -5,22 +5,22 @@ import com.looseboxes.ratelimiter.annotation.RateLimitProcessor;
 import java.io.Serializable;
 import java.util.Objects;
 
-public final class LimitWithinDuration implements Rate, Serializable {
+public final class AmountPerDuration implements Rate, Serializable {
 
-    private final long limit;
+    private final long amount;
     private final long duration;
     private final long timeCreated;
 
-    public LimitWithinDuration() {
+    public AmountPerDuration() {
         this(1);
     }
 
-    public LimitWithinDuration(long limit) {
-        this(limit, 0);
+    public AmountPerDuration(long amount) {
+        this(amount, 0);
     }
 
-    public LimitWithinDuration(long limit, long duration) {
-        final String limitError = RateLimitProcessor.getErrorMessageIfInvalidLimit(limit, null);
+    public AmountPerDuration(long amount, long duration) {
+        final String limitError = RateLimitProcessor.getErrorMessageIfInvalidLimit(amount, null);
         if(limitError != null) {
             throw new IllegalArgumentException(limitError);
         }
@@ -28,23 +28,19 @@ public final class LimitWithinDuration implements Rate, Serializable {
         if(durationError != null) {
             throw new IllegalArgumentException(durationError);
         }
-        this.limit = limit;
+        this.amount = amount;
         this.duration = duration;
         this.timeCreated = System.currentTimeMillis();
     }
 
     @Override
     public int compareTo(Rate other) {
-        LimitWithinDuration limitWithinDuration = (LimitWithinDuration) other;
-        if(limit == limitWithinDuration.limit && duration == limitWithinDuration.duration) {
+        AmountPerDuration amountPerDuration = (AmountPerDuration) other;
+        if(amount == amountPerDuration.amount && duration == amountPerDuration.duration) {
             return 0;
         }
-        if(limit > limitWithinDuration.limit) {
-            if(duration > limitWithinDuration.duration) {
-                return 0;
-            }else{
-                return 1;
-            }
+        if(amount > amountPerDuration.amount) {
+            return duration > amountPerDuration.duration ? 0 : 1;
         }else{
             return -1;
         }
@@ -52,19 +48,19 @@ public final class LimitWithinDuration implements Rate, Serializable {
 
     @Override
     public Rate increment(int amount) {
-        return new LimitWithinDuration(incrementLimit(amount), incrementDuration());
+        return new AmountPerDuration(incrementLimit(amount), incrementDuration());
     }
 
     private long incrementLimit(int amount) {
-        return limit + amount;
+        return this.amount + amount;
     }
 
     private long incrementDuration() {
         return duration + (System.currentTimeMillis() - timeCreated);
     }
 
-    public long getLimit() {
-        return limit;
+    public long getAmount() {
+        return amount;
     }
 
     public long getDuration() {
@@ -79,17 +75,18 @@ public final class LimitWithinDuration implements Rate, Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        LimitWithinDuration that = (LimitWithinDuration) o;
-        return limit == that.limit && duration == that.duration;
+        AmountPerDuration that = (AmountPerDuration) o;
+        return amount == that.amount && duration == that.duration;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(limit, duration);
+        return Objects.hash(amount, duration);
     }
 
     @Override
     public String toString() {
-        return "LimitWithinDuration@" + Integer.toHexString(hashCode()) + "{limit=" + limit + ", duration=" + duration + '}';
+        return "AmountPerDuration@" + Integer.toHexString(hashCode()) +
+                "{limit=" + amount + ", duration=" + duration + '}';
     }
 }

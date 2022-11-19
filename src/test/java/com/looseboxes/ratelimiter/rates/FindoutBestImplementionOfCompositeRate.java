@@ -6,17 +6,17 @@ public class FindoutBestImplementionOfCompositeRate {
     @org.junit.jupiter.api.Test
     public void test() {
 
-        LimitWithinDuration a = new LimitWithinDuration(1, 2000);
-        LimitWithinDuration b = new LimitWithinDuration(2, 1000);
+        AmountPerDuration a = new AmountPerDuration(1, 2000);
+        AmountPerDuration b = new AmountPerDuration(2, 1000);
 
-        LimitWithinDuration or = new LimitWithinDuration(2, 2000);
-        LimitWithinDuration and = new LimitWithinDuration(1, 1000);
+        AmountPerDuration or = new AmountPerDuration(2, 2000);
+        AmountPerDuration and = new AmountPerDuration(1, 1000);
 
         for(int d = 0; d < 3000; d += 500) {
 
             for(int l = 0; l < 4; l ++) {
 
-                LimitWithinDuration x = new LimitWithinDuration(l, d);
+                AmountPerDuration x = new AmountPerDuration(l, d);
 
                 int m = x.compareTo(or);
                 if(x.compareTo(a) != m && x.compareTo(b) != m) {

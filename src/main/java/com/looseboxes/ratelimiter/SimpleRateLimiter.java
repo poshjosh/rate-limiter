@@ -39,7 +39,7 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
     }
 
     public SimpleRateLimiter(RateConfigList rateConfigList) {
-        this(new MapRateCache<>(), new LimitWithinDurationFactory(),
+        this(new MapRateCache<>(), new AmountPerDurationFactory(),
                 new RateExceededExceptionThrower(), rateConfigList);
     }
 

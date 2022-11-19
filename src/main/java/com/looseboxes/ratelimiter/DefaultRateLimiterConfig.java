@@ -12,7 +12,7 @@ public final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K
     private RateRecordedListener rateRecordedListener;
 
     public DefaultRateLimiterConfig() {
-        this(new MapRateCache<>(), new LimitWithinDurationFactory(), new RateExceededExceptionThrower());
+        this(new MapRateCache<>(), new AmountPerDurationFactory(), new RateExceededExceptionThrower());
     }
 
     public DefaultRateLimiterConfig(RateLimiterConfig<K, V> rateLimiterConfig) {

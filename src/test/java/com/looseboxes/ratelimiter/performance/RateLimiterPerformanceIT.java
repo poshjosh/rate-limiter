@@ -17,21 +17,21 @@ public class RateLimiterPerformanceIT extends AbstractPerformanceTest{
         // These stats were achieved under log level INFO
 
         // 2 Nov 2021
-        recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(1_000_000, 250, 50_000_000);
+        recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(1_000_000, Usage.of(250, 50_000_000));
     }
 
-    void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(int count, long maxTime, long maxMemory) {
+    void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(int count, Usage limit) {
 
         RateLimiter<Integer> rateLimiter = getRateLimiterWithSingletonCache(count + 1, 60_000);
 
-        recordCurrentTimeAndMemory();
+        Usage bookmark = Usage.bookmark();
 
         final Integer key = Integer.valueOf(count);
         for(int i = 0; i < count; i++) {
             rateLimiter.increment(key);
         }
-        assertTimeSinceLastRecordIsLessThan(maxTime);
-        assertMemorySinceLastRecordIsLessThan(maxMemory);
+
+        assertUsageSinceBookmarkIsLessThan(bookmark, limit);
     }
 
     public RateLimiter<Integer> getRateLimiter(int limit, int duration) {

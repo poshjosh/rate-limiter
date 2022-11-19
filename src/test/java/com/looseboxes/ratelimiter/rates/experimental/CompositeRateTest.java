@@ -1,6 +1,6 @@
 package com.looseboxes.ratelimiter.rates.experimental;
 
-import com.looseboxes.ratelimiter.rates.LimitWithinDuration;
+import com.looseboxes.ratelimiter.rates.AmountPerDuration;
 import com.looseboxes.ratelimiter.rates.Logic;
 import com.looseboxes.ratelimiter.rates.Rate;
 import org.junit.jupiter.api.Test;
@@ -178,7 +178,7 @@ class CompositeRateTest {
     }
 
     Rate getRate(int limit, int duration) {
-        return new LimitWithinDuration(limit, duration);
+        return new AmountPerDuration(limit, duration);
     }
 
     public CompositeRate getInstance(Logic logic, Rate... rates) {

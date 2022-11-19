@@ -14,10 +14,9 @@ public class AnnotationProcessingPerformanceIT extends AbstractPerformanceTest{
 
     @Test
     void annotationProcessShouldConsumeLimitedTimeAndMemory() {
-        recordCurrentTimeAndMemory();
+        Usage bookmark = Usage.bookmark();
         Node<RateLimiter<Object>> rateLimiterRootNode = buildRateLimiters();
-        assertTimeSinceLastRecordIsLessThan(250);
-        assertMemorySinceLastRecordIsLessThan(25_000_000);
+        assertUsageSinceBookmarkIsLessThan(bookmark, Usage.of(250, 25_000_000));
         System.out.println(NodeFormatters.indentedHeirarchy().format(rateLimiterRootNode));
     }
 
