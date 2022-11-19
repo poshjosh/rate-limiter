@@ -45,12 +45,6 @@ public class RateLimiterTest {
         assertThatThrownBy(() -> rateLimiter.increment(key));
     }
 
-    protected void assertEquals(Rate result, RateConfig expected) {
-        AmountPerDuration rate = (AmountPerDuration)result;
-        assertThat(rate.getAmount()).isEqualTo(expected.getLimit());
-        assertThat(rate.getDuration()).isEqualTo(expected.getDuration().toMillis());
-    }
-
     public RateLimiter<String> getRateLimiter(List<RateConfig> limits) {
         return new SimpleRateLimiter<>(new RateConfigList().addLimits(limits));
     }
