@@ -61,7 +61,7 @@ public class BreadthFirstNodeVisitor<T> implements Consumer<Node<T>>{
         if(LOG.isTraceEnabled()) {
             LOG.trace("Visiting: {}", node);
         }
-        
+
         this.visit(filter, consumer, node);
         
         if(depth > 0) {
@@ -76,15 +76,9 @@ public class BreadthFirstNodeVisitor<T> implements Consumer<Node<T>>{
     }
     
     private void visit(Predicate<Node<T>> test, Consumer<Node<T>> action, Node<T> node) {
-        
-        final boolean testPassed = test.test(node);
 
-        if(LOG.isTraceEnabled()) {
-            LOG.trace("Test Passed: {}, node: {}", testPassed, node);
-        }
+        if(test.test(node)) {
 
-        if(testPassed) {
-            
             action.accept(node);
 
             if(LOG.isTraceEnabled()) {
