@@ -1,14 +1,12 @@
 package com.looseboxes.ratelimiter;
 
 import com.looseboxes.ratelimiter.cache.SingletonRateCache;
-import com.looseboxes.ratelimiter.util.RateConfig;
-
-import java.util.List;
+import com.looseboxes.ratelimiter.rates.Rate;
 
 public class RateLimiterWithSingletonCacheTest extends RateLimiterTest {
 
     @Override
-    public RateLimiter<String> getRateLimiter(List<RateConfig> limits) {
-        return new SimpleRateLimiter<String>(limits).withRateCache(new SingletonRateCache<>(null));
+    public RateLimiter<String> getRateLimiter(Rate... rates) {
+        return new SimpleRateLimiter<String>(rates).withRateCache(new SingletonRateCache<>(null));
     }
 }

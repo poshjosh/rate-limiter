@@ -5,7 +5,7 @@ import com.looseboxes.ratelimiter.annotation.RateLimitProcessor;
 import java.io.Serializable;
 import java.util.Objects;
 
-public final class AmountPerDuration implements Rate, Serializable, Cloneable {
+public final class AmountPerDuration implements Rate, Serializable {
 
     private static final long serialVersionUID = 9081726354000000001L;
 
@@ -67,11 +67,6 @@ public final class AmountPerDuration implements Rate, Serializable, Cloneable {
 
     public long getTimeCreated() {
         return timeCreated;
-    }
-
-    @Override
-    public Object clone() {
-        return new AmountPerDuration(amount, duration, timeCreated);
     }
 
     @Override

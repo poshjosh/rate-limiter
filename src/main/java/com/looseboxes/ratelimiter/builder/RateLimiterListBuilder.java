@@ -1,15 +1,11 @@
 package com.looseboxes.ratelimiter.builder;
 
-import com.looseboxes.ratelimiter.RateRecordedListener;
-import com.looseboxes.ratelimiter.RateFactory;
-import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.RateLimiterFactory;
+import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.annotation.AnnotationProcessor;
 import com.looseboxes.ratelimiter.annotation.NodeData;
 import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.node.BreadthFirstNodeVisitor;
 import com.looseboxes.ratelimiter.node.Node;
-import com.looseboxes.ratelimiter.util.RateConfigList;
 
 import java.util.*;
 
@@ -58,7 +54,7 @@ public class RateLimiterListBuilder<K> implements
         return this;
     }
 
-    public RateLimiterListBuilder<K> rootNode(Node<NodeData<RateConfigList>> rootNode) {
+    public RateLimiterListBuilder<K> rootNode(Node<NodeData<Limit>> rootNode) {
         this.rateLimiterTreeBuilder.rootNode(rootNode);
         return this;
     }
@@ -73,8 +69,8 @@ public class RateLimiterListBuilder<K> implements
         return this;
     }
 
-    public RateLimiterListBuilder<K> rateExceededListener(RateRecordedListener rateRecordedListener) {
-        this.rateLimiterTreeBuilder.rateExceededListener(rateRecordedListener);
+    public RateLimiterListBuilder<K> rateRecordedListener(RateRecordedListener rateRecordedListener) {
+        this.rateLimiterTreeBuilder.rateRecordedListener(rateRecordedListener);
         return this;
     }
 

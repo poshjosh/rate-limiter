@@ -7,18 +7,24 @@ import com.looseboxes.ratelimiter.annotation.NodeData;
 import com.looseboxes.ratelimiter.annotation.NodeUtil;
 import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.node.Node;
-import com.looseboxes.ratelimiter.util.RateConfigList;
-import com.looseboxes.ratelimiter.util.Util;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class RateLimiterTreeBuilder<K> implements
         RateLimiterCollectionBuilder<Node<RateLimiter<K>>> {
 
+    private static final AtomicLong nonce = new AtomicLong();
+    private static String randomUniqueId(String prefix, String suffix) {
+        synchronized (nonce) {
+            return prefix + Long.toHexString(System.currentTimeMillis()) + '-' + nonce.incrementAndGet() + suffix;
+        }
+    }
+
     private final AtomicBoolean buildAttempted = new AtomicBoolean();
     private AnnotationProcessor<Class<?>> annotationProcessor;
-    private Node<NodeData<RateConfigList>> rootNode;
+    private Node<NodeData<Limit>> rootNode;
     private DefaultRateLimiterConfig<K, ?> rateLimiterConfig;
     private RateLimiterFactory<K> rateLimiterFactory;
 
@@ -41,15 +47,15 @@ public class RateLimiterTreeBuilder<K> implements
         return rootNode.transform(null, (name, value) -> createRateLimiter(value.getValue()));
     }
 
-    private RateLimiter<K> createRateLimiter(RateConfigList rateConfigList) {
+    private RateLimiter<K> createRateLimiter(Limit limit) {
         Objects.requireNonNull(rateLimiterConfig);
-        if(rateConfigList == null) {
+        if(limit == null) {
             return RateLimiter.noop();
         }
         if(rateLimiterFactory == null) {
             rateLimiterFactory = new DefaultRateLimiterFactory<>();
         }
-        return rateLimiterFactory.createRateLimiter(rateLimiterConfig, rateConfigList);
+        return rateLimiterFactory.createRateLimiter(rateLimiterConfig, limit);
     }
 
     private void buildConfigs(List<Class<?>> classes) {
@@ -63,7 +69,7 @@ public class RateLimiterTreeBuilder<K> implements
         }
 
         if(rootNode == null) {
-            rootNodeName(Util.randomUniqueId("root-", ""));
+            rootNodeName(randomUniqueId("root-", ""));
         }
 
         annotationProcessor.process(rootNode, classes);
@@ -78,7 +84,7 @@ public class RateLimiterTreeBuilder<K> implements
         return rootNode(NodeUtil.createNode(name, null, null));
     }
 
-    public RateLimiterTreeBuilder<K> rootNode(Node<NodeData<RateConfigList>> rootNode) {
+    public RateLimiterTreeBuilder<K> rootNode(Node<NodeData<Limit>> rootNode) {
         this.rootNode = rootNode;
         return this;
     }
@@ -93,7 +99,7 @@ public class RateLimiterTreeBuilder<K> implements
         return this;
     }
 
-    public RateLimiterTreeBuilder<K> rateExceededListener(RateRecordedListener rateRecordedListener) {
+    public RateLimiterTreeBuilder<K> rateRecordedListener(RateRecordedListener rateRecordedListener) {
         this.rateLimiterConfig.rateRecordedListener(rateRecordedListener);
         return this;
     }

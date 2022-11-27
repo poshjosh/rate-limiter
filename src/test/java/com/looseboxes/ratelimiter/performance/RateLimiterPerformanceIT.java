@@ -2,10 +2,8 @@ package com.looseboxes.ratelimiter.performance;
 
 import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.cache.SingletonRateCache;
-import com.looseboxes.ratelimiter.util.RateConfig;
+import com.looseboxes.ratelimiter.rates.AmountPerDuration;
 import org.junit.jupiter.api.Test;
-
-import java.time.Duration;
 
 public class RateLimiterPerformanceIT extends AbstractPerformanceTest{
 
@@ -35,11 +33,10 @@ public class RateLimiterPerformanceIT extends AbstractPerformanceTest{
     }
 
     public RateLimiter<Integer> getRateLimiter(int limit, int duration) {
-        return new SimpleRateLimiter<>(RateConfig.of(limit, Duration.ofMillis(duration)));
+        return new SimpleRateLimiter<>(AmountPerDuration.of(limit, duration));
     }
 
     public RateLimiter<Integer> getRateLimiterWithSingletonCache(int limit, int duration) {
-        RateConfig rateConfig = RateConfig.of(limit, Duration.ofMillis(duration));
-        return new SimpleRateLimiter<Integer>(rateConfig).withRateCache(new SingletonRateCache<>(null));
+        return new SimpleRateLimiter<Integer>(AmountPerDuration.of(limit, duration)).withRateCache(new SingletonRateCache<>(null));
     }
 }

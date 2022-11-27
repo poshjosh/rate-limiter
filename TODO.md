@@ -13,7 +13,9 @@
   Irrespective of the source, we collect the data using RateConfig and RateConfigList.
   
 - Read this: https://devblogs.microsoft.com/dotnet/announcing-rate-limiting-for-dotnet/
-  
+- Investigate: com.oracle.coherence.common.util.Bandwidth.Rate
+
+- Test (in the core package) that RateLimiter works for different amounts, durations and time units.  
 - Handle and test case where a class has: 1. no path; 2. empty path pattern; but one or more methods of the class has path patterns.
 
 - Research and add @Inherited to all annotations? This needs some thinking

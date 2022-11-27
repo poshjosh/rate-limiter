@@ -1,7 +1,7 @@
 package com.looseboxes.ratelimiter.annotation;
 
+import com.looseboxes.ratelimiter.Limit;
 import com.looseboxes.ratelimiter.node.Node;
-import com.looseboxes.ratelimiter.util.RateConfigList;
 
 import java.lang.reflect.GenericDeclaration;
 import java.util.List;
@@ -9,9 +9,9 @@ import java.util.function.BiConsumer;
 
 public interface AnnotationProcessor<S extends GenericDeclaration> {
 
-    default void process(Node<NodeData<RateConfigList>> root, List<S> elements) {
+    default void process(Node<NodeData<Limit>> root, List<S> elements) {
         process(root, elements, (element, node) -> {});
     }
 
-    void process(Node<NodeData<RateConfigList>> root, List<S> elements, BiConsumer<Object, Node<NodeData<RateConfigList>>> consumer);
+    void process(Node<NodeData<Limit>> root, List<S> elements, BiConsumer<Object, Node<NodeData<Limit>>> consumer);
 }

@@ -5,10 +5,10 @@ import com.looseboxes.ratelimiter.rates.Rate;
 
 public class AmountPerDurationFactory implements RateFactory {
 
-    private static final AmountPerDuration DEFAULT = AmountPerDuration.of(1, 0);
-
     @Override
     public Rate createNew() {
-        return DEFAULT;
+        // We could have shared a single instance, since the instances are immutable.
+        // However, the time created is of importance. Therefore we return a new instance, each time.
+        return AmountPerDuration.of(1, 0);
     }
 }

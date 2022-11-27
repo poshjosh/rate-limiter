@@ -5,6 +5,9 @@
 pom.xml
 
 ```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <dependencies>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
             <artifactId>bucket4j-core</artifactId>
@@ -15,6 +18,8 @@ pom.xml
             <artifactId>bucket4j-jcache</artifactId>
             <version>${bucket4j.version}</version>
         </dependency>
+    </dependencies>
+</project>
 ```
 
 Code
@@ -38,9 +43,9 @@ public class Bucket4jJCacheRateLimiterProvider<K extends Serializable>{
         ProxyManager<K> proxyManager = Bucket4j.extension(JCache.class).proxyManagerForCache(cache);
 
         // Limited to one invocation every second
-        RateConfigList limits = new RateConfigList().addLimit(RateConfig.of(1, Duration.ofSeconds(1)));
+        final Rate rate = AmountPerDuration.of(1, 1000);
 
-        return new Bucket4jRateLimiter<>(proxyManager, new RateExceededExceptionThrower(), limits);
+        return new Bucket4jRateLimiter<>(proxyManager, new RateExceededExceptionThrower(), rate);
     }
 
     public List<RateLimiter<K>> newInstancesFromAnnotatedClass(Cache<K, GridBucketState> cache, Class<?> annotationSource) {
@@ -57,6 +62,9 @@ public class Bucket4jJCacheRateLimiterProvider<K extends Serializable>{
 pom.xml
 
 ```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <dependencies>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
             <artifactId>bucket4j-core</artifactId>
@@ -72,6 +80,8 @@ pom.xml
             <artifactId>bucket4j-hazelcast</artifactId>
             <version>${bucket4j.version}</version>
         </dependency>
+    </dependencies>
+</project>
 ```
 
 Code
@@ -95,9 +105,9 @@ public class Bucket4jHazelcastRateLimiterProvider<K extends Serializable>{
         ProxyManager<K> proxyManager = Bucket4j.extension(Hazelcast.class).proxyManagerForMap(cache);
 
         // Limited to one invocation every second
-        RateConfigList limits = new RateConfigList().addLimit(RateConfig.of(1, Duration.ofSeconds(1)));
+        final Rate rate = AmountPerDuration.of(1, 1000);
 
-        return new Bucket4jRateLimiter<>(proxyManager, new RateExceededExceptionThrower(), limits);
+        return new Bucket4jRateLimiter<>(proxyManager, new RateExceededExceptionThrower(), rate);
     }
 
     public List<RateLimiter<K>> newInstancesFromAnnotatedClass(IMap<K, GridBucketState> cache, Class<?> annotationSource) {
@@ -112,6 +122,9 @@ public class Bucket4jHazelcastRateLimiterProvider<K extends Serializable>{
 ### To create a RateLimiter based on bucket4j-ignite.
 
 ```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <dependencies>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
             <artifactId>bucket4j-core</artifactId>
@@ -132,6 +145,8 @@ public class Bucket4jHazelcastRateLimiterProvider<K extends Serializable>{
             <artifactId>bucket4j-ignite</artifactId>
             <version>${bucket4j.version}</version>
         </dependency>
+    </dependencies>
+</project>
 ```
 
 Code
@@ -155,9 +170,9 @@ public class Bucket4jIgniteRateLimiterProvider<K extends Serializable>{
         ProxyManager<K> proxyManager = Bucket4j.extension(Ignite.class).proxyManagerForCache(cache);
 
         // Limited to one invocation every second
-        RateConfigList limits = new RateConfigList().addLimit(RateConfig.of(1, Duration.ofSeconds(1)));
+        final Rate rate = AmountPerDuration.of(1, 1000);
 
-        return new Bucket4jRateLimiter<>(proxyManager, new RateExceededExceptionThrower(), limits);
+        return new Bucket4jRateLimiter<>(proxyManager, new RateExceededExceptionThrower(), rate);
     }
 
     public List<RateLimiter<K>> newInstancesFromAnnotatedClass(IgniteCache<K, GridBucketState> cache, Class<?> annotationSource) {

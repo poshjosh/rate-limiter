@@ -8,8 +8,8 @@ import com.looseboxes.ratelimiter.bucket4j.ProxyManagerProvider;
 import com.looseboxes.ratelimiter.builder.RateLimiterListBuilder;
 import com.looseboxes.ratelimiter.cache.JavaRateCache;
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.util.RateConfig;
-import com.looseboxes.ratelimiter.util.RateConfigList;
+import com.looseboxes.ratelimiter.rates.AmountPerDuration;
+import com.looseboxes.ratelimiter.rates.Rate;
 import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.ProxyManager;
@@ -17,7 +17,6 @@ import io.github.bucket4j.grid.jcache.JCache;
 
 import javax.cache.Cache;
 import java.io.Serializable;
-import java.time.Duration;
 import java.util.List;
 
 public class Bucket4jJCacheRateLimiterProvider<K extends Serializable>{
@@ -38,9 +37,9 @@ public class Bucket4jJCacheRateLimiterProvider<K extends Serializable>{
         ProxyManager<K> proxyManager = Bucket4j.extension(JCache.class).proxyManagerForCache(cache);
 
         // Limited to one invocation every second
-        RateConfigList limits = new RateConfigList().addLimit(RateConfig.of(1, (Duration.ofSeconds(1))));
+        final Rate rate = AmountPerDuration.of(1, 1000);
 
-        return new Bucket4jRateLimiter<>(proxyManager, new RateExceededExceptionThrower(), limits);
+        return new Bucket4jRateLimiter<>(proxyManager, new RateExceededExceptionThrower(), rate);
     }
 
     public List<RateLimiter<K>> newInstancesFromAnnotatedClass(Cache<K, GridBucketState> cache, Class<?> annotationSource) {

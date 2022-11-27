@@ -3,19 +3,17 @@ package com.looseboxes.ratelimiter.readme;
 import com.looseboxes.ratelimiter.RateExceededException;
 import com.looseboxes.ratelimiter.SimpleRateLimiter;
 import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.util.RateConfig;
-
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
+import com.looseboxes.ratelimiter.rates.AmountPerDuration;
+import com.looseboxes.ratelimiter.rates.Rate;
 
 public class Concept {
 
     public static void main(String... args) {
 
         // Only one recording is allowed within a minute (for each unique recording key)
-        RateConfig rateConfig =RateConfig.of(1,  Duration.ofMinutes(1));
+        Rate rate = AmountPerDuration.of(1,  60 * 1000);
 
-        RateLimiter<Integer> rateLimiter = new SimpleRateLimiter<>(rateConfig);
+        RateLimiter<Integer> rateLimiter = new SimpleRateLimiter<>(rate);
 
         // We use numbers as recording keys
         rateLimiter.increment(1);
@@ -26,7 +24,7 @@ public class Concept {
         try {
             rateLimiter.increment(1);
         }catch(RateExceededException e) {
-            System.err.println(e);
+            e.printStackTrace();
         }
     }
 }
