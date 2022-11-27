@@ -1,5 +1,17 @@
 # TODO
 
+- Our code is tightly coupled to a speicific type of Rate. One which comprises of limit and duration. 
+  This is visiable in: RateConfig, RateConfigList, AbstractAnnotationProcessor and subclasses etc
+  * AbstractAnnotationProcessor could have type parameters AnnotationType, GroupAnnotationType
+  * AbstractAnnotationProcessor could use a RateLimit annotation directly, rather than RateConfigList
+  * Could we re-name the RateLimit annotation, or its values from limit, duration to something more generic
+  
+  !!Note!! 
+  
+  Rather than use annotations: RateLimit and RateLimitGroup, we use classes RateConfig and RateConfigList
+  This is because we source data for rate limiting instructions from both annotations and properties
+  Irrespective of the source, we collect the data using RateConfig and RateConfigList.
+  
 - Read this: https://devblogs.microsoft.com/dotnet/announcing-rate-limiting-for-dotnet/
   
 - Handle and test case where a class has: 1. no path; 2. empty path pattern; but one or more methods of the class has path patterns.

@@ -3,9 +3,17 @@ package com.looseboxes.ratelimiter.util;
 import com.looseboxes.ratelimiter.rates.AmountPerDuration;
 import com.looseboxes.ratelimiter.rates.Rate;
 
+import java.io.Serializable;
 import java.time.Duration;
+import java.util.Objects;
 
-public class RateConfig {
+public class RateConfig implements Serializable, Cloneable {
+
+    private static final long serialVersionUID = 9081726354000000002L;
+
+    public static RateConfig of(long limit, Duration duration) {
+        return new RateConfig(limit, duration);
+    }
 
     private long limit;
     private Duration duration;
@@ -13,11 +21,16 @@ public class RateConfig {
     public RateConfig() { }
 
     public RateConfig(RateConfig rateConfig) {
-        this.limit(rateConfig.limit).duration(rateConfig.duration);
+        this(rateConfig.limit, rateConfig.duration);
+    }
+
+    private RateConfig(long limit, Duration duration) {
+        this.limit = limit;
+        this.duration = duration;
     }
 
     public Rate toRate() {
-        return new AmountPerDuration(limit, duration.toMillis());
+        return AmountPerDuration.of(limit, duration.toMillis());
     }
 
     public RateConfig limit(long limit) {
@@ -44,6 +57,26 @@ public class RateConfig {
 
     public void setDuration(Duration duration) {
         this.duration = duration;
+    }
+
+    @Override
+    public Object clone() {
+        return RateConfig.of(limit, duration);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        RateConfig that = (RateConfig) o;
+        return limit == that.limit && Objects.equals(duration, that.duration);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(limit, duration);
     }
 
     @Override

@@ -25,6 +25,8 @@ import java.util.function.*;
  */
 public class NodeImpl<V> implements Node<V>, Serializable {
 
+    private static final long serialVersionUID = 9081726354000000003L;
+
     private final String name;
     
     private final V value;

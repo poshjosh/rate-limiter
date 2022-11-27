@@ -5,25 +5,19 @@ import com.looseboxes.ratelimiter.annotation.RateLimitProcessor;
 import java.io.Serializable;
 import java.util.Objects;
 
-public final class AmountPerDuration implements Rate, Serializable {
+public final class AmountPerDuration implements Rate, Serializable, Cloneable {
+
+    private static final long serialVersionUID = 9081726354000000001L;
+
+    public static AmountPerDuration of(long amount, long duration) {
+        return new AmountPerDuration(amount, duration, System.currentTimeMillis());
+    }
 
     private final long amount;
     private final long duration;
     private final long timeCreated;
 
-    public AmountPerDuration() {
-        this(1);
-    }
-
-    public AmountPerDuration(long amount) {
-        this(amount, 0);
-    }
-
-    public AmountPerDuration(long amount, long duration) {
-        this(amount, duration, System.currentTimeMillis());
-    }
-
-    public AmountPerDuration(long amount, long duration, long timeCreated) {
+    private AmountPerDuration(long amount, long duration, long timeCreated) {
         final String limitError = RateLimitProcessor.getErrorMessageIfInvalidLimit(amount, null);
         if(limitError != null) {
             throw new IllegalArgumentException(limitError);
@@ -52,7 +46,7 @@ public final class AmountPerDuration implements Rate, Serializable {
 
     @Override
     public Rate increment(int amount) {
-        return new AmountPerDuration(incrementLimit(amount), incrementDuration());
+        return AmountPerDuration.of(incrementLimit(amount), incrementDuration());
     }
 
     private long incrementLimit(int amount) {
@@ -73,6 +67,11 @@ public final class AmountPerDuration implements Rate, Serializable {
 
     public long getTimeCreated() {
         return timeCreated;
+    }
+
+    @Override
+    public Object clone() {
+        return new AmountPerDuration(amount, duration, timeCreated);
     }
 
     @Override

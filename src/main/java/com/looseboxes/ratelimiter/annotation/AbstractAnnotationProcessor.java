@@ -114,11 +114,11 @@ public abstract class AbstractAnnotationProcessor<S extends GenericDeclaration> 
             Node<NodeData<RateConfigList>> rateLimitGroupNode, GenericDeclaration annotatedElement,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         if(rateLimitGroup != null && rateLimits.length != 0) {
-            RateConfigList current = toRateLimitConfig(rateLimitGroup, rateLimits);
+            final Logic logic = logic(rateLimitGroup);
             rateLimitGroupNode.getChildren().stream()
                     .map(childNode -> childNode.getValueOptional().orElseThrow(NodeUtil::newExceptionForRequiredValue))
                     .map(NodeData::getValue)
-                    .forEach(existing -> requireEqual(annotatedElement, rateLimitGroup, current.getLogic(), existing.getLogic()));
+                    .forEach(existing -> requireEqual(annotatedElement, rateLimitGroup, logic, existing.getLogic()));
         }
 
         return rateLimitGroupNode;
@@ -137,14 +137,15 @@ public abstract class AbstractAnnotationProcessor<S extends GenericDeclaration> 
             RateConfig rateConfig = createRate(rateLimit);
             rateConfigList.addLimit(rateConfig);
         }
-        return rateConfigList.logic(rateLimitGroup == null ? Logic.OR : rateLimitGroup.logic());
+        return rateConfigList.logic(logic(rateLimitGroup));
+    }
+
+    private Logic logic(RateLimitGroup rateLimitGroup) {
+        return rateLimitGroup == null ? Logic.OR : rateLimitGroup.logic();
     }
 
     private RateConfig createRate(RateLimit rateLimit) {
-        RateConfig rateConfig = new RateConfig();
-        rateConfig.setLimit(rateLimit.limit());
-        rateConfig.setDuration(toDuration(rateLimit.duration(), rateLimit.timeUnit()));
-        return rateConfig;
+        return RateConfig.of(rateLimit.limit(), toDuration(rateLimit.duration(), rateLimit.timeUnit()));
     }
 
     private Duration toDuration(long duration, TimeUnit timeUnit) {

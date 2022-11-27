@@ -5,8 +5,10 @@ import com.looseboxes.ratelimiter.rates.Rate;
 
 public class AmountPerDurationFactory implements RateFactory {
 
+    private static final AmountPerDuration DEFAULT = AmountPerDuration.of(1, 0);
+
     @Override
     public Rate createNew() {
-        return new AmountPerDuration();
+        return DEFAULT;
     }
 }

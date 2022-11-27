@@ -11,3 +11,10 @@ We can thus:
 
 - Create rate limit groups that do not adhere to single-class-contains-one-or-more-methods paradigm. 
   For example a rate limit group could span the methods of multiple classes.
+  
+### 
+
+Rather than use annotations: RateLimit and RateLimitGroup, we use classes RateConfig and RateConfigList
+This is because we source data for rate limiting instructions from both annotations and properties
+Irrespective of the source, we collect the data using RateConfig and RateConfigList.
+

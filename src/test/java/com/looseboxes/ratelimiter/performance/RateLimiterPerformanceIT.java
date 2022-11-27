@@ -35,11 +35,11 @@ public class RateLimiterPerformanceIT extends AbstractPerformanceTest{
     }
 
     public RateLimiter<Integer> getRateLimiter(int limit, int duration) {
-        return new SimpleRateLimiter<>(new RateConfig().limit(limit).duration(Duration.ofMillis(duration)));
+        return new SimpleRateLimiter<>(RateConfig.of(limit, Duration.ofMillis(duration)));
     }
 
     public RateLimiter<Integer> getRateLimiterWithSingletonCache(int limit, int duration) {
-        RateConfig rateConfig = new RateConfig().limit(limit).duration(Duration.ofMillis(duration));
+        RateConfig rateConfig = RateConfig.of(limit, Duration.ofMillis(duration));
         return new SimpleRateLimiter<Integer>(rateConfig).withRateCache(new SingletonRateCache<>(null));
     }
 }

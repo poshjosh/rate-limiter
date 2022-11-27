@@ -1,7 +1,5 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.rates.AmountPerDuration;
-import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.util.RateConfig;
 import com.looseboxes.ratelimiter.util.RateConfigList;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +9,6 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 public class RateLimiterTest {
@@ -60,7 +57,7 @@ public class RateLimiterTest {
     }
 
     protected RateConfig getDefaultLimit() {
-        return new RateConfig().limit(1).duration(Duration.ofMillis(durationMillis));
+        return RateConfig.of(1, Duration.ofMillis(durationMillis));
     }
 
     protected List<RateConfig> getLimitsThatWillLeadToReset() {
@@ -68,6 +65,6 @@ public class RateLimiterTest {
     }
 
     private RateConfig getBaseRate() {
-        return new RateConfig().limit(1).duration(Duration.ZERO);
+        return RateConfig.of(1, Duration.ZERO);
     }
 }

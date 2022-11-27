@@ -177,8 +177,8 @@ class CompositeRateTest {
         }
     }
 
-    Rate getRate(int limit, int duration) {
-        return new AmountPerDuration(limit, duration);
+    Rate getRate(int amount, int duration) {
+        return AmountPerDuration.of(amount, duration);
     }
 
     public CompositeRate getInstance(Logic logic, Rate... rates) {

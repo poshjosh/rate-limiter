@@ -158,7 +158,7 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
         }
     }
 
-    protected Rate newInitialRate() {
+    private Rate newInitialRate() {
         return Objects.requireNonNull(rateFactory.createNew());
     }
 
