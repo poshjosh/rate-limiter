@@ -16,13 +16,13 @@ public class Concept {
         RateLimiter<Integer> rateLimiter = new SimpleRateLimiter<>(rate);
 
         // We use numbers as recording keys
-        rateLimiter.increment(1);
-        rateLimiter.increment(2);
-        rateLimiter.increment(3);
+        rateLimiter.consume(1);
+        rateLimiter.consume(2);
+        rateLimiter.consume(3);
 
         // This will fail, it is the second recording of the number 1
         try {
-            rateLimiter.increment(1);
+            rateLimiter.consume(1);
         }catch(RateExceededException e) {
             e.printStackTrace();
         }

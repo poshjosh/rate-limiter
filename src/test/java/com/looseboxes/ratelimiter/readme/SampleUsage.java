@@ -27,7 +27,7 @@ public class SampleUsage {
         void rateLimitedMethod() {
 
             // VERY IMPORTANT to record usage
-            rateLimiter.increment(rateLimitedMethodId);
+            rateLimiter.consume(rateLimitedMethodId);
         }
     }
 

@@ -26,7 +26,7 @@ public class RateLimiterPerformanceIT extends AbstractPerformanceTest{
 
         final Integer key = Integer.valueOf(count);
         for(int i = 0; i < count; i++) {
-            rateLimiter.increment(key);
+            rateLimiter.consume(key);
         }
 
         assertUsageSinceBookmarkIsLessThan(bookmark, limit);

@@ -65,12 +65,10 @@ public class SampleUsage {
         }
 
         // Limited to 3 invocations every 2 seconds OR 100 invocations every 1 minute
-        @RateLimit(limit = LIMIT, duration = 2000) 
-        @RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES) 
-        void rateLimitedMethod() {
+        @RateLimit(limit = LIMIT, duration = 2000) @RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES) void rateLimitedMethod() {
 
             // VERY IMPORTANT to record usage
-            rateLimiter.increment(rateLimitedMethodId);
+            rateLimiter.consume(rateLimitedMethodId);
         }
     }
 
@@ -90,7 +88,8 @@ public class SampleUsage {
     }
 
     private static RateLimiter<Object> buildRateLimiter(Class<?> clazz) {
-        return new RateLimiterListBuilder<>().build(clazz).get(0); // Only one class/method is rate limited
+        return new RateLimiterListBuilder<>().build(clazz)
+                .get(0); // Only one class/method is rate limited
     }
 }
 ```
@@ -190,25 +189,25 @@ import com.looseboxes.ratelimiter.rates.Rate;
 
 public class Concept {
 
-  public static void main(String... args) {
+    public static void main(String... args) {
 
-    // Only one recording is allowed within a minute (for each unique recording key)
-    Rate rate = AmountPerDuration.of(1,  60 * 1000);
+        // Only one recording is allowed within a minute (for each unique recording key)
+        Rate rate = AmountPerDuration.of(1, 60 * 1000);
 
-    RateLimiter<Integer> rateLimiter = new SimpleRateLimiter<>(rate);
+        RateLimiter<Integer> rateLimiter = new SimpleRateLimiter<>(rate);
 
-    // We use numbers as recording keys
-    rateLimiter.increment(1);
-    rateLimiter.increment(2);
-    rateLimiter.increment(3);
+        // We use numbers as recording keys
+        rateLimiter.consume(1);
+        rateLimiter.consume(2);
+        rateLimiter.consume(3);
 
-    // This will fail, it is the second recording of the number 1
-    try {
-      rateLimiter.increment(1);
-    }catch(RateExceededException e) {
-      e.printStackTrace();
+        // This will fail, it is the second recording of the number 1
+        try {
+            rateLimiter.consume(1);
+        } catch (RateExceededException e) {
+            e.printStackTrace();
+        }
     }
-  }
 }
 ```
 

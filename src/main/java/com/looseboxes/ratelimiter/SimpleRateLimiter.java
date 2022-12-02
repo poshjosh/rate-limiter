@@ -26,7 +26,7 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
 
     public SimpleRateLimiter(Rate... rates) {
         this(new MapRateCache<>(), new AmountPerDurationFactory(),
-                new RateExceededExceptionThrower(), Limit.of(rates));
+                RateRecordedListener.NO_OP, Limit.of(rates));
     }
 
     public SimpleRateLimiter(RateCache<K, ?> rateCache, RateFactory rateFactory,
@@ -54,7 +54,7 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
     }
 
     @Override
-    public boolean increment(Object resource, K resourceId, int amount) {
+    public boolean consume(Object context, K resourceId, int amount) {
 
         final Rate existingRate = getRateFromCache(resourceId);
 
@@ -98,10 +98,10 @@ public class SimpleRateLimiter<K> implements RateLimiter<K> {
             addRateToCache(resourceId, result, putOnlyIfAbsent);
         }
 
-        rateRecordedListener.onRateRecorded(resource, resourceId, amount, exceededLimits);
+        rateRecordedListener.onRateRecorded(context, resourceId, amount, exceededLimits);
 
         if(limit.isExceeded(failCount)) {
-            rateRecordedListener.onRateExceeded(resource, resourceId, amount, exceededLimits);
+            rateRecordedListener.onRateExceeded(context, resourceId, amount, exceededLimits);
             return false;
         }else{
             return true;

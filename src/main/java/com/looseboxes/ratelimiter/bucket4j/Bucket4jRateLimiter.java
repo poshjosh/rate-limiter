@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 /**
  * RateLimiter implementation based on bucket4j
  * @see <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/6.4/doc-pages/jcache-usage.md">bucket4j jcache usage</a>
- * @param <K> The type of the key which the {@link Bucket4jRateLimiter#increment(Object)}} method accepts.
+ * @param <K> The type of the key which the {@link Bucket4jRateLimiter#consume(Object)}} method accepts.
  */
 public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<K> {
 
@@ -56,7 +56,7 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
     }
 
     @Override
-    public boolean increment(Object resource, K resourceId, int amount) {
+    public boolean consume(Object context, K resourceId, int amount) {
 
         int failCount = 0;
 
@@ -86,11 +86,11 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
                     !exceededLimits.isEmpty(), resourceId, exceededLimits, limit);
         }
 
-        rateRecordedListener.onRateRecorded(resource, resourceId, amount, exceededLimits);
+        rateRecordedListener.onRateRecorded(context, resourceId, amount, exceededLimits);
 
         if(limit.isExceeded(failCount)) {
 
-            rateRecordedListener.onRateExceeded(resource, resourceId, amount, exceededLimits);
+            rateRecordedListener.onRateExceeded(context, resourceId, amount, exceededLimits);
 
             return false;
 

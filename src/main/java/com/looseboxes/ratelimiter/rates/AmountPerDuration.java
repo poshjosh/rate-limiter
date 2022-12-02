@@ -37,16 +37,21 @@ public final class AmountPerDuration implements Rate, Serializable {
         if(amount == amountPerDuration.amount && duration == amountPerDuration.duration) {
             return 0;
         }
-        if(amount > amountPerDuration.amount) {
+        if (amount > amountPerDuration.amount) {
+            //System.out.println("Result: " + result + ", lhs: " + this + ", rhs: " + other);
             return duration > amountPerDuration.duration ? 0 : 1;
-        }else{
-            return -1;
         }
+        //System.out.println("Result: -1, lhs: " + this + ", rhs: " + other);
+        return -1;
     }
 
     @Override
-    public Rate increment(int amount) {
-        return AmountPerDuration.of(incrementLimit(amount), incrementDuration());
+    public AmountPerDuration increment(int amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Invalid amount" + amount);
+        }
+        // @TODO Do we pass in timeCreated or use System.currentTimeMillis() ?
+        return new AmountPerDuration(incrementLimit(amount), incrementDuration(), this.timeCreated);
     }
 
     private long incrementLimit(int amount) {

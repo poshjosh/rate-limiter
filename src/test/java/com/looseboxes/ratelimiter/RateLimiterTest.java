@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 public class RateLimiterTest {
@@ -17,21 +18,21 @@ public class RateLimiterTest {
     void shouldResetWhenAtThreshold() throws Exception{
         RateLimiter<String> rateLimiter = getRateLimiter(getLimitsThatWillLeadToReset());
         final String key = "0";
-        rateLimiter.increment(key);
+        rateLimiter.consume(key);
 
         // Simulate some time before the next recording
         // This way we can have a reset
         Thread.sleep(durationMillis + 500);
 
-        rateLimiter.increment(key);
+        rateLimiter.consume(key);
     }
 
     @Test
     void shouldFailWhenLimitExceeded() {
         RateLimiter<String> rateLimiter = getRateLimiter(getDefaultLimits());
         final String key = "0";
-        rateLimiter.increment(key);
-        assertThatThrownBy(() -> rateLimiter.increment(key));
+        rateLimiter.consume(key);
+        assertThat(rateLimiter.consume(key)).isFalse();
     }
 
     public RateLimiter<String> getRateLimiter(Rate... rates) {

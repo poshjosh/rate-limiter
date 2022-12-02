@@ -33,11 +33,11 @@ public interface Rate extends Comparable<Rate>, Serializable {
         }
     };
 
-    default Rate increment() {
+    default <T extends Rate> T increment() {
         return increment(1);
     }
 
-    Rate increment(int amount);
+    <T extends Rate> T increment(int amount);
 
     /**
      * Compare this to another.
