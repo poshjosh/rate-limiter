@@ -24,11 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.guava.ratelimiter.RateLimiter.SleepingStopwatch;
 import java.lang.reflect.Method;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import com.looseboxes.ratelimiter.rates.AmountPerDuration;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -43,36 +41,6 @@ public class RateLimiterTest {
     private static final double EPSILON = 1e-8;
 
     private final FakeStopwatch stopwatch = new FakeStopwatch();
-
-    @Test
-    public void test0() throws InterruptedException{
-        RateLimiter rateLimiter = RateLimiter.create(2.0);
-        boolean withinLimit = rateLimiter.tryAcquire(Integer.MAX_VALUE);
-        System.out.printf("\nWithin limit: %b\n", withinLimit);
-        withinLimit = rateLimiter.tryAcquire(1);
-        System.out.printf("\nWithin limit: %b\n", withinLimit);
-
-        rateLimiter = RateLimiter.create(2.0);
-        stopwatch.sleepMillis(1100);
-        withinLimit = rateLimiter.tryAcquire(3);
-        System.out.printf("\nWithin limit: %b\n", withinLimit);
-
-        com.looseboxes.ratelimiter.RateLimiter<String> r = new com.looseboxes.ratelimiter.SimpleRateLimiter(AmountPerDuration.of(2, 1000));
-        System.out.println(LocalTime.now());
-        Thread.sleep(999);
-        System.out.println(LocalTime.now());
-        String id = "1";
-        withinLimit = r.consume(id, 3);
-        System.out.printf("\nWithin limit: %b\n", withinLimit);
-
-        System.out.println(LocalTime.now());
-        Thread.sleep(999);
-        System.out.println(LocalTime.now());
-
-        withinLimit = r.consume(id, 3);
-        System.out.printf("\nWithin limit: %b\n", withinLimit);
-        System.out.println(LocalTime.now());
-    }
 
     @Test
     public void testSimple() {

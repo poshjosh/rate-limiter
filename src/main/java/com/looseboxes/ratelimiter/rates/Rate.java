@@ -33,6 +33,10 @@ public interface Rate extends Comparable<Rate>, Serializable {
         }
     };
 
+    static Rate of(long amount, long duration) {
+        return new AmountPerDuration(amount, duration, System.currentTimeMillis());
+    }
+
     default <T extends Rate> T increment() {
         return increment(1);
     }

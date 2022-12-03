@@ -1,6 +1,6 @@
 package com.looseboxes.ratelimiter.annotation;
 
-import com.looseboxes.ratelimiter.Limit;
+import com.looseboxes.ratelimiter.rates.Limit;
 import com.looseboxes.ratelimiter.node.Node;
 
 import java.lang.reflect.GenericDeclaration;

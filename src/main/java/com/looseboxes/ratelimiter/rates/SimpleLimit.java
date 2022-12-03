@@ -1,13 +1,10 @@
-package com.looseboxes.ratelimiter;
-
-import com.looseboxes.ratelimiter.rates.Logic;
-import com.looseboxes.ratelimiter.rates.Rate;
+package com.looseboxes.ratelimiter.rates;
 
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class SimpleLimit implements Limit, Serializable {
+final class SimpleLimit implements Limit, Serializable {
 
     private static final long serialVersionUID = 9081726354000000002L;
 
@@ -15,7 +12,7 @@ public class SimpleLimit implements Limit, Serializable {
 
     private final Rate[] rates;
 
-    public SimpleLimit(Rate[] rates, Logic logic) {
+    SimpleLimit(Rate[] rates, Logic logic) {
         this.logic = Objects.requireNonNull(logic);
         this.rates = new Rate[rates.length];
         System.arraycopy(rates, 0, this.rates, 0, rates.length);

@@ -3,15 +3,15 @@ package com.looseboxes.ratelimiter.cache;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MapRateCache<K, V> implements RateCache<K, V>{
+class MapRateCache<K, V> implements RateCache<K, V>{
 
     private final Map<K, V> delegate;
 
-    public MapRateCache() {
+    MapRateCache() {
         this(new ConcurrentHashMap<>());
     }
 
-    public MapRateCache(Map<K, V> delegate) {
+    MapRateCache(Map<K, V> delegate) {
         this.delegate = new ConcurrentHashMap<>(delegate);
     }
 

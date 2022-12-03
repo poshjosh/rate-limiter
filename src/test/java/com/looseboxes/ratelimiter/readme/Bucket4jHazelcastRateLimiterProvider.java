@@ -5,10 +5,8 @@ import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.bucket4j.Bucket4jRateLimiter;
 import com.looseboxes.ratelimiter.bucket4j.Bucket4jRateLimiterFactory;
 import com.looseboxes.ratelimiter.bucket4j.ProxyManagerProvider;
-import com.looseboxes.ratelimiter.builder.RateLimiterListBuilder;
-import com.looseboxes.ratelimiter.cache.MapRateCache;
+import com.looseboxes.ratelimiter.builder.RateLimitersBuilder;
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.rates.AmountPerDuration;
 import com.looseboxes.ratelimiter.rates.Rate;
 import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.grid.GridBucketState;
@@ -36,15 +34,13 @@ public class Bucket4jHazelcastRateLimiterProvider<K extends Serializable>{
         ProxyManager<K> proxyManager = Bucket4j.extension(Hazelcast.class).proxyManagerForMap(cache);
 
         // Limited to one invocation every second
-        final Rate rate = AmountPerDuration.of(1, 1000);
-
-        return new Bucket4jRateLimiter<>(proxyManager, new RateExceededExceptionThrower(), rate);
+        return new Bucket4jRateLimiter<>(proxyManager, Rate.of(1, 1000));
     }
 
     public List<RateLimiter<K>> newInstancesFromAnnotatedClass(IMap<K, GridBucketState> cache, Class<?> annotationSource) {
-        return new RateLimiterListBuilder<K>()
+        return RateLimitersBuilder.<K>list()
                 .rateLimiterFactory(new Bucket4jRateLimiterFactory<>(new HazelcastProxyManagerProvider()))
-                .rateCache(new MapRateCache<>(cache))
+                .rateCache(RateCache.of(cache))
                 .build(annotationSource);
     }
 }

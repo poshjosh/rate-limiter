@@ -1,28 +1,31 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.cache.MapRateCache;
 import com.looseboxes.ratelimiter.cache.RateCache;
 
 import java.util.Objects;
 
-public final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K, V> {
+final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K, V>, RateLimiterConfigBuilder<K, V> {
 
     private RateCache<K, V> rateCache;
     private RateFactory rateFactory;
     private RateRecordedListener rateRecordedListener;
 
-    public DefaultRateLimiterConfig() {
-        this(new MapRateCache<>(), new AmountPerDurationFactory(), new RateExceededExceptionThrower());
+    DefaultRateLimiterConfig() {
+        this(RateCache.ofMap(), new DefaultRateFactory(), RateRecordedListener.NO_OP);
     }
 
-    public DefaultRateLimiterConfig(RateLimiterConfig<K, V> rateLimiterConfig) {
+    DefaultRateLimiterConfig(RateLimiterConfig<K, V> rateLimiterConfig) {
         this(rateLimiterConfig.getRateCache(), rateLimiterConfig.getRateFactory(), rateLimiterConfig.getRateRecordedListener());
     }
 
-    public DefaultRateLimiterConfig(RateCache<K, V> rateCache, RateFactory rateFactory, RateRecordedListener rateRecordedListener) {
+    DefaultRateLimiterConfig(RateCache<K, V> rateCache, RateFactory rateFactory, RateRecordedListener rateRecordedListener) {
         this.rateCache = Objects.requireNonNull(rateCache);
         this.rateFactory = Objects.requireNonNull(rateFactory);
         this.rateRecordedListener = Objects.requireNonNull(rateRecordedListener);
+    }
+
+    public DefaultRateLimiterConfig<K, V> build() {
+        return new DefaultRateLimiterConfig<>(this);
     }
 
     public DefaultRateLimiterConfig<K, V> rateCache(RateCache<K, V> rateCache) {

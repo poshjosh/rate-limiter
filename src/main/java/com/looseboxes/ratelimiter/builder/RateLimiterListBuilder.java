@@ -6,30 +6,20 @@ import com.looseboxes.ratelimiter.annotation.NodeData;
 import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.node.BreadthFirstNodeVisitor;
 import com.looseboxes.ratelimiter.node.Node;
+import com.looseboxes.ratelimiter.rates.Limit;
 
 import java.util.*;
 
-public class RateLimiterListBuilder<K> implements
-        RateLimiterCollectionBuilder<List<RateLimiter<K>>> {
+class RateLimiterListBuilder<K> implements RateLimitersBuilder<K, List<RateLimiter<K>>> {
 
     private final RateLimiterTreeBuilder<K> rateLimiterTreeBuilder;
 
-    public RateLimiterListBuilder() {
+    RateLimiterListBuilder() {
         this(new RateLimiterTreeBuilder<>());
     }
 
-    public RateLimiterListBuilder(RateLimiterTreeBuilder<K> rateLimiterTreeBuilder) {
+    RateLimiterListBuilder(RateLimiterTreeBuilder<K> rateLimiterTreeBuilder) {
         this.rateLimiterTreeBuilder = rateLimiterTreeBuilder;
-    }
-
-    public List<RateLimiter<K>> build(Class<?> clazz) {
-        Node<RateLimiter<K>> node = rateLimiterTreeBuilder.build(clazz);
-        return toList(node);
-    }
-
-    public List<RateLimiter<K>> build(Class<?>... classes) {
-        Node<RateLimiter<K>> node = rateLimiterTreeBuilder.build(classes);
-        return toList(node);
     }
 
     public List<RateLimiter<K>> build(List<Class<?>> classes) {

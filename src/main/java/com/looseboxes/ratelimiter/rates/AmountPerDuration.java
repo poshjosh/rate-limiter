@@ -9,15 +9,11 @@ public final class AmountPerDuration implements Rate, Serializable {
 
     private static final long serialVersionUID = 9081726354000000001L;
 
-    public static AmountPerDuration of(long amount, long duration) {
-        return new AmountPerDuration(amount, duration, System.currentTimeMillis());
-    }
-
     private final long amount;
     private final long duration;
     private final long timeCreated;
 
-    private AmountPerDuration(long amount, long duration, long timeCreated) {
+    AmountPerDuration(long amount, long duration, long timeCreated) {
         final String limitError = RateLimitProcessor.getErrorMessageIfInvalidLimit(amount, null);
         if(limitError != null) {
             throw new IllegalArgumentException(limitError);

@@ -1,6 +1,29 @@
 package com.looseboxes.ratelimiter.cache;
 
+import javax.cache.Cache;
+import java.util.Map;
+
 public interface RateCache<K, V> {
+
+    static <K, V> RateCache<K, V> of(Cache cache) {
+        return new JavaRateCache<K, V>(cache);
+    }
+
+    static <K, V> RateCache<K, V> of(Map<K, V> map) {
+        return new MapRateCache<>(map);
+    }
+
+    static <K, V> RateCache<K, V> ofMap() {
+        return new MapRateCache<>();
+    }
+
+    static <K, V> RateCache<K, V> singleton() {
+        return singleton(null);
+    }
+
+    static <K, V> RateCache<K, V> singleton(K key) {
+        return new SingletonRateCache<>(key);
+    }
 
     void clear();
 

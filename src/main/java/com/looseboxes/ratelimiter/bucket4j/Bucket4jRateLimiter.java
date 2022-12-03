@@ -1,20 +1,16 @@
 package com.looseboxes.ratelimiter.bucket4j;
 
-import com.looseboxes.ratelimiter.Limit;
+import com.looseboxes.ratelimiter.rates.Limit;
 import com.looseboxes.ratelimiter.RateRecordedListener;
 import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.rates.AmountPerDuration;
 import com.looseboxes.ratelimiter.rates.Rate;
-import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.grid.ProxyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.time.Duration;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -32,27 +28,28 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
     private final Supplier<BucketConfiguration>[] configurationSuppliers;
     private final RateRecordedListener rateRecordedListener;
 
-    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, RateRecordedListener rateRecordedListener, Rate... rates) {
-        this(proxyManager, rateRecordedListener, Limit.of(rates));
+    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, Rate... rates) {
+        this(proxyManager, Limit.of(rates));
     }
 
-    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, RateRecordedListener rateRecordedListener, Limit limit) {
+    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, Limit limit) {
+        this(proxyManager, BucketConfigurationProvider.simple(), RateRecordedListener.NO_OP, limit);
+    }
+
+    public Bucket4jRateLimiter(
+            ProxyManager<K> proxyManager,
+            BucketConfigurationProvider bucketConfigurationProvider,
+            RateRecordedListener rateRecordedListener,
+            Limit limit) {
         this.buckets = Objects.requireNonNull(proxyManager);
         this.limit = Objects.requireNonNull(limit);
         this.configurationSuppliers = new Supplier[limit.getRateCount()];
         for(int i = 0; i < limit.getRateCount(); i++) {
             Rate rate = limit.getRates()[i];
-            BucketConfiguration configuration = getSimpleBucketConfiguration(rate);
+            BucketConfiguration configuration = bucketConfigurationProvider.getBucketConfiguration(rate);
             this.configurationSuppliers[i] = () -> configuration;
         }
         this.rateRecordedListener = Objects.requireNonNull(rateRecordedListener);
-    }
-
-    private BucketConfiguration getSimpleBucketConfiguration(Rate rate) {
-        final AmountPerDuration amountPerDuration = (AmountPerDuration)rate;
-        return Bucket4j.configurationBuilder()
-                .addLimit(Bandwidth.simple(amountPerDuration.getAmount(), Duration.ofMillis(amountPerDuration.getDuration())))
-                .build();
     }
 
     @Override
@@ -102,6 +99,6 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
 
     @Override
     public String toString() {
-        return Bucket4jRateLimiter.class.getSimpleName() + "@" + Integer.toHexString(hashCode()) + limit;
+        return "Bucket4jRateLimiter@" + Integer.toHexString(hashCode()) + limit;
     }
 }

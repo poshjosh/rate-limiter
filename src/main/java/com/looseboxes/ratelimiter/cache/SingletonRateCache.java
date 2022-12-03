@@ -6,13 +6,13 @@ package com.looseboxes.ratelimiter.cache;
  * A {code null} key will match any/all keys.
  * @param <K> The type of the key which this Cache holds
  */
-public class SingletonRateCache<K, V> implements RateCache<K, V>{
+class SingletonRateCache<K, V> implements RateCache<K, V>{
 
     private final K key;
 
     private V rate;
 
-    public SingletonRateCache(K key) {
+    SingletonRateCache(K key) {
         this.key = key;
     }
 

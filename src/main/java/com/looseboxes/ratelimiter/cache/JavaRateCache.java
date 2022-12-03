@@ -3,11 +3,11 @@ package com.looseboxes.ratelimiter.cache;
 import javax.cache.Cache;
 import java.util.Objects;
 
-public class JavaRateCache<K, V> implements RateCache<K, V>{
+class JavaRateCache<K, V> implements RateCache<K, V>{
 
     private final Cache<K, V> delegate;
 
-    public JavaRateCache(Cache<K, V> delegate) {
+    JavaRateCache(Cache<K, V> delegate) {
         this.delegate = Objects.requireNonNull(delegate);
     }
 
@@ -49,7 +49,8 @@ public class JavaRateCache<K, V> implements RateCache<K, V>{
         }
     }
 
-    @Override public <T> T unwrap(Class<T> clazz) {
+    @Override
+    public <T> T unwrap(Class<T> clazz) {
         if (clazz.isAssignableFrom(delegate.getClass())) {
             return clazz.cast(delegate);
         }

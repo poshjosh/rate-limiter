@@ -43,15 +43,13 @@ public class Bucket4jJCacheRateLimiterProvider<K extends Serializable>{
         ProxyManager<K> proxyManager = Bucket4j.extension(JCache.class).proxyManagerForCache(cache);
 
         // Limited to one invocation every second
-        final Rate rate = AmountPerDuration.of(1, 1000);
-
-        return new Bucket4jRateLimiter<>(proxyManager, new RateExceededExceptionThrower(), rate);
+        return new Bucket4jRateLimiter<>(proxyManager, Rate.of(1, 1000));
     }
 
     public List<RateLimiter<K>> newInstancesFromAnnotatedClass(Cache<K, GridBucketState> cache, Class<?> annotationSource) {
-        return new RateLimiterListBuilder<K>()
+        return RateLimitersBuilder.<K>list()
                 .rateLimiterFactory(new Bucket4jRateLimiterFactory<>(new JCacheProxyManagerProvider()))
-                .rateCache(new JavaRateCache<>(cache)) 
+                .rateCache(RateCache.of(cache)) 
                 .build(annotationSource);
     }
 }
@@ -105,15 +103,13 @@ public class Bucket4jHazelcastRateLimiterProvider<K extends Serializable>{
         ProxyManager<K> proxyManager = Bucket4j.extension(Hazelcast.class).proxyManagerForMap(cache);
 
         // Limited to one invocation every second
-        final Rate rate = AmountPerDuration.of(1, 1000);
-
-        return new Bucket4jRateLimiter<>(proxyManager, new RateExceededExceptionThrower(), rate);
+        return new Bucket4jRateLimiter<>(proxyManager, Rate.of(1, 1000));
     }
 
     public List<RateLimiter<K>> newInstancesFromAnnotatedClass(IMap<K, GridBucketState> cache, Class<?> annotationSource) {
-        return new RateLimiterListBuilder<K>()
+        return RateLimitersBuilder.<K>list()
                 .rateLimiterFactory(new Bucket4jRateLimiterFactory<>(new HazelcastProxyManagerProvider()))
-                .rateCache(new MapRateCache<>(cache))
+                .rateCache(RateCache.of(cache))
                 .build(annotationSource);
     }
 }
@@ -170,15 +166,13 @@ public class Bucket4jIgniteRateLimiterProvider<K extends Serializable>{
         ProxyManager<K> proxyManager = Bucket4j.extension(Ignite.class).proxyManagerForCache(cache);
 
         // Limited to one invocation every second
-        final Rate rate = AmountPerDuration.of(1, 1000);
-
-        return new Bucket4jRateLimiter<>(proxyManager, new RateExceededExceptionThrower(), rate);
+        return new Bucket4jRateLimiter<>(proxyManager, Rate.of(1, 1000));
     }
 
     public List<RateLimiter<K>> newInstancesFromAnnotatedClass(IgniteCache<K, GridBucketState> cache, Class<?> annotationSource) {
-        return new RateLimiterListBuilder<K>()
+        return RateLimitersBuilder.<K>list()
                 .rateLimiterFactory(new Bucket4jRateLimiterFactory<>(new IgniteProxyManagerProvider()))
-                .rateCache(new JavaRateCache<>(cache))
+                .rateCache(RateCache.of(cache))
                 .build(annotationSource);
     }
 }

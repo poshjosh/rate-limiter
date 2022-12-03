@@ -11,33 +11,33 @@ class AmountPerDurationTest {
     void negativeAmountIsRejected() {
         Assertions.assertThrows(
                 IllegalArgumentException.class,
-                () -> AmountPerDuration.of(-1, 0));
+                () -> Rate.of(-1, 0));
     }
 
     @Test
     void negativeDurationIsRejected() {
         Assertions.assertThrows(
                 IllegalArgumentException.class,
-                () -> AmountPerDuration.of(1, -1));
+                () -> Rate.of(1, -1));
     }
 
     @Test
     void amountIsIncremented() {
         final int amount = 1;
-        AmountPerDuration amountPerDuration = AmountPerDuration.of(amount, 1000);
+        Rate rate = Rate.of(amount, 1000);
         final int increment = 4;
-        AmountPerDuration incremented = amountPerDuration.increment(increment);
-        assertThat(incremented.getAmount()).isEqualTo(amount + increment);
+        Rate incremented = rate.increment(increment);
+        assertThat(((AmountPerDuration)incremented).getAmount()).isEqualTo(amount + increment);
     }
 
     @Test
     void durationIsIncrementedByTimeElapsed() throws InterruptedException{
-        AmountPerDuration amountPerDuration = AmountPerDuration.of(1, 0);
+        Rate rate = Rate.of(1, 0);
         final long timeElapsed = 100;
         Thread.sleep(timeElapsed);
-        AmountPerDuration incremented = amountPerDuration.increment();
-        final long expectedAtMost = System.currentTimeMillis() - amountPerDuration.getTimeCreated();
+        Rate incremented = rate.increment();
+        final long expectedAtMost = System.currentTimeMillis() - ((AmountPerDuration)rate).getTimeCreated();
         //System.out.println("Duration: " + incremented.getDuration() + ", expected: " + expectedAtMost);
-        assertThat(incremented.getDuration()).isEqualTo(expectedAtMost);
+        assertThat(((AmountPerDuration)incremented).getDuration()).isEqualTo(expectedAtMost);
     }
 }

@@ -1,14 +1,15 @@
 package com.looseboxes.ratelimiter.performance;
 
 import com.looseboxes.ratelimiter.*;
-import com.looseboxes.ratelimiter.cache.SingletonRateCache;
-import com.looseboxes.ratelimiter.rates.AmountPerDuration;
+import com.looseboxes.ratelimiter.cache.RateCache;
+import com.looseboxes.ratelimiter.rates.Limit;
+import com.looseboxes.ratelimiter.rates.Rate;
 import org.junit.jupiter.api.Test;
 
-public class RateLimiterPerformanceIT extends AbstractPerformanceTest{
+class RateLimiterPerformanceIT extends AbstractPerformanceTest{
 
     @Test
-    public void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory() {
+    void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory() {
 
         // @TODO introduce maven profiles so performance tests could be INFO, while other tests DEBUG
 
@@ -33,10 +34,12 @@ public class RateLimiterPerformanceIT extends AbstractPerformanceTest{
     }
 
     public RateLimiter<Integer> getRateLimiter(int limit, int duration) {
-        return new SimpleRateLimiter<>(AmountPerDuration.of(limit, duration));
+        return RateLimiter.of(Rate.of(limit, duration));
     }
 
     public RateLimiter<Integer> getRateLimiterWithSingletonCache(int limit, int duration) {
-        return new SimpleRateLimiter<Integer>(AmountPerDuration.of(limit, duration)).withRateCache(new SingletonRateCache<>(null));
+    RateLimiterConfig<Integer, ?> config =
+        RateLimiterConfig.<Integer, Object>builder().rateCache(RateCache.singleton()).build();
+        return RateLimiter.<Integer>of(config, Limit.of(Rate.of(limit, duration)));
     }
 }

@@ -1,7 +1,4 @@
-package com.looseboxes.ratelimiter;
-
-import com.looseboxes.ratelimiter.rates.Logic;
-import com.looseboxes.ratelimiter.rates.Rate;
+package com.looseboxes.ratelimiter.rates;
 
 public interface Limit {
 

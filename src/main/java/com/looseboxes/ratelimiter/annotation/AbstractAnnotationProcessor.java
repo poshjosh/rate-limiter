@@ -1,8 +1,7 @@
 package com.looseboxes.ratelimiter.annotation;
 
-import com.looseboxes.ratelimiter.Limit;
+import com.looseboxes.ratelimiter.rates.Limit;
 import com.looseboxes.ratelimiter.node.formatters.NodeFormatters;
-import com.looseboxes.ratelimiter.rates.AmountPerDuration;
 import com.looseboxes.ratelimiter.rates.Logic;
 import com.looseboxes.ratelimiter.rates.Rate;
 import com.looseboxes.ratelimiter.util.Nullable;
@@ -153,6 +152,6 @@ public abstract class AbstractAnnotationProcessor<S extends GenericDeclaration> 
     }
 
     private Rate createRate(RateLimit rateLimit) {
-        return AmountPerDuration.of(rateLimit.limit(), rateLimit.timeUnit().toMillis(rateLimit.duration()));
+        return Rate.of(rateLimit.limit(), rateLimit.timeUnit().toMillis(rateLimit.duration()));
     }
 }

@@ -1,5 +1,8 @@
 package com.looseboxes.ratelimiter;
 
+import com.looseboxes.ratelimiter.rates.Limit;
+import com.looseboxes.ratelimiter.rates.Rate;
+
 import java.util.Objects;
 
 public interface RateLimiter<K> {
@@ -9,6 +12,18 @@ public interface RateLimiter<K> {
     @SuppressWarnings("unchecked")
     static <T> RateLimiter<T> noop() {
         return (RateLimiter<T>)NO_OP;
+    }
+
+    static <K> RateLimiter<K> of(Rate... rates) {
+        return of(Limit.of(rates));
+    }
+
+    static <K> RateLimiter<K> of(Limit limit) {
+        return of(RateLimiterConfig.newInstance(), limit);
+    }
+
+    static <K> RateLimiter<K> of(RateLimiterConfig<K, ?> rateLimiterConfig, Limit limit) {
+        return new SimpleRateLimiter<>(rateLimiterConfig, limit);
     }
 
     /**

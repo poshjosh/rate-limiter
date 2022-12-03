@@ -1,8 +1,8 @@
 package com.looseboxes.ratelimiter.readme;
 
 import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.builder.RateLimiterListBuilder;
 import com.looseboxes.ratelimiter.annotation.RateLimit;
+import com.looseboxes.ratelimiter.builder.RateLimitersBuilder;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +47,6 @@ public class SampleUsage {
     }
 
     private static RateLimiter<Object> buildRateLimiter(Class<?> clazz) {
-        return new RateLimiterListBuilder<>().build(clazz).get(0); // Only one class/method is rate limited
+        return RateLimitersBuilder.list().build(clazz).get(0); // Only one class/method is rate limited
     }
 }

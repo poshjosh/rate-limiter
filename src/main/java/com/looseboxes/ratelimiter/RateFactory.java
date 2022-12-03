@@ -4,5 +4,5 @@ import com.looseboxes.ratelimiter.rates.Rate;
 
 @FunctionalInterface
 public interface RateFactory {
-    Rate createNew();
+    Rate createNew(long amount);
 }

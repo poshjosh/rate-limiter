@@ -88,8 +88,8 @@ public class SampleUsage {
     }
 
     private static RateLimiter<Object> buildRateLimiter(Class<?> clazz) {
-        return new RateLimiterListBuilder<>().build(clazz)
-                .get(0); // Only one class/method is rate limited
+        // Only one class/method is rate limited
+        return RateLimitersBuilder.list().build(clazz).get(0); 
     }
 }
 ```
@@ -181,33 +181,25 @@ Resource2#methodC                       Resource2#methodB                   Reso
 ### Concept
 
 ```java
-import com.looseboxes.ratelimiter.RateExceededException;
-import com.looseboxes.ratelimiter.SimpleRateLimiter;
 import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.rates.AmountPerDuration;
 import com.looseboxes.ratelimiter.rates.Rate;
 
 public class Concept {
 
-    public static void main(String... args) {
+  public static void main(String... args) {
 
-        // Only one recording is allowed within a minute (for each unique recording key)
-        Rate rate = AmountPerDuration.of(1, 60 * 1000);
+    // Only one recording is allowed within a minute (for each unique recording key)
+    RateLimiter<Integer> rateLimiter = RateLimiter.of(Rate.of(1, 60 * 1000));
 
-        RateLimiter<Integer> rateLimiter = new SimpleRateLimiter<>(rate);
+    // We use numbers as recording keys
+    rateLimiter.consume(1);
+    rateLimiter.consume(2);
+    rateLimiter.consume(3);
 
-        // We use numbers as recording keys
-        rateLimiter.consume(1);
-        rateLimiter.consume(2);
-        rateLimiter.consume(3);
-
-        // This will fail, it is the second recording of the number 1
-        try {
-            rateLimiter.consume(1);
-        } catch (RateExceededException e) {
-            e.printStackTrace();
-        }
-    }
+    // This will return false, it is the second recording of the number 1
+    final boolean withinLimit = rateLimiter.consume(1);
+    System.out.printf("Within limit: %b", withinLimit);
+  }
 }
 ```
 

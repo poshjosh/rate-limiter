@@ -1,7 +1,7 @@
 # TODO
 
 - Test Bucket4jRateLimiter
-- Use Stopwatch, Ticker, SystemTicker etc also RateLimiter.tryAcquire() or RateLimiter.request()
+- Use Guava RateLimiter -> Add caching to guava rateLimiter
 - Test (in the core package) that RateLimiter works for different amounts, durations and time units.  
 - Handle and test case where a class has: 1. no path; 2. empty path pattern; but one or more methods of the class has path patterns.
 
