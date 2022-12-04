@@ -5,7 +5,7 @@ import com.looseboxes.ratelimiter.annotation.RateLimitProcessor;
 import java.io.Serializable;
 import java.util.Objects;
 
-public final class AmountPerDuration implements Rate, Serializable {
+public final class AmountPerDuration implements Rate<AmountPerDuration>, Serializable {
 
     private static final long serialVersionUID = 9081726354000000001L;
 
@@ -28,8 +28,7 @@ public final class AmountPerDuration implements Rate, Serializable {
     }
 
     @Override
-    public int compareTo(Rate other) {
-        AmountPerDuration amountPerDuration = (AmountPerDuration) other;
+    public int compareTo(AmountPerDuration amountPerDuration) {
         if(amount == amountPerDuration.amount && duration == amountPerDuration.duration) {
             return 0;
         }

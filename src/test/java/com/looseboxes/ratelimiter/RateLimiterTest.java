@@ -20,7 +20,7 @@ class RateLimiterTest {
     @Test
     void shouldNotBeAffectedByLongInitialDelay() throws InterruptedException {
         final long duration = 100;
-        RateLimiter<String> rateLimiter = RateLimiter.of(Rate.of(1, duration));
+        RateLimiter<String> rateLimiter = RateLimiter.of(getRate(1, duration));
         Thread.sleep(duration + 1);
         assertTrue(rateLimiter.consume(key), "Unable to acquire initial permit");
         assertFalse(rateLimiter.consume(key), "Capable of acquiring additional permit");
@@ -29,7 +29,7 @@ class RateLimiterTest {
     @Test
     void veryLargeLimitShouldNotBeAffectedByDuration() {
         final long duration = 1;
-        RateLimiter<String> rateLimiter = RateLimiter.of(Rate.of(Long.MAX_VALUE, duration));
+        RateLimiter<String> rateLimiter = RateLimiter.of(getRate(Long.MAX_VALUE, duration));
         for (int i = 0; i < 100; i++) {
             assertTrue(rateLimiter.consume(key), "Unable to acquire permit " + i);
         }
@@ -52,8 +52,8 @@ class RateLimiterTest {
 
     @Test
     void testNewInstanceParameterValidation() {
-        assertThrowsRuntimeException(() -> RateLimiter.of(Rate.of(-1, 1)));
-        assertThrowsRuntimeException(() -> RateLimiter.of(Rate.of(1, -1)));
+        assertThrowsRuntimeException(() -> RateLimiter.of(getRate(-1, 1)));
+        assertThrowsRuntimeException(() -> RateLimiter.of(getRate(1, -1)));
     }
 
     private static void assertTrue(boolean expression, String message) {
@@ -69,7 +69,7 @@ class RateLimiterTest {
     }
 
     private <T> RateLimiter<T> perSecondRateLimiter(long amount) {
-        return RateLimiter.of(Rate.of(amount, durationMillis));
+        return RateLimiter.of(getRate(amount, durationMillis));
     }
 
     @Test

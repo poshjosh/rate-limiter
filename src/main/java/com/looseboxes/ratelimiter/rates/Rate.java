@@ -16,9 +16,9 @@ import java.io.Serializable;
  * Count and time
  * Memory and time
  */
-public interface Rate extends Comparable<Rate>, Serializable {
+public interface Rate<T extends Rate> extends Comparable<T>, Serializable {
 
-    Rate NONE = new Rate() {
+    Rate NONE = new Rate<Rate>() {
         @Override
         public Rate increment(int amount) {
             return this;
@@ -37,11 +37,11 @@ public interface Rate extends Comparable<Rate>, Serializable {
         return new AmountPerDuration(amount, duration, System.currentTimeMillis());
     }
 
-    default <T extends Rate> T increment() {
+    default T increment() {
         return increment(1);
     }
 
-    <T extends Rate> T increment(int amount);
+    T increment(int amount);
 
     /**
      * Compare this to another.
@@ -50,12 +50,12 @@ public interface Rate extends Comparable<Rate>, Serializable {
      * @return
      * <p><b>The return value represents the following:</b></p>
      * <ul>
-     *     <li>POSITIVE_INTEGER = HAS EXCEEDED LIMIT</li>
-     *     <li>ZERO = IS AT A THRESHOLD (Should be reset)</li>
-     *     <li>NEGATIVE_INTEGER = IS WITHIN LIMIT</li>
+     *     <li>+1 = HAS EXCEEDED LIMIT</li>
+     *     <li>0 = IS AT A THRESHOLD (Should be reset)</li>
+     *     <li>-1 = IS WITHIN LIMIT</li>
      * </ul>
      * @see Comparable#compareTo(Object)
      */
     @Override
-    int compareTo(Rate other);
+    int compareTo(T other);
 }

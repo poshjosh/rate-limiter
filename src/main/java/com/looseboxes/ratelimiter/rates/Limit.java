@@ -17,10 +17,10 @@ public interface Limit {
         return new SimpleLimit(rates, logic);
     }
 
-    default boolean isExceeded(int failCount) {
+    default boolean isExceeded(int numberOfHits) {
         Logic logic = getLogic();
-        return (Logic.OR.equals(logic) && failCount > 0)
-                || (Logic.AND.equals(logic) && failCount >= getRateCount());
+        return (Logic.OR.equals(logic) && numberOfHits > 0)
+                || (Logic.AND.equals(logic) && numberOfHits >= getRateCount());
     }
 
     default boolean hasLimits() { return getRateCount() > 0; }
@@ -29,6 +29,20 @@ public interface Limit {
         return getRates().length;
     }
 
+    /**
+     * Compare this Limit to a {@link Rate}.
+     *
+     * @param rate The Rate to compare this Limit to
+     * @return
+     * <p><b>The return value represents the following:</b></p>
+     * <ul>
+     *     <li>+1 = HAS EXCEEDED LIMIT</li>
+     *     <li>0 = IS AT A THRESHOLD (Should be reset)</li>
+     *     <li>-1 = IS WITHIN LIMIT</li>
+     * </ul>
+     * @see Rate#compareTo(Rate)
+     */
+    int compareTo(Rate rate);
     Logic getLogic();
     Rate[] getRates();
 }

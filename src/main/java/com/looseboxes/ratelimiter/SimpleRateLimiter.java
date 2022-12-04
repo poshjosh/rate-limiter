@@ -44,58 +44,28 @@ final class SimpleRateLimiter<K> implements RateLimiter<K> {
 
         final Rate existingRate = getRateFromCache(resourceId);
 
-        final Rate next = existingRate == null ? newInitialRate(amount) : existingRate.increment(amount);
+        final Rate targetRate = existingRate == null ? newInitialRate(amount) : existingRate.increment(amount);
 
-        int resetCount = 0;
-        int failCount = 0;
-        List<Rate> exceededLimits = null; // Initialize only when needed
-
-        for(Rate rate : limit.getRates()) {
-
-            final int n = next.compareTo(rate);
-
-            if(n == 0) {
-
-                ++resetCount;
-
-            }else if(n > 0) {
-
-                ++failCount;
-
-                if(exceededLimits == null) {
-                    exceededLimits = new ArrayList<>(this.limit.getRateCount());
-                }
-                exceededLimits.add(rate);
-            }
-        }
-
-        if(exceededLimits == null){
-            exceededLimits = Collections.emptyList();
-        }
+        final int comparison = limit.compareTo(targetRate);
 
         if(LOG.isTraceEnabled()) {
-            LOG.trace("Limit exceeded: {}, for: {}, rate: {}, exceeded limits: {}, all limits: {}",
-                    !exceededLimits.isEmpty(), resourceId, next, exceededLimits, limit);
+            LOG.trace("Limit exceeded: {}, for: {}, rate: {}, limit: {}", comparison == 1, resourceId, targetRate, limit);
         }
 
-        final Rate result = shouldReset(resetCount) ? newInitialRate(amount) : next;
+        final Rate result = comparison == 0 ? newInitialRate(amount) : targetRate;
         if(existingRate != result) {
             final boolean putOnlyIfAbsent = existingRate == null;
             addRateToCache(resourceId, result, putOnlyIfAbsent);
         }
 
-        rateRecordedListener.onRateRecorded(context, resourceId, amount, exceededLimits);
+        rateRecordedListener.onRateRecorded(context, resourceId, amount, limit, targetRate);
 
-        if(limit.isExceeded(failCount)) {
-            rateRecordedListener.onRateExceeded(context, resourceId, amount, exceededLimits);
+        if(comparison == 1) {
+            rateRecordedListener.onRateExceeded(context, resourceId, amount, limit, targetRate);
             return false;
         }else{
             return true;
         }
-    }
-
-    private boolean shouldReset(int resetCount) {
-        return limit.isExceeded(resetCount);
     }
 
     private Rate getRateFromCache(K key) {
