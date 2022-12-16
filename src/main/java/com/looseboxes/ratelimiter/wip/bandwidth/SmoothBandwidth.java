@@ -1,6 +1,7 @@
-package com.wip.ratelimiter.rate;
+package com.looseboxes.ratelimiter.wip.bandwidth;
 
-import com.wip.ratelimiter.Checks;
+import com.looseboxes.ratelimiter.rates.AmountPerDuration;
+import com.looseboxes.ratelimiter.wip.Checks;
 
 import java.util.concurrent.TimeUnit;
 
@@ -8,23 +9,29 @@ import static java.lang.Math.min;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public abstract class SmoothRate implements Rate {
+public abstract class SmoothBandwidth implements Bandwidth {
 
-    public static Rate bursty(double permitsPerSecond, long nowMicros) {
+    public static Bandwidth bursty(AmountPerDuration amountPerDuration, long nowMicros) {
+        double durationSeconds = (double)amountPerDuration.getDuration() / 1000;
+        double permitsPerSecond = amountPerDuration.getAmount() / durationSeconds;
+        return bursty(permitsPerSecond, nowMicros);
+    }
+
+    public static Bandwidth bursty(double permitsPerSecond, long nowMicros) {
         return bursty(permitsPerSecond, nowMicros, 1.0);
     }
 
-    public static Rate bursty(double permitsPerSecond, long nowMicros, double maxBurstSeconds) {
-        return new SmoothBurstyRate(permitsPerSecond, nowMicros, maxBurstSeconds);
+    public static Bandwidth bursty(double permitsPerSecond, long nowMicros, double maxBurstSeconds) {
+        return new SmoothBurstyBandwidth(permitsPerSecond, nowMicros, maxBurstSeconds);
     }
 
-    public static Rate warmingUp(double permitsPerSecond, long nowMicros, long warmupPeriodMicros) {
+    public static Bandwidth warmingUp(double permitsPerSecond, long nowMicros, long warmupPeriodMicros) {
         return warmingUp(permitsPerSecond, nowMicros, warmupPeriodMicros, MICROSECONDS, 3.0);
     }
 
-    public static Rate warmingUp(double permitsPerSecond, long nowMicros,
+    public static Bandwidth warmingUp(double permitsPerSecond, long nowMicros,
             long warmupPeriod, TimeUnit timeUnit, double coldFactor) {
-        return new SmoothWarmingUpRate(permitsPerSecond, nowMicros, warmupPeriod, timeUnit, coldFactor);
+        return new SmoothWarmingUpBandwidth(permitsPerSecond, nowMicros, warmupPeriod, timeUnit, coldFactor);
     }
 
     /** The currently stored permits. */
@@ -45,7 +52,7 @@ public abstract class SmoothRate implements Rate {
      */
     private long nextFreeTicketMicros = 0L; // could be either in the past or future
 
-    public abstract SmoothRate with(double permitsPerSecond, long nowMicros);
+    public abstract SmoothBandwidth with(double permitsPerSecond, long nowMicros);
 
     protected abstract void doSetRate(double permitsPerSecond, double stableIntervalMicros);
 

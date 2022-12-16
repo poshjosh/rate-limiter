@@ -1,4 +1,4 @@
-package com.wip.ratelimiter;
+package com.looseboxes.ratelimiter.wip;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;

@@ -1,17 +1,17 @@
-package com.wip.ratelimiter.rate;
+package com.looseboxes.ratelimiter.wip.bandwidth;
 
-final class SmoothBurstyRate extends SmoothRate{
+final class SmoothBurstyBandwidth extends SmoothBandwidth {
 
     /** The work (permits) of how many seconds can be saved up if this RateLimiter is unused? */
     private final double maxBurstSeconds;
 
-    SmoothBurstyRate(double permitsPerSecond, long nowMicros, double maxBurstSeconds) {
+    SmoothBurstyBandwidth(double permitsPerSecond, long nowMicros, double maxBurstSeconds) {
         this.maxBurstSeconds = maxBurstSeconds; // Before calling setPermitsPerSecond
         setRate(permitsPerSecond, nowMicros);
     }
 
-    public SmoothBurstyRate with(double permitsPerSecond, long nowMicros) {
-        return new SmoothBurstyRate(permitsPerSecond, nowMicros, maxBurstSeconds);
+    public SmoothBurstyBandwidth with(double permitsPerSecond, long nowMicros) {
+        return new SmoothBurstyBandwidth(permitsPerSecond, nowMicros, maxBurstSeconds);
     }
 
     @Override

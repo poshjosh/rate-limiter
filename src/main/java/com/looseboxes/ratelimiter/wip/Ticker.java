@@ -1,4 +1,4 @@
-package com.wip.ratelimiter;
+package com.looseboxes.ratelimiter.wip;
 
 public abstract class Ticker {
     private static final Ticker SYSTEM_TICKER = new Ticker() {

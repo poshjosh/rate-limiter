@@ -1,7 +1,7 @@
-package com.wip.ratelimiter;
+package com.looseboxes.ratelimiter.wip;
 
-import com.wip.ratelimiter.rate.Rate;
-import com.wip.ratelimiter.rate.SmoothRate;
+import com.looseboxes.ratelimiter.wip.bandwidth.Bandwidth;
+import com.looseboxes.ratelimiter.wip.bandwidth.SmoothBandwidth;
 
 import java.time.Duration;
 import java.util.Locale;
@@ -71,7 +71,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  */
 // TODO(user): switch to nano precision. A natural unit of cost is "bytes", and a micro precision
 // would mean a maximum rate of "1MB/s", which might be small in some cases.
-public class RateLimiter2 implements RateLimiterIx{
+public class SimpleBandwidthLimiter implements BandwidthLimiter {
     /**
      * Creates a {@code RateLimiter} with the specified stable throughput, given as "permits per
      * second" (commonly referred to as <i>QPS</i>, queries per second).
@@ -89,7 +89,7 @@ public class RateLimiter2 implements RateLimiterIx{
      */
     // TODO(user): "This is equivalent to
     // {@code createWithCapacity(permitsPerSecond, 1, TimeUnit.SECONDS)}".
-    public static RateLimiter2 create(double permitsPerSecond) {
+    public static SimpleBandwidthLimiter create(double permitsPerSecond) {
         /*
          * The default RateLimiter configuration can save the unused permits of up to one second. This
          * is to avoid unnecessary stalls in situations like this: A RateLimiter of 1qps, and 4 threads,
@@ -107,9 +107,9 @@ public class RateLimiter2 implements RateLimiterIx{
     }
 
     //@VisibleForTesting
-    static RateLimiter2 create(double permitsPerSecond, SleepingStopwatch stopwatch) {
-        Rate rate = SmoothRate.bursty(permitsPerSecond, stopwatch.readMicros());
-        return new RateLimiter2(rate, stopwatch);
+    static SimpleBandwidthLimiter create(double permitsPerSecond, SleepingStopwatch stopwatch) {
+        Bandwidth bandwidth = SmoothBandwidth.bursty(permitsPerSecond, stopwatch.readMicros());
+        return new SimpleBandwidthLimiter(bandwidth, stopwatch);
     }
 
     /**
@@ -136,7 +136,7 @@ public class RateLimiter2 implements RateLimiterIx{
      *     warmupPeriod} is negative
      * @since 28.0
      */
-    public static RateLimiter2 create(double permitsPerSecond, Duration warmupPeriod) {
+    public static SimpleBandwidthLimiter create(double permitsPerSecond, Duration warmupPeriod) {
         return create(permitsPerSecond, Util.toNanosSaturated(warmupPeriod), TimeUnit.NANOSECONDS);
     }
 
@@ -165,25 +165,27 @@ public class RateLimiter2 implements RateLimiterIx{
      *     warmupPeriod} is negative
      */
     @SuppressWarnings("GoodTime") // should accept a java.time.Duration
-    public static RateLimiter2 create(double permitsPerSecond, long warmupPeriod, TimeUnit unit) {
+    public static SimpleBandwidthLimiter create(double permitsPerSecond, long warmupPeriod, TimeUnit unit) {
         Checks.requireTrue(warmupPeriod >= 0, "warmupPeriod must not be negative: %s", warmupPeriod);
         SleepingStopwatch stopwatch = SleepingStopwatch.createFromSystemTimer();
-        Rate rate = SmoothRate.warmingUp(permitsPerSecond, stopwatch.readMicros(), unit.toMicros(warmupPeriod));
-        return new RateLimiter2(rate, stopwatch);
+        Bandwidth bandwidth = SmoothBandwidth
+                .warmingUp(permitsPerSecond, stopwatch.readMicros(), unit.toMicros(warmupPeriod));
+        return new SimpleBandwidthLimiter(bandwidth, stopwatch);
     }
 
     //@VisibleForTesting
-    static RateLimiter2 create(
+    static SimpleBandwidthLimiter create(
             double permitsPerSecond,
             long warmupPeriod,
             TimeUnit unit,
             double coldFactor,
             SleepingStopwatch stopwatch) {
-        Rate rate = SmoothRate.warmingUp(permitsPerSecond, stopwatch.readMicros(), warmupPeriod, unit, coldFactor);
-        return new RateLimiter2(rate, stopwatch);
+        Bandwidth bandwidth = SmoothBandwidth
+                .warmingUp(permitsPerSecond, stopwatch.readMicros(), warmupPeriod, unit, coldFactor);
+        return new SimpleBandwidthLimiter(bandwidth, stopwatch);
     }
 
-    private final Rate rate;
+    private final Bandwidth bandwidth;
 
     /**
      * The underlying timer; used both to measure elapsed time and sleep as necessary. A separate
@@ -207,8 +209,8 @@ public class RateLimiter2 implements RateLimiterIx{
         return mutex;
     }
 
-    RateLimiter2(Rate rate, SleepingStopwatch stopwatch) {
-        this.rate = Objects.requireNonNull(rate);
+    SimpleBandwidthLimiter(Bandwidth bandwidth, SleepingStopwatch stopwatch) {
+        this.bandwidth = Objects.requireNonNull(bandwidth);
         this.stopwatch = Objects.requireNonNull(stopwatch);
     }
 
@@ -234,7 +236,7 @@ public class RateLimiter2 implements RateLimiterIx{
         Checks.requireTrue(permitsPerSecond > 0.0
                 && !Double.isNaN(permitsPerSecond), "rate must be positive");
         synchronized (mutex()) {
-            rate.setRate(permitsPerSecond, stopwatch.readMicros());
+            bandwidth.setRate(permitsPerSecond, stopwatch.readMicros());
         }
     }
 
@@ -246,7 +248,7 @@ public class RateLimiter2 implements RateLimiterIx{
      */
     public final double getPermitsPerSecond() {
         synchronized (mutex()) {
-            return rate.getRate();
+            return bandwidth.getRate();
         }
     }
 
@@ -309,7 +311,9 @@ public class RateLimiter2 implements RateLimiterIx{
     }
 
     private boolean canAcquire(long nowMicros, long timeoutMicros) {
-        return rate.queryEarliestAvailable(nowMicros) - timeoutMicros <= nowMicros;
+        //System.out.println("Result: " + (rate.queryEarliestAvailable(nowMicros) - timeoutMicros <= nowMicros)
+        //        + ", " + rate.queryEarliestAvailable(nowMicros) + " - " + timeoutMicros + " <= " + nowMicros);
+        return bandwidth.queryEarliestAvailable(nowMicros) - timeoutMicros <= nowMicros;
     }
 
     /**
@@ -318,8 +322,14 @@ public class RateLimiter2 implements RateLimiterIx{
      * @return the required wait time, never negative
      */
     final long reserveAndGetWaitLength(int permits, long nowMicros) {
-        long momentAvailable = rate.reserveEarliestAvailable(permits, nowMicros);
+        long momentAvailable = bandwidth.reserveEarliestAvailable(permits, nowMicros);
+        //System.out.println("Result: " + (max(momentAvailable - nowMicros, 0))
+        //        + ", max(" + momentAvailable + " - " + nowMicros + ", 0)");
         return max(momentAvailable - nowMicros, 0);
+    }
+
+    public Bandwidth getRate() {
+        return bandwidth;
     }
 
     @Override

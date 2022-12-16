@@ -1,4 +1,4 @@
-package com.wip.ratelimiter;
+package com.looseboxes.ratelimiter.wip;
 
 public final class Checks {
     private Checks() { }

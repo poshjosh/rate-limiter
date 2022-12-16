@@ -1,6 +1,6 @@
-package com.wip.ratelimiter.rate;
+package com.looseboxes.ratelimiter.wip.bandwidth;
 
-public interface Rate {
+public interface Bandwidth {
 
     void setRate(double permitsPerSecond, long nowMicros);
 

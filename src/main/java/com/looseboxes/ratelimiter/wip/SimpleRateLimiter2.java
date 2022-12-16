@@ -1,7 +1,13 @@
-package com.looseboxes.ratelimiter;
+package com.looseboxes.ratelimiter.wip;
 
+import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.cache.RateCache;
+import com.looseboxes.ratelimiter.rates.AmountPerDuration;
+import com.looseboxes.ratelimiter.rates.Limit;
 import com.looseboxes.ratelimiter.rates.Rate;
+import com.looseboxes.ratelimiter.wip.SimpleBandwidthLimiter;
+import com.looseboxes.ratelimiter.wip.bandwidth.Bandwidth;
+import com.looseboxes.ratelimiter.wip.bandwidth.SmoothBandwidth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,49 +25,50 @@ final class SimpleRateLimiter2<K> implements RateLimiter<K> {
 
     private final RateFactory rateFactory;
 
-    private final RateLimiter rateLimiter;
+    private final Limit limit;
 
     private final RateRecordedListener rateRecordedListener;
 
-    protected SimpleRateLimiter2(RateLimiterConfig<K, ?> rateLimiterConfig, RateLimiter rateLimiter) {
+    protected SimpleRateLimiter2(RateLimiterConfig<K, ?> rateLimiterConfig, Limit limit) {
         this(rateLimiterConfig.getRateCache(),
                 rateLimiterConfig.getRateFactory(),
                 rateLimiterConfig.getRateRecordedListener(),
-                rateLimiter);
+                limit);
     }
 
     private SimpleRateLimiter2(RateCache<K, ?> rateCache, RateFactory rateFactory,
-                             RateRecordedListener rateRecordedListener, RateLimiter rateLimiter) {
+            RateRecordedListener rateRecordedListener, Limit limit) {
         this.rateCache = (RateCache<K, Object>)Objects.requireNonNull(rateCache);
         this.rateFactory = Objects.requireNonNull(rateFactory);
         this.rateRecordedListener = Objects.requireNonNull(rateRecordedListener);
-        this.rateLimiter = Objects.requireNonNull(rateLimiter);
+        this.limit = Objects.requireNonNull(limit);
     }
 
     @Override
     public boolean consume(Object context, K resourceId, int amount) {
 
-        Rate existingRate = getRateFromCache(resourceId);
+        final Rate existingRate = getRateFromCache(resourceId);
 
-        if (existingRate == null) {
-            existingRate = newInitialRate(amount);
+        //final Bandwidth bandwidth = SmoothBandwidth.bursty((AmountPerDuration)existingRate, null);
+
+        final Rate targetRate = existingRate == null ? newInitialRate(amount) : existingRate.increment(amount);
+
+        final int comparison = limit.compareTo(targetRate);
+
+        if(LOG.isTraceEnabled()) {
+            LOG.trace("Limit exceeded: {}, for: {}, rate: {}, limit: {}", comparison == 1, resourceId, targetRate, limit);
         }
 
-        Rate result = existingRate;
-
-        final boolean success = rateLimiter.consume(context, result, amount);
-
+        final Rate result = comparison == 0 ? newInitialRate(amount) : targetRate;
         if(existingRate != result) {
             final boolean putOnlyIfAbsent = existingRate == null;
             addRateToCache(resourceId, result, putOnlyIfAbsent);
         }
 
-        com.looseboxes.ratelimiter.rates.Limit limit = null; // TODO
+        rateRecordedListener.onRateRecorded(context, resourceId, amount, limit, targetRate);
 
-        rateRecordedListener.onRateRecorded(context, resourceId, amount, limit, result);
-
-        if(!success) {
-            rateRecordedListener.onRateExceeded(context, resourceId, amount, limit, result);
+        if(comparison == 1) {
+            rateRecordedListener.onRateExceeded(context, resourceId, amount, limit, targetRate);
             return false;
         }else{
             return true;
@@ -95,6 +102,10 @@ final class SimpleRateLimiter2<K> implements RateLimiter<K> {
         return Objects.requireNonNull(rateFactory.createNew(amount));
     }
 
+    public Limit getLimit() {
+        return limit;
+    }
+
     public RateCache<K, ?> getRateCache() {
         return rateCache;
     }
@@ -105,5 +116,10 @@ final class SimpleRateLimiter2<K> implements RateLimiter<K> {
 
     public RateRecordedListener getRateRecordedListener() {
         return rateRecordedListener;
+    }
+
+    @Override
+    public String toString() {
+        return "SimpleRateLimiter@" + Integer.toHexString(hashCode()) + '_' + limit;
     }
 }

@@ -1,11 +1,11 @@
-package com.wip.ratelimiter;
+package com.looseboxes.ratelimiter.wip;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
-public interface RateLimiterIx {
+public interface BandwidthLimiter {
 
     void setPermitsPerSecond(double permitsPerSecond);
 
@@ -69,7 +69,7 @@ public interface RateLimiterIx {
     }
 
     /**
-     * Acquires permits from this {@link RateLimiter2} if it can be acquired immediately without delay.
+     * Acquires permits from this {@link SimpleBandwidthLimiter} if it can be acquired immediately without delay.
      *
      * <p>This method is equivalent to {@code tryAcquire(permits, 0, anyUnit)}.
      *
@@ -83,7 +83,7 @@ public interface RateLimiterIx {
     }
 
     /**
-     * Acquires a permit from this {@link RateLimiter2} if it can be acquired immediately without
+     * Acquires a permit from this {@link SimpleBandwidthLimiter} if it can be acquired immediately without
      * delay.
      *
      * <p>This method is equivalent to {@code tryAcquire(1)}.

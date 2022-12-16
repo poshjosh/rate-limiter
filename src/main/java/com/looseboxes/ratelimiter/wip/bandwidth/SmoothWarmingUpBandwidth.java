@@ -1,10 +1,10 @@
-package com.wip.ratelimiter.rate;
+package com.looseboxes.ratelimiter.wip.bandwidth;
 
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.min;
 
-final class SmoothWarmingUpRate extends SmoothRate {
+final class SmoothWarmingUpBandwidth extends SmoothBandwidth {
 
     private final long warmupPeriodMicros;
     private final double coldFactor;
@@ -16,15 +16,15 @@ final class SmoothWarmingUpRate extends SmoothRate {
 
     private double thresholdPermits;
 
-    SmoothWarmingUpRate(double permitsPerSecond, long nowMicros,
+    SmoothWarmingUpBandwidth(double permitsPerSecond, long nowMicros,
             long warmupPeriod, TimeUnit timeUnit, double coldFactor) {
         this.warmupPeriodMicros = timeUnit.toMicros(warmupPeriod); // Before calling setPermitsPerSecond
         this.coldFactor = coldFactor; // Before calling setPermitsPerSecond
         setRate(permitsPerSecond, nowMicros);
     }
 
-    public SmoothWarmingUpRate with(double permitsPerSecond, long nowMicros) {
-        return new SmoothWarmingUpRate(permitsPerSecond, nowMicros, warmupPeriodMicros, TimeUnit.MICROSECONDS, coldFactor);
+    public SmoothWarmingUpBandwidth with(double permitsPerSecond, long nowMicros) {
+        return new SmoothWarmingUpBandwidth(permitsPerSecond, nowMicros, warmupPeriodMicros, TimeUnit.MICROSECONDS, coldFactor);
     }
 
     @Override

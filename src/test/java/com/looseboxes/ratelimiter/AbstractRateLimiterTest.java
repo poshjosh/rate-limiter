@@ -1,7 +1,6 @@
 package com.looseboxes.ratelimiter;
 
 import com.looseboxes.ratelimiter.rates.Rate;
-import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
@@ -12,7 +11,7 @@ abstract class AbstractRateLimiterTest {
 
     final String key = "0";
 
-    private final int durationMillis = 1_500;
+    final int durationMillis = 1_500;
 
     private final boolean supportsNullKeys;
 
@@ -23,6 +22,19 @@ abstract class AbstractRateLimiterTest {
     @Test
     void shouldNotBeAffectedByLongInitialDelay() throws InterruptedException {
         final long duration = 100;
+        RateLimiter<String> rateLimiter = getRateLimiter(Rate.of(1, duration));
+        Thread.sleep(duration + 1);
+        assertTrue(rateLimiter.consume(key), "Unable to acquire initial permit");
+    }
+
+    @Test
+    void shouldExceedLimitAfterLongInitialDelay() throws InterruptedException {
+        final long duration = 100;
+        shouldExceedLimitAfterLongInitialDelay(duration);
+        shouldExceedLimitAfterLongInitialDelay(duration * 20);
+    }
+
+    void shouldExceedLimitAfterLongInitialDelay(long duration) throws InterruptedException {
         RateLimiter<String> rateLimiter = getRateLimiter(Rate.of(1, duration));
         Thread.sleep(duration + 1);
         assertTrue(rateLimiter.consume(key), "Unable to acquire initial permit");
@@ -54,26 +66,33 @@ abstract class AbstractRateLimiterTest {
         }
     }
 
+    protected <T> RateLimiter<T> perSecondRateLimiter(long amount) {
+        return getRateLimiter(Rate.of(amount, durationMillis));
+    }
+
     @Test
     void testNewInstanceParameterValidation() {
         assertThrowsRuntimeException(() -> getRateLimiter(Rate.of(-1, 1)));
         assertThrowsRuntimeException(() -> getRateLimiter(Rate.of(1, -1)));
     }
 
-    static void assertTrue(boolean expression, String message) {
-        assertThat(expression).is(new Condition<>(b -> b, message));
-    }
+    @Test
+    void shouldResetWhenLimitNotExceededWithinDuration() throws InterruptedException{
+        final long limit = 10;
+        final long duration = 1000;
+        RateLimiter<String> rateLimiter = getRateLimiter(Rate.of(limit, duration));
 
-    static void assertFalse(boolean expression, String message) {
-        assertThat(expression).is(new Condition<>(b -> !b, message));
-    }
+        for (int i = 0; i < limit; i++) {
+            assertTrue(rateLimiter.consume(key), "Unable to acquire permit " + i);
+        }
+        assertFalse(rateLimiter.consume(key), "Capable of acquiring permit " + (limit + 1));
 
-    static void assertThrowsRuntimeException(Executable executable) {
-        assertThrows(RuntimeException.class, executable);
-    }
+        Thread.sleep(duration); // Leads to reset
 
-    protected <T> RateLimiter<T> perSecondRateLimiter(long amount) {
-        return getRateLimiter(Rate.of(amount, durationMillis));
+        for (int i = 0; i < limit; i++) {
+            assertTrue(rateLimiter.consume(key), "Unable to acquire permit " + i);
+        }
+        assertFalse(rateLimiter.consume(key), "Capable of acquiring permit " + (limit + 1));
     }
 
     @Test
@@ -91,8 +110,20 @@ abstract class AbstractRateLimiterTest {
     @Test
     void shouldFailWhenLimitExceeded() {
         RateLimiter<String> rateLimiter = getRateLimiter(getDefaultLimits());
-        rateLimiter.consume(key);
+        assertThat(rateLimiter.consume(key)).isTrue();
         assertThat(rateLimiter.consume(key)).isFalse();
+    }
+
+    static void assertTrue(boolean expression, String message) {
+        assertThat(expression).withFailMessage(message).isTrue();
+    }
+
+    static void assertFalse(boolean expression, String message) {
+        assertThat(expression).withFailMessage(message).isFalse();
+    }
+
+    static void assertThrowsRuntimeException(Executable executable) {
+        assertThrows(RuntimeException.class, executable);
     }
 
     public <T> RateLimiter<T> getRateLimiter(Rate... rates) {
