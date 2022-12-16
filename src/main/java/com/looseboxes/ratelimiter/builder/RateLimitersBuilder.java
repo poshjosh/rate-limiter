@@ -13,11 +13,11 @@ import java.util.List;
 
 public interface RateLimitersBuilder<K, R> {
 
-    static <K> RateLimitersBuilder<K, List<RateLimiter<K>>> list() {
+    static <K> RateLimitersBuilder<K, List<NodeData<RateLimiter<K>>>> list() {
         return new RateLimiterListBuilder<>();
     }
 
-    static <K> RateLimitersBuilder<K, Node<RateLimiter<K>>> tree() {
+    static <K> RateLimitersBuilder<K, Node<NodeData<RateLimiter<K>>>> tree() {
         return new RateLimiterTreeBuilder<>();
     }
 

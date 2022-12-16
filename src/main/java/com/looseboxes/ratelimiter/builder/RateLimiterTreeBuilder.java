@@ -12,7 +12,7 @@ import com.looseboxes.ratelimiter.rates.Limit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-class RateLimiterTreeBuilder<K> implements RateLimitersBuilder<K, Node<RateLimiter<K>>> {
+class RateLimiterTreeBuilder<K> implements RateLimitersBuilder<K, Node<NodeData<RateLimiter<K>>>> {
 
     private final AtomicBoolean buildAttempted = new AtomicBoolean();
     private AnnotationProcessor<Class<?>> annotationProcessor;
@@ -24,11 +24,13 @@ class RateLimiterTreeBuilder<K> implements RateLimitersBuilder<K, Node<RateLimit
         this.rateLimiterConfigBuilder = RateLimiterConfig.builder();
     }
 
-    @Override public Node<RateLimiter<K>> build(List<Class<?>> classes) {
+    @Override
+    public Node<NodeData<RateLimiter<K>>> build(List<Class<?>> classes) {
 
         buildConfigs(classes);
 
-        return rootNode.transform(null, (name, value) -> createRateLimiter(value.getValue()));
+        return rootNode.transform(null, (name, nodeData) ->
+                new NodeData<>(nodeData.getSource(), createRateLimiter(nodeData.getValue())));
     }
 
     private RateLimiter<K> createRateLimiter(Limit limit) {

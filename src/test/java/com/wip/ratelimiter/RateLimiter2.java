@@ -1,4 +1,7 @@
-package com.guava.ratelimiter;
+package com.wip.ratelimiter;
+
+import com.wip.ratelimiter.rate.Rate;
+import com.wip.ratelimiter.rate.SmoothRate;
 
 import java.time.Duration;
 import java.util.Locale;
@@ -68,7 +71,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  */
 // TODO(user): switch to nano precision. A natural unit of cost is "bytes", and a micro precision
 // would mean a maximum rate of "1MB/s", which might be small in some cases.
-public abstract class RateLimiter {
+public class RateLimiter2 implements RateLimiterIx{
     /**
      * Creates a {@code RateLimiter} with the specified stable throughput, given as "permits per
      * second" (commonly referred to as <i>QPS</i>, queries per second).
@@ -86,7 +89,7 @@ public abstract class RateLimiter {
      */
     // TODO(user): "This is equivalent to
     // {@code createWithCapacity(permitsPerSecond, 1, TimeUnit.SECONDS)}".
-    public static RateLimiter create(double permitsPerSecond) {
+    public static RateLimiter2 create(double permitsPerSecond) {
         /*
          * The default RateLimiter configuration can save the unused permits of up to one second. This
          * is to avoid unnecessary stalls in situations like this: A RateLimiter of 1qps, and 4 threads,
@@ -104,10 +107,9 @@ public abstract class RateLimiter {
     }
 
     //@VisibleForTesting
-    static RateLimiter create(double permitsPerSecond, SleepingStopwatch stopwatch) {
-        RateLimiter rateLimiter = new SmoothRateLimiter.SmoothBursty(stopwatch, 1.0 /* maxBurstSeconds */);
-        rateLimiter.setRate(permitsPerSecond);
-        return rateLimiter;
+    static RateLimiter2 create(double permitsPerSecond, SleepingStopwatch stopwatch) {
+        Rate rate = SmoothRate.bursty(permitsPerSecond, stopwatch.readMicros());
+        return new RateLimiter2(rate, stopwatch);
     }
 
     /**
@@ -134,26 +136,8 @@ public abstract class RateLimiter {
      *     warmupPeriod} is negative
      * @since 28.0
      */
-    public static RateLimiter create(double permitsPerSecond, Duration warmupPeriod) {
-        return create(permitsPerSecond, toNanosSaturated(warmupPeriod), TimeUnit.NANOSECONDS);
-    }
-
-
-    /**
-     * Returns the number of nanoseconds of the given duration without throwing or overflowing.
-     *
-     * <p>Instead of throwing {@link ArithmeticException}, this method silently saturates to either
-     * {@link Long#MAX_VALUE} or {@link Long#MIN_VALUE}. This behavior can be useful when decomposing
-     * a duration in order to call a legacy API which requires a {@code long, TimeUnit} pair.
-     */
-    private static long toNanosSaturated(Duration duration) {
-        // Using a try/catch seems lazy, but the catch block will rarely get invoked (except for
-        // durations longer than approximately +/- 292 years).
-        try {
-            return duration.toNanos();
-        } catch (ArithmeticException tooBig) {
-            return duration.isNegative() ? Long.MIN_VALUE : Long.MAX_VALUE;
-        }
+    public static RateLimiter2 create(double permitsPerSecond, Duration warmupPeriod) {
+        return create(permitsPerSecond, Util.toNanosSaturated(warmupPeriod), TimeUnit.NANOSECONDS);
     }
 
     /**
@@ -181,23 +165,25 @@ public abstract class RateLimiter {
      *     warmupPeriod} is negative
      */
     @SuppressWarnings("GoodTime") // should accept a java.time.Duration
-    public static RateLimiter create(double permitsPerSecond, long warmupPeriod, TimeUnit unit) {
+    public static RateLimiter2 create(double permitsPerSecond, long warmupPeriod, TimeUnit unit) {
         Checks.requireTrue(warmupPeriod >= 0, "warmupPeriod must not be negative: %s", warmupPeriod);
-        return create(
-                permitsPerSecond, warmupPeriod, unit, 3.0, SleepingStopwatch.createFromSystemTimer());
+        SleepingStopwatch stopwatch = SleepingStopwatch.createFromSystemTimer();
+        Rate rate = SmoothRate.warmingUp(permitsPerSecond, stopwatch.readMicros(), unit.toMicros(warmupPeriod));
+        return new RateLimiter2(rate, stopwatch);
     }
 
     //@VisibleForTesting
-    static RateLimiter create(
+    static RateLimiter2 create(
             double permitsPerSecond,
             long warmupPeriod,
             TimeUnit unit,
             double coldFactor,
             SleepingStopwatch stopwatch) {
-        RateLimiter rateLimiter = new SmoothRateLimiter.SmoothWarmingUp(stopwatch, warmupPeriod, unit, coldFactor);
-        rateLimiter.setRate(permitsPerSecond);
-        return rateLimiter;
+        Rate rate = SmoothRate.warmingUp(permitsPerSecond, stopwatch.readMicros(), warmupPeriod, unit, coldFactor);
+        return new RateLimiter2(rate, stopwatch);
     }
+
+    private final Rate rate;
 
     /**
      * The underlying timer; used both to measure elapsed time and sleep as necessary. A separate
@@ -221,7 +207,8 @@ public abstract class RateLimiter {
         return mutex;
     }
 
-    RateLimiter(SleepingStopwatch stopwatch) {
+    RateLimiter2(Rate rate, SleepingStopwatch stopwatch) {
+        this.rate = Objects.requireNonNull(rate);
         this.stopwatch = Objects.requireNonNull(stopwatch);
     }
 
@@ -243,41 +230,24 @@ public abstract class RateLimiter {
      * @param permitsPerSecond the new stable rate of this {@code RateLimiter}
      * @throws IllegalArgumentException if {@code permitsPerSecond} is negative or zero
      */
-    public final void setRate(double permitsPerSecond) {
+    public final void setPermitsPerSecond(double permitsPerSecond) {
         Checks.requireTrue(permitsPerSecond > 0.0
                 && !Double.isNaN(permitsPerSecond), "rate must be positive");
         synchronized (mutex()) {
-            doSetRate(permitsPerSecond, stopwatch.readMicros());
+            rate.setRate(permitsPerSecond, stopwatch.readMicros());
         }
     }
-
-    abstract void doSetRate(double permitsPerSecond, long nowMicros);
 
     /**
      * Returns the stable rate (as {@code permits per seconds}) with which this {@code RateLimiter} is
      * configured with. The initial value of this is the same as the {@code permitsPerSecond} argument
      * passed in the factory method that produced this {@code RateLimiter}, and it is only updated
-     * after invocations to {@linkplain #setRate}.
+     * after invocations to {@linkplain #setPermitsPerSecond}.
      */
-    public final double getRate() {
+    public final double getPermitsPerSecond() {
         synchronized (mutex()) {
-            return doGetRate();
+            return rate.getRate();
         }
-    }
-
-    abstract double doGetRate();
-
-    /**
-     * Acquires a single permit from this {@code RateLimiter}, blocking until the request can be
-     * granted. Tells the amount of time slept, if any.
-     *
-     * <p>This method is equivalent to {@code acquire(1)}.
-     *
-     * @return time spent sleeping to enforce rate, in seconds; 0.0 if not rate-limited
-     * @since 16.0 (present in 13.0 with {@code void} return type})
-     */
-    public double acquire() {
-        return acquire(1);
     }
 
     /**
@@ -289,6 +259,7 @@ public abstract class RateLimiter {
      * @throws IllegalArgumentException if the requested number of permits is negative or zero
      * @since 16.0 (present in 13.0 with {@code void} return type})
      */
+    @Override
     public double acquire(int permits) {
         long microsToWait = reserve(permits);
         stopwatch.sleepMicrosUninterruptibly(microsToWait);
@@ -309,81 +280,6 @@ public abstract class RateLimiter {
     }
 
     /**
-     * Acquires a permit from this {@code RateLimiter} if it can be obtained without exceeding the
-     * specified {@code timeout}, or returns {@code false} immediately (without waiting) if the permit
-     * would not have been granted before the timeout expired.
-     *
-     * <p>This method is equivalent to {@code tryAcquire(1, timeout)}.
-     *
-     * @param timeout the maximum time to wait for the permit. Negative values are treated as zero.
-     * @return {@code true} if the permit was acquired, {@code false} otherwise
-     * @throws IllegalArgumentException if the requested number of permits is negative or zero
-     * @since 28.0
-     */
-    public boolean tryAcquire(Duration timeout) {
-        return tryAcquire(1, toNanosSaturated(timeout), TimeUnit.NANOSECONDS);
-    }
-
-    /**
-     * Acquires a permit from this {@code RateLimiter} if it can be obtained without exceeding the
-     * specified {@code timeout}, or returns {@code false} immediately (without waiting) if the permit
-     * would not have been granted before the timeout expired.
-     *
-     * <p>This method is equivalent to {@code tryAcquire(1, timeout, unit)}.
-     *
-     * @param timeout the maximum time to wait for the permit. Negative values are treated as zero.
-     * @param unit the time unit of the timeout argument
-     * @return {@code true} if the permit was acquired, {@code false} otherwise
-     * @throws IllegalArgumentException if the requested number of permits is negative or zero
-     */
-    @SuppressWarnings("GoodTime") // should accept a java.time.Duration
-    public boolean tryAcquire(long timeout, TimeUnit unit) {
-        return tryAcquire(1, timeout, unit);
-    }
-
-    /**
-     * Acquires permits from this {@link RateLimiter} if it can be acquired immediately without delay.
-     *
-     * <p>This method is equivalent to {@code tryAcquire(permits, 0, anyUnit)}.
-     *
-     * @param permits the number of permits to acquire
-     * @return {@code true} if the permits were acquired, {@code false} otherwise
-     * @throws IllegalArgumentException if the requested number of permits is negative or zero
-     * @since 14.0
-     */
-    public boolean tryAcquire(int permits) {
-        return tryAcquire(permits, 0, MICROSECONDS);
-    }
-
-    /**
-     * Acquires a permit from this {@link RateLimiter} if it can be acquired immediately without
-     * delay.
-     *
-     * <p>This method is equivalent to {@code tryAcquire(1)}.
-     *
-     * @return {@code true} if the permit was acquired, {@code false} otherwise
-     * @since 14.0
-     */
-    public boolean tryAcquire() {
-        return tryAcquire(1, 0, MICROSECONDS);
-    }
-
-    /**
-     * Acquires the given number of permits from this {@code RateLimiter} if it can be obtained
-     * without exceeding the specified {@code timeout}, or returns {@code false} immediately (without
-     * waiting) if the permits would not have been granted before the timeout expired.
-     *
-     * @param permits the number of permits to acquire
-     * @param timeout the maximum time to wait for the permits. Negative values are treated as zero.
-     * @return {@code true} if the permits were acquired, {@code false} otherwise
-     * @throws IllegalArgumentException if the requested number of permits is negative or zero
-     * @since 28.0
-     */
-    public boolean tryAcquire(int permits, Duration timeout) {
-        return tryAcquire(permits, toNanosSaturated(timeout), TimeUnit.NANOSECONDS);
-    }
-
-    /**
      * Acquires the given number of permits from this {@code RateLimiter} if it can be obtained
      * without exceeding the specified {@code timeout}, or returns {@code false} immediately (without
      * waiting) if the permits would not have been granted before the timeout expired.
@@ -395,6 +291,7 @@ public abstract class RateLimiter {
      * @throws IllegalArgumentException if the requested number of permits is negative or zero
      */
     @SuppressWarnings("GoodTime") // should accept a java.time.Duration
+    @Override
     public boolean tryAcquire(int permits, long timeout, TimeUnit unit) {
         long timeoutMicros = max(unit.toMicros(timeout), 0);
         checkPermits(permits);
@@ -412,7 +309,7 @@ public abstract class RateLimiter {
     }
 
     private boolean canAcquire(long nowMicros, long timeoutMicros) {
-        return queryEarliestAvailable(nowMicros) - timeoutMicros <= nowMicros;
+        return rate.queryEarliestAvailable(nowMicros) - timeoutMicros <= nowMicros;
     }
 
     /**
@@ -421,30 +318,17 @@ public abstract class RateLimiter {
      * @return the required wait time, never negative
      */
     final long reserveAndGetWaitLength(int permits, long nowMicros) {
-        long momentAvailable = reserveEarliestAvailable(permits, nowMicros);
+        long momentAvailable = rate.reserveEarliestAvailable(permits, nowMicros);
         return max(momentAvailable - nowMicros, 0);
     }
 
-    /**
-     * Returns the earliest time that permits are available (with one caveat).
-     *
-     * @return the time that permits are available, or, if permits are available immediately, an
-     *     arbitrary past or present time
-     */
-    abstract long queryEarliestAvailable(long nowMicros);
-
-    /**
-     * Reserves the requested number of permits and returns the time that those permits can be used
-     * (with one caveat).
-     *
-     * @return the time that the permits may be used, or, if the permits may be used immediately, an
-     *     arbitrary past or present time
-     */
-    abstract long reserveEarliestAvailable(int permits, long nowMicros);
-
     @Override
     public String toString() {
-        return String.format(Locale.ROOT, "RateLimiter[stableRate=%3.1fqps]", getRate());
+        return String.format(Locale.ROOT, "RateLimiter[stableRate=%3.1fqps]", getPermitsPerSecond());
+    }
+
+    private static void checkPermits(int permits) {
+        Checks.requireTrue(permits > 0, "Requested permits (%s) must be positive", permits);
     }
 
     abstract static class SleepingStopwatch {
@@ -472,39 +356,10 @@ public abstract class RateLimiter {
                 @Override
                 protected void sleepMicrosUninterruptibly(long micros) {
                     if (micros > 0) {
-                        sleepUninterruptibly(micros, MICROSECONDS);
+                        Util.sleepUninterruptibly(micros, MICROSECONDS);
                     }
                 }
             };
-        }
-    }
-
-    private static void checkPermits(int permits) {
-        Checks.requireTrue(permits > 0, "Requested permits (%s) must be positive", permits);
-    }
-
-    // TODO(user): Support Sleeper somehow (wrapper or interface method)?
-    /** Invokes {@code unit.}{@link TimeUnit#sleep(long) sleep(sleepFor)} uninterruptibly. */
-    @SuppressWarnings("GoodTime") // should accept a java.time.Duration
-    private static void sleepUninterruptibly(long sleepFor, TimeUnit unit) {
-        boolean interrupted = false;
-        try {
-            long remainingNanos = unit.toNanos(sleepFor);
-            long end = System.nanoTime() + remainingNanos;
-            while (true) {
-                try {
-                    // TimeUnit.sleep() treats negative timeouts just like zero.
-                    TimeUnit.NANOSECONDS.sleep(remainingNanos);
-                    return;
-                } catch (InterruptedException e) {
-                    interrupted = true;
-                    remainingNanos = end - System.nanoTime();
-                }
-            }
-        } finally {
-            if (interrupted) {
-                Thread.currentThread().interrupt();
-            }
         }
     }
 }

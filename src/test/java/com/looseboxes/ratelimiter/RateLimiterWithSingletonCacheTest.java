@@ -3,8 +3,13 @@ package com.looseboxes.ratelimiter;
 import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.rates.Limit;
 import com.looseboxes.ratelimiter.rates.Rate;
+import org.junit.jupiter.api.Test;
 
-public class RateLimiterWithSingletonCacheTest extends RateLimiterTest {
+class RateLimiterWithSingletonCacheTest extends AbstractRateLimiterTest {
+
+    public RateLimiterWithSingletonCacheTest() {
+        super(true);
+    }
 
     @Override
     public RateLimiter<String> getRateLimiter(Rate... rates) {

@@ -1,6 +1,7 @@
 package com.looseboxes.ratelimiter.readme;
 
 import com.looseboxes.ratelimiter.RateLimiter;
+import com.looseboxes.ratelimiter.annotation.NodeData;
 import com.looseboxes.ratelimiter.bucket4j.Bucket4jRateLimiter;
 import com.looseboxes.ratelimiter.bucket4j.Bucket4jRateLimiterFactory;
 import com.looseboxes.ratelimiter.bucket4j.ProxyManagerProvider;
@@ -37,7 +38,7 @@ public class Bucket4jJCacheRateLimiterProvider<K extends Serializable>{
         return new Bucket4jRateLimiter<>(proxyManager, Rate.of(1, 1000));
     }
 
-    public List<RateLimiter<K>> newInstancesFromAnnotatedClass(Cache<K, GridBucketState> cache, Class<?> annotationSource) {
+    public List<NodeData<RateLimiter<K>>> newInstancesFromAnnotatedClass(Cache<K, GridBucketState> cache, Class<?> annotationSource) {
         return RateLimitersBuilder.<K>list()
                 .rateLimiterFactory(new Bucket4jRateLimiterFactory<>(new JCacheProxyManagerProvider()))
                 .rateCache(RateCache.of(cache))

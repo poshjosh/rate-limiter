@@ -47,6 +47,7 @@ public class SampleUsage {
     }
 
     private static RateLimiter<Object> buildRateLimiter(Class<?> clazz) {
-        return RateLimitersBuilder.list().build(clazz).get(0); // Only one class/method is rate limited
+        // Only one class/method is rate limited
+        return RateLimitersBuilder.list().build(clazz).get(0).getValue();
     }
 }

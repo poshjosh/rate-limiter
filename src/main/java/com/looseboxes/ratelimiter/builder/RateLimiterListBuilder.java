@@ -10,7 +10,7 @@ import com.looseboxes.ratelimiter.rates.Limit;
 
 import java.util.*;
 
-class RateLimiterListBuilder<K> implements RateLimitersBuilder<K, List<RateLimiter<K>>> {
+class RateLimiterListBuilder<K> implements RateLimitersBuilder<K, List<NodeData<RateLimiter<K>>>> {
 
     private final RateLimiterTreeBuilder<K> rateLimiterTreeBuilder;
 
@@ -22,14 +22,15 @@ class RateLimiterListBuilder<K> implements RateLimitersBuilder<K, List<RateLimit
         this.rateLimiterTreeBuilder = rateLimiterTreeBuilder;
     }
 
-    public List<RateLimiter<K>> build(List<Class<?>> classes) {
-        Node<RateLimiter<K>> node = rateLimiterTreeBuilder.build(classes);
+    public List<NodeData<RateLimiter<K>>> build(List<Class<?>> classes) {
+        Node<NodeData<RateLimiter<K>>> node = rateLimiterTreeBuilder.build(classes);
         return toList(node);
     }
 
-    private List<RateLimiter<K>> toList(Node<RateLimiter<K>> node) {
-        List<RateLimiter<K>> result = new ArrayList<>();
-        new BreadthFirstNodeVisitor<RateLimiter<K>>(n -> n.getValueOptional().ifPresent(result::add)).accept(node);
+    private List<NodeData<RateLimiter<K>>> toList(Node<NodeData<RateLimiter<K>>> node) {
+        // Do we need to prevent duplicates here?
+        List<NodeData<RateLimiter<K>>> result = new ArrayList<>();
+        new BreadthFirstNodeVisitor<NodeData<RateLimiter<K>>>(n -> n.getValueOptional().ifPresent(result::add)).accept(node);
         return Collections.unmodifiableList(result);
     }
 

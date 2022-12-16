@@ -1,21 +1,21 @@
-package com.guava.ratelimiter;
+package com.wip.ratelimiter;
 
-final class Checks {
+public final class Checks {
     private Checks() { }
 
-    static void requireFalse(boolean expression, String errorMessage) {
+    public static void requireFalse(boolean expression, String errorMessage) {
         if (expression) {
             throw new IllegalArgumentException(errorMessage);
         }
     }
 
-    static void requireTrue(boolean expression, String errorMessage) {
+    public static void requireTrue(boolean expression, String errorMessage) {
         if (!expression) {
             throw new IllegalArgumentException(errorMessage);
         }
     }
 
-    static void requireTrue(boolean expression, String errorMessageFormat, Object... args) {
+    public static void requireTrue(boolean expression, String errorMessageFormat, Object... args) {
         if (!expression) {
             throw new IllegalArgumentException(String.format(errorMessageFormat, args));
         }

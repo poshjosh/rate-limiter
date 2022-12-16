@@ -1,10 +1,12 @@
 # TODO
 
+- Implement PatternMatchingRateLimiterTest
 - Test Bucket4jRateLimiter
 - Use Guava RateLimiter -> Add caching to guava rateLimiter
 - Test (in the core package) that RateLimiter works for different amounts, durations and time units.  
 - Handle and test case where a class has: 1. no path; 2. empty path pattern; but one or more methods of the class has path patterns.
-
+- See com.oracle.coherence.common.util.Bandwidth
+  
 - Research and add @Inherited to all annotations? This needs some thinking
 
 - Make the entire thing modular, so some libraries are added as needed.
