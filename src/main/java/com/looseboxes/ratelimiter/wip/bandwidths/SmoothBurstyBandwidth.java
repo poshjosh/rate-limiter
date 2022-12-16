@@ -1,4 +1,4 @@
-package com.looseboxes.ratelimiter.wip.bandwidth;
+package com.looseboxes.ratelimiter.wip.bandwidths;
 
 final class SmoothBurstyBandwidth extends SmoothBandwidth {
 

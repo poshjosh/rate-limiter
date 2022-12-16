@@ -1,7 +1,7 @@
 package com.looseboxes.ratelimiter.wip;
 
-import com.looseboxes.ratelimiter.wip.bandwidth.Bandwidth;
-import com.looseboxes.ratelimiter.wip.bandwidth.SmoothBandwidth;
+import com.looseboxes.ratelimiter.wip.bandwidths.Bandwidth;
+import com.looseboxes.ratelimiter.wip.bandwidths.SmoothBandwidth;
 
 import java.time.Duration;
 import java.util.Locale;

@@ -1,4 +1,4 @@
-package com.looseboxes.ratelimiter.wip.bandwidth;
+package com.looseboxes.ratelimiter.wip.bandwidths;
 
 import com.looseboxes.ratelimiter.rates.AmountPerDuration;
 import com.looseboxes.ratelimiter.wip.Checks;

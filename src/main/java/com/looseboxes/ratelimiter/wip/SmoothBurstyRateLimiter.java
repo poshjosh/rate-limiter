@@ -3,8 +3,8 @@ package com.looseboxes.ratelimiter.wip;
 import com.looseboxes.ratelimiter.RateLimiter;
 import com.looseboxes.ratelimiter.rates.AmountPerDuration;
 import com.looseboxes.ratelimiter.rates.Rate;
-import com.looseboxes.ratelimiter.wip.bandwidth.Bandwidth;
-import com.looseboxes.ratelimiter.wip.bandwidth.SmoothBandwidth;
+import com.looseboxes.ratelimiter.wip.bandwidths.Bandwidth;
+import com.looseboxes.ratelimiter.wip.bandwidths.SmoothBandwidth;
 
 public class SmoothBurstyRateLimiter<K> implements RateLimiter<K> {
 

@@ -2,12 +2,8 @@ package com.looseboxes.ratelimiter.wip;
 
 import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.rates.AmountPerDuration;
 import com.looseboxes.ratelimiter.rates.Limit;
 import com.looseboxes.ratelimiter.rates.Rate;
-import com.looseboxes.ratelimiter.wip.SimpleBandwidthLimiter;
-import com.looseboxes.ratelimiter.wip.bandwidth.Bandwidth;
-import com.looseboxes.ratelimiter.wip.bandwidth.SmoothBandwidth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
