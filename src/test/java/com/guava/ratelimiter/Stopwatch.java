@@ -54,7 +54,7 @@ import static java.util.concurrent.TimeUnit.*;
  * <pre>{@code
  * Stopwatch.createStarted(
  *      new Ticker() {
- *        public long read() {
+ *        public long elapsed() {
  *          return android.os.SystemClock.elapsedRealtimeNanos(); // requires API Level 17
  *        }
  *      });

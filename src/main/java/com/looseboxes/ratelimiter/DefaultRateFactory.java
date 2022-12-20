@@ -1,11 +1,8 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.rates.Rate;
-
-public class DefaultRateFactory implements RateFactory {
-
+final class DefaultRateFactory implements RateFactory {
     @Override
-    public Rate createNew(long amount) {
-        return Rate.of(amount, 0);
+    public Rate createNew(long amount, long durationMillis) {
+        return Rate.of(amount, durationMillis);
     }
 }

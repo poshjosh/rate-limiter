@@ -2,8 +2,8 @@ package com.looseboxes.ratelimiter.performance;
 
 import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.rates.Limit;
-import com.looseboxes.ratelimiter.rates.Rate;
+import com.looseboxes.ratelimiter.util.CompositeRate;
+import com.looseboxes.ratelimiter.Rate;
 import org.junit.jupiter.api.Test;
 
 class RateLimiterPerformanceIT extends AbstractPerformanceTest{
@@ -27,7 +27,7 @@ class RateLimiterPerformanceIT extends AbstractPerformanceTest{
 
         final Integer key = Integer.valueOf(count);
         for(int i = 0; i < count; i++) {
-            rateLimiter.consume(key);
+            rateLimiter.tryConsume(key);
         }
 
         assertUsageSinceBookmarkIsLessThan(bookmark, limit);
@@ -40,6 +40,6 @@ class RateLimiterPerformanceIT extends AbstractPerformanceTest{
     public RateLimiter<Integer> getRateLimiterWithSingletonCache(int limit, int duration) {
     RateLimiterConfig<Integer, ?> config =
         RateLimiterConfig.<Integer, Object>builder().rateCache(RateCache.singleton()).build();
-        return RateLimiter.<Integer>of(config, Limit.of(Rate.of(limit, duration)));
+        return RateLimiter.<Integer>of(config, CompositeRate.of(Rate.of(limit, duration)));
     }
 }

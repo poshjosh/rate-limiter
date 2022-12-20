@@ -1,38 +1,43 @@
 package com.looseboxes.ratelimiter.bucket4j;
 
-import com.looseboxes.ratelimiter.rates.Limit;
+import com.looseboxes.ratelimiter.util.CompositeRate;
 import com.looseboxes.ratelimiter.RateRecordedListener;
 import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.rates.Rate;
+import com.looseboxes.ratelimiter.Rate;
+import com.looseboxes.ratelimiter.util.SleepingTicker;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.EstimationProbe;
 import io.github.bucket4j.grid.ProxyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
  * RateLimiter implementation based on bucket4j
  * @see <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/6.4/doc-pages/jcache-usage.md">bucket4j jcache usage</a>
- * @param <K> The type of the key which the {@link Bucket4jRateLimiter#consume(Object)}} method accepts.
+ * @param <K> The type of the key which the {@link Bucket4jRateLimiter#tryConsume(Object)}} method accepts.
  */
 public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<K> {
 
     private static final Logger LOG = LoggerFactory.getLogger(Bucket4jRateLimiter.class);
 
+    private final SleepingTicker ticker = SleepingTicker.systemTicker();
+
     private final ProxyManager<K> buckets;
-    private final Limit limit;
+    private final CompositeRate limit;
     private final Supplier<BucketConfiguration>[] configurationSuppliers;
     private final RateRecordedListener rateRecordedListener;
 
     public Bucket4jRateLimiter(ProxyManager<K> proxyManager, Rate... rates) {
-        this(proxyManager, Limit.of(rates));
+        this(proxyManager, CompositeRate.of(rates));
     }
 
-    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, Limit limit) {
+    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, CompositeRate limit) {
         this(proxyManager, BucketConfigurationProvider.simple(), RateRecordedListener.NO_OP, limit);
     }
 
@@ -40,11 +45,11 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
             ProxyManager<K> proxyManager,
             BucketConfigurationProvider bucketConfigurationProvider,
             RateRecordedListener rateRecordedListener,
-            Limit limit) {
+            CompositeRate limit) {
         this.buckets = Objects.requireNonNull(proxyManager);
         this.limit = Objects.requireNonNull(limit);
-        this.configurationSuppliers = new Supplier[limit.getRateCount()];
-        for(int i = 0; i < limit.getRateCount(); i++) {
+        this.configurationSuppliers = new Supplier[limit.numberOfRates()];
+        for(int i = 0; i < limit.numberOfRates(); i++) {
             Rate rate = limit.getRates()[i];
             BucketConfiguration configuration = bucketConfigurationProvider.getBucketConfiguration(rate);
             this.configurationSuppliers[i] = () -> configuration;
@@ -53,7 +58,7 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
     }
 
     @Override
-    public boolean consume(Object context, K resourceId, int amount) {
+    public boolean tryConsume(Object context, K resourceId, int amount, long timeout, TimeUnit unit) {
 
         int failCount = 0;
 
@@ -63,12 +68,14 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
 
             Bucket bucket = buckets.getProxy(resourceId, configurationSuppliers[i]);
 
-            if(!bucket.tryConsume(amount)) {
-                if (firstExceeded == null) {
-                    firstExceeded = bucket;
-                }
-                ++failCount;
+            if (tryAcquire(bucket, amount, timeout, unit)) {
+                continue;
             }
+
+            if (firstExceeded == null) {
+                firstExceeded = bucket;
+            }
+            ++failCount;
         }
 
         if(LOG.isTraceEnabled()) {
@@ -77,16 +84,31 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
 
         rateRecordedListener.onRateRecorded(context, resourceId, amount, limit, firstExceeded);
 
-        if(limit.isExceeded(failCount)) {
-
-            rateRecordedListener.onRateExceeded(context, resourceId, amount, limit, firstExceeded);
-
-            return false;
-
-        }else{
-
+        if (!limit.isExceeded(failCount)) {
             return true;
         }
+
+        rateRecordedListener.onRateExceeded(context, resourceId, amount, limit, firstExceeded);
+
+        return false;
+    }
+
+    private boolean tryAcquire(Bucket bucket, int permits, long timeout, TimeUnit unit) {
+        EstimationProbe estimate = bucket.estimateAbilityToConsume(permits);
+        if (!estimate.canBeConsumed()) {
+            final long nanosToWait = estimate.getNanosToWaitForRefill();
+            final long timeoutNanos = unit.toNanos(timeout);
+            if (nanosToWait > timeoutNanos) {
+                return false;
+            }
+            sleepNanosUninterruptibly(nanosToWait);
+        }
+        bucket.tryConsume(permits);
+        return true;
+    }
+
+    private void sleepNanosUninterruptibly(long nanosToWait) {
+        ticker.sleepMicrosUninterruptibly(TimeUnit.NANOSECONDS.toMicros(nanosToWait));
     }
 
     @Override

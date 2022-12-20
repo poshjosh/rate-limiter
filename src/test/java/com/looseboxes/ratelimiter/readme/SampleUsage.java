@@ -14,11 +14,9 @@ public class SampleUsage {
         static final int LIMIT = 3;
 
         final RateLimiter<Object> rateLimiter;
-        final String rateLimitedMethodId;
 
         RateLimitedResource(RateLimiter<Object> rateLimiter) {
             this.rateLimiter = Objects.requireNonNull(rateLimiter);
-            this.rateLimitedMethodId = getClass().getName() + ".rateLimitedMethod";
         }
 
         // Limited to 3 invocations every 2 seconds OR 100 invocations every 1 minute
@@ -26,8 +24,9 @@ public class SampleUsage {
         @RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES)
         void rateLimitedMethod() {
 
-            // VERY IMPORTANT to record usage
-            rateLimiter.consume(rateLimitedMethodId);
+            if (!rateLimiter.tryConsume("rateLimitedMethodId")) {
+                throw new RuntimeException("Limit exceeded");
+            }
         }
     }
 

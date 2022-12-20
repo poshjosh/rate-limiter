@@ -1,27 +1,21 @@
 package com.looseboxes.ratelimiter.bucket4j;
 
-import com.looseboxes.ratelimiter.rates.AmountPerDuration;
-import com.looseboxes.ratelimiter.rates.Rate;
+import com.looseboxes.ratelimiter.Rate;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.BucketConfiguration;
 
-import java.time.Duration;
-
 public interface BucketConfigurationProvider {
-    final class BucketConfigurationProviderImpl implements BucketConfigurationProvider {
+    final class SimpleBucketConfigurationProvider implements BucketConfigurationProvider {
         @Override
         public BucketConfiguration getBucketConfiguration(Rate rate) {
-            // @TODO This cast is a code smell - redesign
-            final AmountPerDuration amountPerDuration = (AmountPerDuration) rate;
-            return Bucket4j.configurationBuilder().addLimit(Bandwidth
-                    .simple(amountPerDuration.getAmount(),
-                            Duration.ofMillis(amountPerDuration.getDuration()))).build();
+            return Bucket4j.configurationBuilder()
+                    .addLimit(Bandwidth.simple(rate.getAmount(), rate.getDuration())).build();
         }
     }
 
     static BucketConfigurationProvider simple() {
-        return new BucketConfigurationProviderImpl();
+        return new SimpleBucketConfigurationProvider();
     }
 
     <R extends Rate> BucketConfiguration getBucketConfiguration(R rate);

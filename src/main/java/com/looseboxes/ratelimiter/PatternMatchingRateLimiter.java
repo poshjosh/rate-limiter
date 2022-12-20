@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class PatternMatchingRateLimiter<R> implements RateLimiter<R>{
@@ -47,7 +48,7 @@ public class PatternMatchingRateLimiter<R> implements RateLimiter<R>{
     }
 
     @Override
-    public boolean consume(Object context, R request, int amount) {
+    public boolean tryConsume(Object context, R request, int permits, long timeout, TimeUnit unit) {
 
         int globalFailureCount = 0;
 
@@ -57,7 +58,7 @@ public class PatternMatchingRateLimiter<R> implements RateLimiter<R>{
 
             while(node != rootNode && node != null && node.hasNodeValue()) {
 
-                final RateLimitResult result = increment(request, amount, node);
+                final RateLimitResult result = consume(request, permits, timeout, unit, node);
 
                 switch(result) {
                     case SUCCESS: ++nodeSuccessCount; break;
@@ -83,7 +84,7 @@ public class PatternMatchingRateLimiter<R> implements RateLimiter<R>{
         return globalFailureCount == 0;
     }
 
-    private RateLimitResult increment(R request, int amount, Node<NodeData<RateLimiter<?>>> node) {
+    private RateLimitResult consume(R request, int permits, long timeout, TimeUnit unit, Node<NodeData<RateLimiter<?>>> node) {
 
         final String nodeName = node.getName();
         final NodeData<RateLimiter<?>> nodeData = node.getValueOptional().orElseThrow(NullPointerException::new);
@@ -108,6 +109,6 @@ public class PatternMatchingRateLimiter<R> implements RateLimiter<R>{
             return RateLimitResult.NOMATCH;
         }
 
-        return ((RateLimiter<Object>)rateLimiter).consume(request, key, amount) ? RateLimitResult.SUCCESS : RateLimitResult.FAILURE;
+        return ((RateLimiter<Object>)rateLimiter).tryConsume(request, key, permits, timeout, unit) ? RateLimitResult.SUCCESS : RateLimitResult.FAILURE;
     }
 }

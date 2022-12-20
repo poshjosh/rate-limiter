@@ -1,12 +1,16 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.rates.Limit;
+import com.looseboxes.ratelimiter.util.CompositeRate;
 
 public interface RateLimiterFactory<K> {
 
-    default RateLimiter<K> createRateLimiter(Limit limit) {
+    static <K> RateLimiterFactory<K> newInstance() {
+        return new DefaultRateLimiterFactory<>();
+    }
+
+    default RateLimiter<K> createRateLimiter(CompositeRate limit) {
         return createRateLimiter(RateLimiterConfig.newInstance(), limit);
     }
 
-    RateLimiter<K> createRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Limit limit);
+    RateLimiter<K> createRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, CompositeRate limit);
 }

@@ -1,6 +1,6 @@
 package com.looseboxes.ratelimiter.annotation;
 
-import com.looseboxes.ratelimiter.rates.Logic;
+import com.looseboxes.ratelimiter.util.Operator;
 
 public class ClassWithClassAnnotations {
 
@@ -9,7 +9,7 @@ public class ClassWithClassAnnotations {
     public class ClassGroupOnlyAnon { }
 
 //    @RateLimitGroup("Fire")
-    @RateLimitGroup(name = "Fire", logic = Logic.AND)
+    @RateLimitGroup(name = "Fire", logic = Operator.AND)
     @RateLimit(limit = 2, duration = 20)
     @RateLimit(limit = 1, duration = 10)
     public class ClassGroupOnlyNamedFire { }
@@ -23,7 +23,7 @@ public class ClassWithClassAnnotations {
     @RateLimitGroup
     public class GroupAnnotationOnly { }
 
-    @RateLimitGroup(name = "Fire", logic = Logic.AND)
+    @RateLimitGroup(name = "Fire", logic = Operator.AND)
     @RateLimit(limit = 2, duration = 20)
     @RateLimit(limit = 1, duration = 10)
     public class SecondClassGroupOnlyNamedFire { }

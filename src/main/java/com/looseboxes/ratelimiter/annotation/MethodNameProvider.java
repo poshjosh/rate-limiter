@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 /**
  * Provide a name to identify a method
  */
-public final class MethodNameProvider implements IdProvider<Method, String>{
+final class MethodNameProvider implements IdProvider<Method, String>{
 
   /**
    * Identify a method.

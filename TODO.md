@@ -1,7 +1,31 @@
+/api/limit_1_or_5
+MethodLevelPathPatterns{pathPatterns=[/api/limit_1_or_5]}
+
+Should RateLimiter have method setRate() ? What about getRate()?.
+We think setRate may be an overkill. However, many tests use that method.
+
+SleepingStopwatch should not extend Stopwatch
+
+Method sleepUninterruptibly does not belong.
+For method elapsedMicros, we should simply use Stopwatch.elapsed
+
 # TODO
+
+So that we can have methods without resourceId, we will introduce a default global key
+Make sure the single argument method, has synced argument between RateLimiterIx and RateLimiter
+Let RateLimiter2 implement our original RateLimiter, then test that exhaustively
+
+Remove all System.out.println and any print() methods
+From RateLimiterTest move all Rate related tests to own class
+RateLimiter2.setRate should have package access and visible for testing.
+Implement serialization properly (esp for cache)
+Implement VisibleForTesting
+Remove all @since
+Remove RateLimiter.setRate and add the rate to the constructor of RateLimiter
 
 - Implement PatternMatchingRateLimiterTest
 - Test Bucket4jRateLimiter
+- Look for all serialVersionUID and implement Serialization  
 - Use Guava RateLimiter -> Add caching to guava rateLimiter
 - Test (in the core package) that RateLimiter works for different amounts, durations and time units.  
 - Handle and test case where a class has: 1. no path; 2. empty path pattern; but one or more methods of the class has path patterns.

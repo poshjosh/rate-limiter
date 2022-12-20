@@ -1,13 +1,13 @@
 package com.looseboxes.ratelimiter.builder;
 
 import com.looseboxes.ratelimiter.*;
-import com.looseboxes.ratelimiter.annotation.AnnotationProcessor;
-import com.looseboxes.ratelimiter.annotation.ClassAnnotationProcessor;
+import com.looseboxes.ratelimiter.annotation.AnnotationTreeBuilder;
 import com.looseboxes.ratelimiter.annotation.NodeData;
 import com.looseboxes.ratelimiter.annotation.NodeUtil;
+import com.looseboxes.ratelimiter.annotation.RateLimitTreeBuilder;
 import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.node.Node;
-import com.looseboxes.ratelimiter.rates.Limit;
+import com.looseboxes.ratelimiter.util.CompositeRate;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -15,9 +15,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 class RateLimiterTreeBuilder<K> implements RateLimitersBuilder<K, Node<NodeData<RateLimiter<K>>>> {
 
     private final AtomicBoolean buildAttempted = new AtomicBoolean();
-    private AnnotationProcessor<Class<?>> annotationProcessor;
-    private Node<NodeData<Limit>> rootNode;
-    private RateLimiterConfigBuilder<K, ?> rateLimiterConfigBuilder;
+    private AnnotationTreeBuilder<Class<?>> annotationTreeBuilder;
+    private Node<NodeData<CompositeRate>> rootNode;
+    private RateLimiterConfig.Builder<K, ?> rateLimiterConfigBuilder;
+    private RateLimiterConfig<K, ?> rateLimiterConfig;
     private RateLimiterFactory<K> rateLimiterFactory;
 
     RateLimiterTreeBuilder() {
@@ -27,61 +28,67 @@ class RateLimiterTreeBuilder<K> implements RateLimitersBuilder<K, Node<NodeData<
     @Override
     public Node<NodeData<RateLimiter<K>>> build(List<Class<?>> classes) {
 
-        buildConfigs(classes);
+        buildTree(classes);
 
         return rootNode.transform(null, (name, nodeData) ->
                 new NodeData<>(nodeData.getSource(), createRateLimiter(nodeData.getValue())));
     }
 
-    private RateLimiter<K> createRateLimiter(Limit limit) {
-        Objects.requireNonNull(rateLimiterConfigBuilder);
-        if(limit == null) {
-            return RateLimiter.noop();
-        }
-        if(rateLimiterFactory == null) {
-            rateLimiterFactory = new DefaultRateLimiterFactory<>();
-        }
-        return rateLimiterFactory.createRateLimiter(rateLimiterConfigBuilder.build(), limit);
-    }
-
-    private void buildConfigs(List<Class<?>> classes) {
+    private void buildTree(List<Class<?>> classes) {
 
         if(!buildAttempted.compareAndSet(false, true)) {
             throw new IllegalStateException("build() method may only be called once, per instance of this class");
         }
 
-        if(annotationProcessor == null) {
-            annotationProcessor(new ClassAnnotationProcessor());
+        rateLimiterConfig = Objects.requireNonNull(rateLimiterConfigBuilder).build();
+
+        if(annotationTreeBuilder == null) {
+            annotationProcessor(RateLimitTreeBuilder.newInstance(rateLimiterConfig.getRateFactory()));
         }
 
         if(rootNode == null) {
             rootNodeName("root-" + UUID.randomUUID());
         }
 
-        annotationProcessor.process(rootNode, classes);
+        annotationTreeBuilder.build(rootNode, classes);
     }
 
-    @Override public RateLimiterTreeBuilder<K> annotationProcessor(
-            AnnotationProcessor<Class<?>> annotationProcessor) {
-        this.annotationProcessor = annotationProcessor;
+    private RateLimiter<K> createRateLimiter(CompositeRate limit) {
+        if(limit == null) {
+            return RateLimiter.noop();
+        }
+        if(rateLimiterFactory == null) {
+            rateLimiterFactory = RateLimiterFactory.newInstance();
+        }
+        return rateLimiterFactory.createRateLimiter(rateLimiterConfig, limit);
+    }
+
+    @Override
+    public RateLimiterTreeBuilder<K> annotationProcessor(
+            AnnotationTreeBuilder<Class<?>> annotationTreeBuilder) {
+        this.annotationTreeBuilder = annotationTreeBuilder;
         return this;
     }
 
-    @Override public RateLimiterTreeBuilder<K> rootNodeName(String name) {
+    @Override
+    public RateLimiterTreeBuilder<K> rootNodeName(String name) {
         return rootNode(NodeUtil.createNode(name, null, null));
     }
 
-    @Override public RateLimiterTreeBuilder<K> rootNode(Node<NodeData<Limit>> rootNode) {
+    @Override
+    public RateLimiterTreeBuilder<K> rootNode(Node<NodeData<CompositeRate>> rootNode) {
         this.rootNode = rootNode;
         return this;
     }
 
-    @Override public RateLimiterTreeBuilder<K> rateCache(RateCache<K, ?> rateCache) {
+    @Override
+    public RateLimiterTreeBuilder<K> rateCache(RateCache<K, ?> rateCache) {
         this.rateLimiterConfigBuilder.rateCache((RateCache)rateCache);
         return this;
     }
 
-    @Override public RateLimiterTreeBuilder<K> rateFactory(RateFactory rateFactory) {
+    @Override
+    public RateLimiterTreeBuilder<K> rateFactory(RateFactory rateFactory) {
         this.rateLimiterConfigBuilder.rateFactory(rateFactory);
         return this;
     }

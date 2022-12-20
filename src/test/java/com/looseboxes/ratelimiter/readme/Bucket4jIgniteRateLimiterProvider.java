@@ -7,7 +7,7 @@ import com.looseboxes.ratelimiter.bucket4j.Bucket4jRateLimiterFactory;
 import com.looseboxes.ratelimiter.bucket4j.ProxyManagerProvider;
 import com.looseboxes.ratelimiter.builder.RateLimitersBuilder;
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.rates.Rate;
+import com.looseboxes.ratelimiter.Rate;
 import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.ProxyManager;

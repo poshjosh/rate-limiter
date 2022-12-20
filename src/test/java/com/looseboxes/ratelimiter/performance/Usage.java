@@ -1,13 +1,13 @@
 package com.looseboxes.ratelimiter.performance;
 
-import com.looseboxes.ratelimiter.Util;
+import com.looseboxes.ratelimiter.MemoryUtil;
 
 import java.util.Objects;
 
 public final class Usage {
 
     public static Usage bookmark() {
-        return of(System.currentTimeMillis(), Util.availableMemory());
+        return of(System.currentTimeMillis(), MemoryUtil.availableMemory());
     }
     public static Usage of(long duration, long memory) {
         return new Usage(duration, memory);
@@ -29,7 +29,7 @@ public final class Usage {
     }
 
     public Usage usage() {
-        return new Usage(System.currentTimeMillis() - duration, Util.usedMemory(memory));
+        return new Usage(System.currentTimeMillis() - duration, MemoryUtil.usedMemory(memory));
     }
 
     @Override

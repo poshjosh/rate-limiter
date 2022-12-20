@@ -1,6 +1,6 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.rates.Limit;
+import com.looseboxes.ratelimiter.util.CompositeRate;
 
 import java.util.Objects;
 
@@ -11,12 +11,12 @@ public interface RateRecordedListener {
     /**
      * Called when a rate is recorded
      */
-    default void onRateRecorded(Object context, Object resourceId, int recordedHits, Limit limit, Object rate) { }
+    default void onRateRecorded(Object context, Object resourceId, int recordedHits, CompositeRate limit, Object rate) { }
 
     /**
      * Called when a rate is exceeded
      */
-    default void onRateExceeded(Object context, Object resourceId, int recordedHits, Limit limit, Object rate) { }
+    default void onRateExceeded(Object context, Object resourceId, int recordedHits, CompositeRate limit, Object rate) { }
 
     /**
      * Returns a composed {@code RateRecordedListener} that performs, in sequence, this
@@ -34,12 +34,12 @@ public interface RateRecordedListener {
         Objects.requireNonNull(after);
         return new RateRecordedListener() {
             @Override
-            public void onRateRecorded(Object context, Object resourceId, int recordedHits, Limit limit, Object rate) {
+            public void onRateRecorded(Object context, Object resourceId, int recordedHits, CompositeRate limit, Object rate) {
                 RateRecordedListener.this.onRateRecorded(context, resourceId, recordedHits, limit, rate);
                 after.onRateRecorded(context, resourceId, recordedHits, limit, rate);
             }
             @Override
-            public void onRateExceeded(Object context, Object resourceId, int recordedHits, Limit limit, Object rate) {
+            public void onRateExceeded(Object context, Object resourceId, int recordedHits, CompositeRate limit, Object rate) {
                 RateRecordedListener.this.onRateExceeded(context, resourceId, recordedHits, limit, rate);
                 after.onRateExceeded(context, resourceId, recordedHits, limit, rate);
             }

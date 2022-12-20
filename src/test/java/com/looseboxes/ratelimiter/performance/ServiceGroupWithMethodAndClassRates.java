@@ -2,7 +2,7 @@ package com.looseboxes.ratelimiter.performance;
 
 import com.looseboxes.ratelimiter.annotation.RateLimit;
 import com.looseboxes.ratelimiter.annotation.RateLimitGroup;
-import com.looseboxes.ratelimiter.rates.Logic;
+import com.looseboxes.ratelimiter.util.Operator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +30,7 @@ public class ServiceGroupWithMethodAndClassRates {
             log.info("limit_2_or_5_per_minute");
         }
 
-        @RateLimitGroup(name = "and_method_group", logic = Logic.AND)
+        @RateLimitGroup(name = "and_method_group", logic = Operator.AND)
         @RateLimit(limit = 2, duration = 1, timeUnit = TimeUnit.MINUTES)
         @RateLimit(limit = 5, duration = 1, timeUnit = TimeUnit.MINUTES)
         void limit_2_and_5_per_minute() {
@@ -38,7 +38,7 @@ public class ServiceGroupWithMethodAndClassRates {
         }
     }
 
-    @RateLimitGroup(name = "class_group", logic = Logic.AND)
+    @RateLimitGroup(name = "class_group", logic = Operator.AND)
     @RateLimit(limit = 1000, duration = 1, timeUnit = TimeUnit.MINUTES)
     public static class Service2{
         @RateLimit(limit = 2, duration = 1, timeUnit = TimeUnit.MINUTES)
@@ -57,7 +57,7 @@ public class ServiceGroupWithMethodAndClassRates {
             log.info("limit_2_or_5_per_minute");
         }
 
-        @RateLimitGroup(name = "and_method_group", logic = Logic.AND)
+        @RateLimitGroup(name = "and_method_group", logic = Operator.AND)
         @RateLimit(limit = 2, duration = 1, timeUnit = TimeUnit.MINUTES)
         @RateLimit(limit = 5, duration = 1, timeUnit = TimeUnit.MINUTES)
         void limit_2_and_5_per_minute() {
@@ -65,7 +65,7 @@ public class ServiceGroupWithMethodAndClassRates {
         }
     }
 
-    @RateLimitGroup(name = "class_group", logic = Logic.AND)
+    @RateLimitGroup(name = "class_group", logic = Operator.AND)
     @RateLimit(limit = 1000, duration = 1, timeUnit = TimeUnit.MINUTES)
     public static class Service3{
         @RateLimit(limit = 2, duration = 1, timeUnit = TimeUnit.MINUTES)
@@ -84,7 +84,7 @@ public class ServiceGroupWithMethodAndClassRates {
             log.info("limit_2_or_5_per_minute");
         }
 
-        @RateLimitGroup(logic = Logic.AND)
+        @RateLimitGroup(logic = Operator.AND)
         @RateLimit(limit = 2, duration = 1, timeUnit = TimeUnit.MINUTES)
         @RateLimit(limit = 5, duration = 1, timeUnit = TimeUnit.MINUTES)
         void limit_2_and_5_per_minute() {

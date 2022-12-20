@@ -4,11 +4,24 @@ import com.looseboxes.ratelimiter.cache.RateCache;
 
 public interface RateLimiterConfig<K, V> {
 
-    static <K, V> RateLimiterConfigBuilder<K, V> builder() {
+    interface Builder<K, V> {
+
+        RateLimiterConfig<K, V> build();
+
+        Builder<K, V> rateCache(RateCache<K, V> rateCache);
+
+        Builder<K, V> rateFactory(RateFactory rateFactory);
+
+        Builder<K, V> rateRecordedListener(RateRecordedListener rateRecordedListener);
+
+        Builder<K, V> bandwidthLimiterFactory(BandwidthLimiterProvider<K> bandwidthLimiterProvider);
+    }
+
+    static <K, V> Builder<K, V> builder() {
         return new DefaultRateLimiterConfig<>();
     }
 
-    static <K, V> RateLimiterConfigBuilder<K, V> builder(RateLimiterConfig<K, V> rateLimiterConfig) {
+    static <K, V> Builder<K, V> builder(RateLimiterConfig<K, V> rateLimiterConfig) {
         return new DefaultRateLimiterConfig<>(rateLimiterConfig);
     }
 
@@ -25,4 +38,6 @@ public interface RateLimiterConfig<K, V> {
     RateFactory getRateFactory();
 
     RateRecordedListener getRateRecordedListener();
+
+    BandwidthLimiterProvider<K> getBandwidthLimiterFactory();
 }

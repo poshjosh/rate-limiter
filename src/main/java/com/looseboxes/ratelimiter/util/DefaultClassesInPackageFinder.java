@@ -16,18 +16,13 @@ import java.util.jar.JarFile;
 /**
  * @author hp
  */
-public class DefaultClassesInPackageFinder implements ClassesInPackageFinder{
+final class DefaultClassesInPackageFinder implements ClassesInPackageFinder{
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultClassesInPackageFinder.class);
     
     private final ClassLoader classLoader;
 
-    public DefaultClassesInPackageFinder() {
-        this(Thread.currentThread().getContextClassLoader());
-        
-    }
-    
-    public DefaultClassesInPackageFinder(ClassLoader classLoader) {
+    DefaultClassesInPackageFinder(ClassLoader classLoader) {
         this.classLoader = Objects.requireNonNull(classLoader);
     }
 

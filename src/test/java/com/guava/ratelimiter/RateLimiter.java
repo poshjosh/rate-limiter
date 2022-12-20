@@ -453,7 +453,7 @@ public abstract class RateLimiter {
 
         /*
          * We always hold the mutex when calling this. TODO(cpovirk): Is that important? Perhaps we need
-         * to guarantee that each call to reserveEarliestAvailable, etc. sees a value >= the previous?
+         * to guarantee that each call to reserveNextAvailable, etc. sees a value >= the previous?
          * Also, is it OK that we don't hold the mutex when sleeping?
          */
         protected abstract long readMicros();

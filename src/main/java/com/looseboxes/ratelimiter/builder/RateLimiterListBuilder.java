@@ -1,12 +1,12 @@
 package com.looseboxes.ratelimiter.builder;
 
 import com.looseboxes.ratelimiter.*;
-import com.looseboxes.ratelimiter.annotation.AnnotationProcessor;
+import com.looseboxes.ratelimiter.annotation.AnnotationTreeBuilder;
 import com.looseboxes.ratelimiter.annotation.NodeData;
 import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.node.BreadthFirstNodeVisitor;
 import com.looseboxes.ratelimiter.node.Node;
-import com.looseboxes.ratelimiter.rates.Limit;
+import com.looseboxes.ratelimiter.util.CompositeRate;
 
 import java.util.*;
 
@@ -35,8 +35,8 @@ class RateLimiterListBuilder<K> implements RateLimitersBuilder<K, List<NodeData<
     }
 
     public RateLimiterListBuilder<K> annotationProcessor(
-            AnnotationProcessor<Class<?>> annotationProcessor) {
-        this.rateLimiterTreeBuilder.annotationProcessor(annotationProcessor);
+            AnnotationTreeBuilder<Class<?>> annotationTreeBuilder) {
+        this.rateLimiterTreeBuilder.annotationProcessor(annotationTreeBuilder);
         return this;
     }
 
@@ -45,7 +45,7 @@ class RateLimiterListBuilder<K> implements RateLimitersBuilder<K, List<NodeData<
         return this;
     }
 
-    public RateLimiterListBuilder<K> rootNode(Node<NodeData<Limit>> rootNode) {
+    public RateLimiterListBuilder<K> rootNode(Node<NodeData<CompositeRate>> rootNode) {
         this.rateLimiterTreeBuilder.rootNode(rootNode);
         return this;
     }

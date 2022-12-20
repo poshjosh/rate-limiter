@@ -8,6 +8,14 @@ import java.util.stream.Collectors;
 @FunctionalInterface
 public interface ClassesInPackageFinder {
 
+    static ClassesInPackageFinder newInstance() {
+        return newInstance(Thread.currentThread().getContextClassLoader());
+    }
+
+    static ClassesInPackageFinder newInstance(ClassLoader classLoader) {
+        return new DefaultClassesInPackageFinder(classLoader);
+    }
+
     default List<Class<?>> findClasses(List<String> packageNames, ClassFilter classFilter) {
         Objects.requireNonNull(classFilter);
         return packageNames.isEmpty() ? Collections.emptyList() : packageNames.stream()

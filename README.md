@@ -43,7 +43,6 @@ class RateLimitedResource {
 
 ```java
 import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.builder.RateLimiterListBuilder;
 import com.looseboxes.ratelimiter.annotation.RateLimit;
 
 import java.util.Objects;
@@ -51,46 +50,46 @@ import java.util.concurrent.TimeUnit;
 
 public class SampleUsage {
 
-    static class RateLimitedResource {
+  static class RateLimitedResource {
 
-        static final int LIMIT = 3;
+    static final int LIMIT = 3;
 
-        final RateLimiter<Object> rateLimiter;
+    final RateLimiter<Object> rateLimiter;
 
-        final String rateLimitedMethodId;
-
-        RateLimitedResource(RateLimiter<Object> rateLimiter) {
-            this.rateLimiter = Objects.requireNonNull(rateLimiter);
-            this.rateLimitedMethodId = getClass().getName() + ".rateLimitedMethod";
-        }
-
-        // Limited to 3 invocations every 2 seconds OR 100 invocations every 1 minute
-        @RateLimit(limit = LIMIT, duration = 2000) @RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES) void rateLimitedMethod() {
-
-            // VERY IMPORTANT to record usage
-            rateLimiter.consume(rateLimitedMethodId);
-        }
+    RateLimitedResource(RateLimiter<Object> rateLimiter) {
+      this.rateLimiter = Objects.requireNonNull(rateLimiter);
     }
 
-    public static void main(String... args) {
+    // Limited to 3 invocations every 2 seconds OR 100 invocations every 1 minute
+    @RateLimit(limit = LIMIT, duration = 2000) 
+    @RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES) 
+    void rateLimitedMethod() {
 
-        RateLimiter<Object> rateLimiter = buildRateLimiter(RateLimitedResource.class);
-
-        RateLimitedResource rateLimitedResource = new RateLimitedResource(rateLimiter);
-
-        // This will make the last invocation of the method from within the for loop fail
-        final int exceedsLimitByOne = RateLimitedResource.LIMIT + 1;
-
-        for (int i = 0; i < exceedsLimitByOne; i++) {
-
-            rateLimitedResource.rateLimitedMethod();
-        }
+      if (!rateLimiter.tryConsume("rateLimitedMethodId")) {
+        throw new RuntimeException("Limit exceeded");
+      }
     }
+  }
 
-    private static RateLimiter<Object> buildRateLimiter(Class<?> clazz) {
-        // Only one class/method is rate limited
-        return RateLimitersBuilder.list().build(clazz).get(0).getValue(); 
+  public static void main(String... args) {
+
+    RateLimiter<Object> rateLimiter = buildRateLimiter(RateLimitedResource.class);
+
+    RateLimitedResource rateLimitedResource = new RateLimitedResource(rateLimiter);
+
+    // This will make the last invocation of the method from within the for loop fail
+    final int exceedsLimitByOne = RateLimitedResource.LIMIT + 1;
+
+    for (int i = 0; i < exceedsLimitByOne; i++) {
+
+      rateLimitedResource.rateLimitedMethod();
     }
+  }
+
+  private static RateLimiter<Object> buildRateLimiter(Class<?> clazz) {
+    // Only one class/method is rate limited
+    return RateLimitersBuilder.list().build(clazz).get(0).getValue();
+  }
 }
 ```
 
@@ -182,22 +181,22 @@ Resource2#methodC                       Resource2#methodB                   Reso
 
 ```java
 import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.rates.Rate;
+import com.looseboxes.ratelimiter.Rate;
 
 public class Concept {
 
   public static void main(String... args) {
 
-    // Only one recording is allowed within a minute (for each unique recording key)
-    RateLimiter<Integer> rateLimiter = RateLimiter.of(Rate.of(1, 60 * 1000));
+    // Only one consumption is allowed within a minute (for each unique recording key)
+    RateLimiter<String> rateLimiter = RateLimiter.of(Rate.of(1, 60 * 1000));
 
     // We use numbers as recording keys
-    rateLimiter.consume(1);
-    rateLimiter.consume(2);
-    rateLimiter.consume(3);
+    rateLimiter.tryConsume("resource_1");
+    rateLimiter.tryConsume("resource_2");
+    rateLimiter.tryConsume("resource_3");
 
-    // This will return false, it is the second recording of the number 1
-    final boolean withinLimit = rateLimiter.consume(1);
+    // This will return false, it is the second consumption of resource_1
+    final boolean withinLimit = rateLimiter.tryConsume("resource_1");
     System.out.printf("Within limit: %b", withinLimit);
   }
 }

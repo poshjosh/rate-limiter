@@ -2,7 +2,7 @@ package com.looseboxes.ratelimiter.bucket4j;
 
 import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.rates.Limit;
+import com.looseboxes.ratelimiter.util.CompositeRate;
 import io.github.bucket4j.grid.ProxyManager;
 
 import java.io.Serializable;
@@ -25,7 +25,7 @@ public class Bucket4jRateLimiterFactory<K extends Serializable> implements RateL
     }
 
     @Override
-    public RateLimiter<K> createRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Limit limit) {
+    public RateLimiter<K> createRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, CompositeRate limit) {
 
         RateCache<K, ?> rateCache = rateLimiterConfig.getRateCache();
 

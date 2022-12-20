@@ -5,7 +5,7 @@ import java.util.Objects;
 
 public final class NodeData<V> implements Serializable {
 
-    private static final long serialVersionUID = 9081726354000000004L;
+    private static final long serialVersionUID = 9081726354000000040L;
 
     private final Object source;
     private final V value;

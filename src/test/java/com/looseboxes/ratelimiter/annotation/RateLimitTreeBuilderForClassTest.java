@@ -1,0 +1,50 @@
+package com.looseboxes.ratelimiter.annotation;
+
+import com.looseboxes.ratelimiter.RateFactory;
+import com.looseboxes.ratelimiter.util.CompositeRate;
+import com.looseboxes.ratelimiter.node.Node;
+import com.looseboxes.ratelimiter.node.formatters.NodeFormatters;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
+class RateLimitTreeBuilderForClassTest extends AbstractAnnotationProcessorTest<Class<?>> {
+
+    @Test
+    public void methodNodesFromSuperClassesShouldBeTransferredToResourceAnnotatedClass() {
+        // @TODO
+    }
+
+    @Test
+    public void classCannotHaveMultipleClassLevelResourceAnnotationsInHeirarchy() {
+        // @TODO
+    }
+
+    @Test
+    public void nodeVisitingShouldBeAccurate() {
+        List<Class<?>> classes = findClasses();
+//        System.out.println("Found classes: " + classes);
+        final String rootNodeName = "sample-root-node";
+        Node<NodeData<CompositeRate>> root = NodeUtil.createNode(rootNodeName);
+        getInstance().build(root, classes);
+        System.out.println();
+        System.out.println(NodeFormatters.indentedHeirarchy().format(root));
+        assertThat(root.findFirstChild(node -> node.getName().equals(rootNodeName)).isPresent()).isTrue();
+        assertHasChildrenHavingNames(root, "ClassGroupOnlyAnon", "PrivateClass", "InternalClass");
+        assertHasChildrenHavingNames(root, "Fire");
+        Node<NodeData<CompositeRate>> fire = root.findFirstChild(node -> "Fire".equals(node.getName())).orElse(null);
+        assertHasChildrenHavingNames(fire,
+                ClassWithClassAnnotations.ClassGroupOnlyNamedFire.class,
+                ClassWithClassAnnotations.SecondClassGroupOnlyNamedFire.class);
+    }
+
+    RateLimitTreeBuilder<Class<?>> getInstance() {
+        return RateLimitTreeBuilder.newInstance(this::getId, IdProvider.forMethod(), RateFactory.newInstance());
+    }
+
+    String getId(Class<?> element) {
+        return element.getSimpleName();
+    }
+}
