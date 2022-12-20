@@ -169,18 +169,10 @@ public interface RateLimiter<K> {
      */
     default RateLimiter<K> andThen(RateLimiter<K> after) {
         Objects.requireNonNull(after);
-        return new RateLimiter<K>() {
-            @Override
-            public boolean tryConsume(Object context, K resourceId, int permits, long timeout, TimeUnit unit) {
-                boolean a;
-                boolean b;
-                try {
-                    a = tryConsume(context, resourceId, permits, timeout, unit);
-                } finally {
-                    b = after.tryConsume(context, resourceId, permits, timeout, unit);
-                }
-                return a && b;
-            }
+        return (context, resourceId, permits, timeout, unit) -> {
+            final boolean a = RateLimiter.this.tryConsume(context, resourceId, permits, timeout, unit);
+            final boolean b = after.tryConsume(context, resourceId, permits, timeout, unit);
+            return a && b;
         };
     }
 }
