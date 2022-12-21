@@ -1,16 +1,18 @@
 package com.looseboxes.ratelimiter.bucket4j;
 
-import com.looseboxes.ratelimiter.Rate;
-import io.github.bucket4j.Bandwidth;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
 import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.BucketConfiguration;
+
+import java.time.Duration;
 
 public interface BucketConfigurationProvider {
     final class SimpleBucketConfigurationProvider implements BucketConfigurationProvider {
         @Override
-        public BucketConfiguration getBucketConfiguration(Rate rate) {
+        public BucketConfiguration getBucketConfiguration(Bandwidth bandwidth) {
+            final long permitsPerNanos = bandwidth.getPermitsPerNanos();
             return Bucket4j.configurationBuilder()
-                    .addLimit(Bandwidth.simple(rate.getAmount(), rate.getDuration())).build();
+                    .addLimit(io.github.bucket4j.Bandwidth.simple(permitsPerNanos, Duration.ofNanos(1))).build();
         }
     }
 
@@ -18,5 +20,5 @@ public interface BucketConfigurationProvider {
         return new SimpleBucketConfigurationProvider();
     }
 
-    <R extends Rate> BucketConfiguration getBucketConfiguration(R rate);
+    <R extends Bandwidth> BucketConfiguration getBucketConfiguration(R rate);
 }

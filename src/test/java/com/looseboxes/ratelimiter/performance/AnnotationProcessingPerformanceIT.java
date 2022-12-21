@@ -11,13 +11,13 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import java.util.List;
 
-class AnnotationProcessingPerformanceIT extends AbstractPerformanceTest{
+class AnnotationProcessingPerformanceIT {
 
     @Test
     void annotationProcessShouldConsumeLimitedTimeAndMemory() {
         Usage bookmark = Usage.bookmark();
         Node<NodeData<RateLimiter<Object>>> rateLimiterRootNode = buildRateLimiters();
-        assertUsageSinceBookmarkIsLessThan(bookmark, Usage.of(250, 25_000_000));
+        bookmark.assertUsageLessThan(Usage.of(250, 25_000_000));
         System.out.println(NodeFormatters.indentedHeirarchy().format(rateLimiterRootNode));
     }
 

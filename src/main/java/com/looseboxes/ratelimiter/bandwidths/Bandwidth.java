@@ -1,5 +1,7 @@
 package com.looseboxes.ratelimiter.bandwidths;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 public interface Bandwidth {
 
     Bandwidth copy();
@@ -12,6 +14,10 @@ public interface Bandwidth {
         Bandwidth copy = copy();
         copy.setRate(permitsPerSecond, nowMicros);
         return copy;
+    }
+
+    default long getPermitsPerNanos() {
+        return (long)(SECONDS.toNanos(1L) / getRate());
     }
 
     void setRate(double permitsPerSecond, long nowMicros);

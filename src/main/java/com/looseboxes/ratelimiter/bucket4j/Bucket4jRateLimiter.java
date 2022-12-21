@@ -1,9 +1,9 @@
 package com.looseboxes.ratelimiter.bucket4j;
 
-import com.looseboxes.ratelimiter.util.CompositeRate;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.RateRecordedListener;
 import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.Rate;
 import com.looseboxes.ratelimiter.util.SleepingTicker;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
@@ -26,32 +26,32 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
 
     private static final Logger LOG = LoggerFactory.getLogger(Bucket4jRateLimiter.class);
 
-    private final SleepingTicker ticker = SleepingTicker.systemTicker();
+    private final SleepingTicker ticker = SleepingTicker.zeroOffset();
 
     private final ProxyManager<K> buckets;
-    private final CompositeRate limit;
+    private final Bandwidths limit;
     private final Supplier<BucketConfiguration>[] configurationSuppliers;
     private final RateRecordedListener rateRecordedListener;
 
-    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, Rate... rates) {
-        this(proxyManager, CompositeRate.of(rates));
+    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, Bandwidth... bandwidths) {
+        this(proxyManager, Bandwidths.of(bandwidths));
     }
 
-    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, CompositeRate limit) {
-        this(proxyManager, BucketConfigurationProvider.simple(), RateRecordedListener.NO_OP, limit);
+    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, Bandwidths bandwidths) {
+        this(proxyManager, BucketConfigurationProvider.simple(), RateRecordedListener.NO_OP, bandwidths);
     }
 
     public Bucket4jRateLimiter(
             ProxyManager<K> proxyManager,
             BucketConfigurationProvider bucketConfigurationProvider,
             RateRecordedListener rateRecordedListener,
-            CompositeRate limit) {
+            Bandwidths bandwidths) {
         this.buckets = Objects.requireNonNull(proxyManager);
-        this.limit = Objects.requireNonNull(limit);
-        this.configurationSuppliers = new Supplier[limit.numberOfRates()];
-        for(int i = 0; i < limit.numberOfRates(); i++) {
-            Rate rate = limit.getRates()[i];
-            BucketConfiguration configuration = bucketConfigurationProvider.getBucketConfiguration(rate);
+        this.limit = Objects.requireNonNull(bandwidths);
+        final Bandwidth [] members = bandwidths.getMembers();
+        this.configurationSuppliers = new Supplier[members.length];
+        for(int i = 0; i < members.length; i++) {
+            BucketConfiguration configuration = bucketConfigurationProvider.getBucketConfiguration(members[i]);
             this.configurationSuppliers[i] = () -> configuration;
         }
         this.rateRecordedListener = Objects.requireNonNull(rateRecordedListener);
@@ -62,9 +62,9 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
 
         int failCount = 0;
 
-        for (int i = 0; i < configurationSuppliers.length; i++) {
+        for (Supplier<BucketConfiguration> configurationSupplier : configurationSuppliers) {
 
-            Bucket bucket = buckets.getProxy(resourceId, configurationSuppliers[i]);
+            Bucket bucket = buckets.getProxy(resourceId, configurationSupplier);
 
             if (tryAcquire(bucket, amount, timeout, unit)) {
                 continue;

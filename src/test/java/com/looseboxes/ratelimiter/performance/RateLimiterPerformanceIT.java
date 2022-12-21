@@ -1,12 +1,13 @@
 package com.looseboxes.ratelimiter.performance;
 
 import com.looseboxes.ratelimiter.*;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
+import com.looseboxes.ratelimiter.bandwidths.SmoothBandwidth;
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.util.CompositeRate;
-import com.looseboxes.ratelimiter.Rate;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import org.junit.jupiter.api.Test;
 
-class RateLimiterPerformanceIT extends AbstractPerformanceTest{
+class RateLimiterPerformanceIT {
 
     @Test
     void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory() {
@@ -21,7 +22,7 @@ class RateLimiterPerformanceIT extends AbstractPerformanceTest{
 
     void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(int count, Usage limit) {
 
-        RateLimiter<Integer> rateLimiter = getRateLimiterWithSingletonCache(count + 1, 60_000);
+        RateLimiter<Integer> rateLimiter = getRateLimiter((double)count + 1 / 60);
 
         Usage bookmark = Usage.bookmark();
 
@@ -30,16 +31,16 @@ class RateLimiterPerformanceIT extends AbstractPerformanceTest{
             rateLimiter.tryConsume(key);
         }
 
-        assertUsageSinceBookmarkIsLessThan(bookmark, limit);
+        bookmark.assertUsageLessThan(limit);
     }
 
-    public RateLimiter<Integer> getRateLimiter(int limit, int duration) {
-        return RateLimiter.of(Rate.of(limit, duration));
+    public RateLimiter<Integer> getRateLimiter(double permitsPerSecond) {
+        RateLimiterConfig<Integer, ?> config =
+            RateLimiterConfig.<Integer, Object>builder().rateCache(RateCache.singleton()).build();
+        return RateLimiter.<Integer>of(config, Bandwidths.of(getBandwidth(permitsPerSecond)));
     }
 
-    public RateLimiter<Integer> getRateLimiterWithSingletonCache(int limit, int duration) {
-    RateLimiterConfig<Integer, ?> config =
-        RateLimiterConfig.<Integer, Object>builder().rateCache(RateCache.singleton()).build();
-        return RateLimiter.<Integer>of(config, CompositeRate.of(Rate.of(limit, duration)));
+    private Bandwidth getBandwidth(double permitsPerSecond) {
+        return SmoothBandwidth.warmingUp(permitsPerSecond, 5);
     }
 }

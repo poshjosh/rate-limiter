@@ -1,6 +1,7 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.util.CompositeRate;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -17,32 +18,32 @@ public interface RateLimiter<K> {
         return (RateLimiter<T>)NO_OP;
     }
 
-    static <K> RateLimiter<K> of(Rate... rates) {
-        return of(CompositeRate.of(rates));
+    static <K> RateLimiter<K> of(Bandwidth... bandwidth) {
+        return of(Bandwidths.of(bandwidth));
     }
 
-    static <K> RateLimiter<K> of(CompositeRate limit) {
-        return of(RateLimiterConfig.newInstance(), limit);
+    static <K> RateLimiter<K> of(Bandwidths bandwidths) {
+        return of(RateLimiterConfig.newInstance(), bandwidths);
     }
 
-    static <K> RateLimiter<K> of(RateLimiterConfig<K, ?> rateLimiterConfig, CompositeRate limit) {
-        return bursty(rateLimiterConfig, limit);
+    static <K> RateLimiter<K> of(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths bandwidths) {
+        return bursty(rateLimiterConfig, bandwidths);
     }
 
-    static <K> RateLimiter<K> bursty(CompositeRate limit) {
-        return bursty(RateLimiterConfig.newInstance(), limit);
+    static <K> RateLimiter<K> bursty(Bandwidths bandwidths) {
+        return bursty(RateLimiterConfig.newInstance(), bandwidths);
     }
 
-    static <K> RateLimiter<K> bursty(RateLimiterConfig<K, ?> rateLimiterConfig, CompositeRate limit) {
-        return SmoothRateLimiter.bursty(rateLimiterConfig, limit);
+    static <K> RateLimiter<K> bursty(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths bandwidths) {
+        return new SmoothRateLimiter(rateLimiterConfig, bandwidths);
     }
 
-    static <K> RateLimiter<K> warmingUp(CompositeRate limit, long warmupPeriodSeconds) {
-        return warmingUp(RateLimiterConfig.newInstance(), limit, warmupPeriodSeconds);
+    static <K> RateLimiter<K> warmingUp(Bandwidths bandwidths) {
+        return warmingUp(RateLimiterConfig.newInstance(), bandwidths);
     }
 
-    static <K> RateLimiter<K> warmingUp(RateLimiterConfig<K, ?> rateLimiterConfig, CompositeRate limit, long warmupPeriodSeconds) {
-        return SmoothRateLimiter.warmingUp(rateLimiterConfig, limit, warmupPeriodSeconds);
+    static <K> RateLimiter<K> warmingUp(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths bandwidths) {
+        return new SmoothRateLimiter(rateLimiterConfig, bandwidths);
     }
 
     /**

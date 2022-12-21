@@ -10,12 +10,24 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 public abstract class SmoothBandwidth implements Bandwidth {
 
+    public static SmoothBandwidth bursty(double permitsPerSecond) {
+        return bursty(permitsPerSecond, 0);
+    }
+
     public static SmoothBandwidth bursty(double permitsPerSecond, long nowMicros) {
         return bursty(permitsPerSecond, nowMicros, 1.0);
     }
 
     public static SmoothBandwidth bursty(double permitsPerSecond, long nowMicros, double maxBurstSeconds) {
         return new SmoothBurstyBandwidth(permitsPerSecond, nowMicros, maxBurstSeconds);
+    }
+
+    public static SmoothBandwidth warmingUp(double permitsPerSecond) {
+        return warmingUp(permitsPerSecond, 0);
+    }
+
+    public static SmoothBandwidth warmingUp(double permitsPerSecond, long warmupPeriodSeconds) {
+        return warmingUp(permitsPerSecond, 0, warmupPeriodSeconds);
     }
 
     public static SmoothBandwidth warmingUp(double permitsPerSecond, long nowMicros, long warmupPeriodSeconds) {

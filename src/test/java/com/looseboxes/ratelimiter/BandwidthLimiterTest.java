@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.bandwidths.SmoothBandwidth;
 import com.looseboxes.ratelimiter.util.Operator;
 import com.looseboxes.ratelimiter.util.SleepingTicker;
@@ -49,12 +50,12 @@ class BandwidthLimiterTest {
     public void testBurstyAnd() {
         final int min = 1;
         final int max = 5;
-        final long nowMicros = ticker.elapsed(MICROSECONDS);
+        final long nowMicros = ticker.elapsedMicros();
         Bandwidth a = SmoothBandwidth.bursty(min, nowMicros);
         Bandwidth b = SmoothBandwidth.bursty(max, nowMicros);
 
         // TODO - Create and use static factory method for composite Bandwidths
-        BandwidthLimiter limiter = new SmoothBandwidthLimiter(new Bandwidth[]{a, b}, Operator.AND, ticker);
+        BandwidthLimiter limiter = new SmoothBandwidthLimiter(Bandwidths.and(a, b), ticker);
 
         for( int i = 0; i < max; i++) {
             if (i == 0) {
@@ -131,15 +132,15 @@ class BandwidthLimiterTest {
     public void testSimpleRateUpdate() {
         BandwidthLimiter limiter = BandwidthLimiter.create(5.0, 5, SECONDS);
         assertEquals(5.0, limiter.getPermitsPerSecond()[0]);
-        limiter = limiter.copy(10.0);
+        limiter = setRate(limiter, 10.0);
         assertEquals(10.0, limiter.getPermitsPerSecond()[0]);
     }
 
     @Test
     public void testWithParameterValidation() {
         BandwidthLimiter limiter = BandwidthLimiter.create(5.0, 5, SECONDS);
-        assertThrowsIllegalArgumentException(() -> limiter.copy(0.0));
-        assertThrowsIllegalArgumentException(() -> limiter.copy(-10.0));
+        assertThrowsIllegalArgumentException(() -> setRate(limiter, 0.0));
+        assertThrowsIllegalArgumentException(() -> setRate(limiter, -10.0));
     }
 
     @Test
@@ -302,7 +303,7 @@ class BandwidthLimiterTest {
             limiter.acquire(); // #3
         }
 
-        limiter = limiter.copy(4.0);
+        limiter = setRate(limiter, 4.0);
         limiter.acquire(); // #4, we repay the debt of the last acquire (imposed by the old rate)
         for (int i = 0; i < 4; i++) {
             limiter.acquire(); // #5
@@ -336,7 +337,7 @@ class BandwidthLimiterTest {
             limiter.acquire(); // #3
         }
 
-        limiter = limiter.copy(10.0); // double the rate!
+        limiter = setRate(limiter, 10.0); // double the rate!
         limiter.acquire(); // #4, we repay the debt of the last acquire (imposed by the old rate)
         for (int i = 0; i < 4; i++) {
             limiter.acquire(); // #5
@@ -364,7 +365,7 @@ class BandwidthLimiterTest {
         limiter.acquire(1); // no wait
         limiter.acquire(1); // R1.00, to repay previous
 
-        limiter = limiter.copy(2.0); // setPermitsPerSecond the rate!
+        limiter = setRate(limiter, 2.0); // setPermitsPerSecond the rate!
 
         limiter.acquire(1); // R1.00, to repay previous (the previous was under the old rate!)
         limiter.acquire(2); // R0.50, to repay previous (now the rate takes effect)
@@ -431,7 +432,7 @@ class BandwidthLimiterTest {
         limiter.acquire(Integer.MAX_VALUE);
         assertEvents("R0.00", "R0.00", "R0.00"); // no wait, infinite rate!
 
-        limiter = limiter.copy(2.0);
+        limiter = setRate(limiter, 2.0);
         limiter.acquire();
         limiter.acquire();
         limiter.acquire();
@@ -443,7 +444,7 @@ class BandwidthLimiterTest {
                 "R0.50", // Now it's 0.5 seconds per request.
                 "R0.50");
 
-        limiter = limiter.copy(Double.POSITIVE_INFINITY);
+        limiter = setRate(limiter, Double.POSITIVE_INFINITY);
         limiter.acquire();
         limiter.acquire();
         limiter.acquire();
@@ -455,7 +456,7 @@ class BandwidthLimiterTest {
     public void testInfinity_BustyTimeElapsed() {
         BandwidthLimiter limiter = BandwidthLimiter.create(Double.POSITIVE_INFINITY, ticker);
         ticker.instant += 1000000;
-        limiter = limiter.copy(2.0);
+        limiter = setRate(limiter, 2.0);
         for (int i = 0; i < 5; i++) {
             limiter.acquire();
         }
@@ -475,13 +476,13 @@ class BandwidthLimiterTest {
         limiter.acquire(Integer.MAX_VALUE);
         assertEvents("R0.00", "R0.00", "R0.00");
 
-        limiter = limiter.copy(1.0);
+        limiter = setRate(limiter, 1.0);
         limiter.acquire();
         limiter.acquire();
         limiter.acquire();
         assertEvents("R0.00", "R1.00", "R1.00");
 
-        limiter = limiter.copy(Double.POSITIVE_INFINITY);
+        limiter = setRate(limiter, Double.POSITIVE_INFINITY);
         limiter.acquire();
         limiter.acquire();
         limiter.acquire();
@@ -493,7 +494,7 @@ class BandwidthLimiterTest {
         BandwidthLimiter limiter = BandwidthLimiter
                 .create(Double.POSITIVE_INFINITY, 10, SECONDS, 3.0, ticker);
         ticker.instant += 1000000;
-        limiter = limiter.copy(1.0);
+        limiter = setRate(limiter, 1.0);
         for (int i = 0; i < 5; i++) {
             limiter.acquire();
         }
@@ -511,7 +512,7 @@ class BandwidthLimiterTest {
         for (int rate : rates) {
             int oneSecWorthOfWork = rate;
             ticker.sleepMillis(rate * 1000);
-            limiter = limiter.copy(rate);
+            limiter = setRate(limiter, rate);
             long burst = measureTotalTimeMillis(limiter, oneSecWorthOfWork, new Random());
             // we allow one second worth of work to go in a burst (i.e. take less than a second)
             assertTrue("Expected value <= 1000, found: " + burst, burst <= 1000);
@@ -519,6 +520,11 @@ class BandwidthLimiterTest {
             // but work beyond that must take at least one second
             assertTrue("Expected value >= 1000, found: " + afterBurst, afterBurst >= 1000);
         }
+    }
+    
+    private BandwidthLimiter setRate(BandwidthLimiter limiter, double permitsPerSecond) {
+        ((SmoothBandwidthLimiter)limiter).setRate(permitsPerSecond);
+        return limiter;
     }
 
     /**

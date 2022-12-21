@@ -1,6 +1,6 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.util.CompositeRate;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 
 import java.util.Objects;
 
@@ -11,12 +11,12 @@ public interface RateRecordedListener {
     /**
      * Called when a rate is recorded
      */
-    default void onRateRecorded(Object context, Object resourceId, int recordedHits, CompositeRate limit) { }
+    default void onRateRecorded(Object context, Object resourceId, int recordedHits, Bandwidths limit) { }
 
     /**
      * Called when a rate is exceeded
      */
-    default void onRateExceeded(Object context, Object resourceId, int recordedHits, CompositeRate limit) { }
+    default void onRateExceeded(Object context, Object resourceId, int recordedHits, Bandwidths limit) { }
 
     /**
      * Returns a composed {@code RateRecordedListener} that performs, in sequence, this
@@ -34,12 +34,12 @@ public interface RateRecordedListener {
         Objects.requireNonNull(after);
         return new RateRecordedListener() {
             @Override
-            public void onRateRecorded(Object context, Object resourceId, int recordedHits, CompositeRate limit) {
+            public void onRateRecorded(Object context, Object resourceId, int recordedHits, Bandwidths limit) {
                 RateRecordedListener.this.onRateRecorded(context, resourceId, recordedHits, limit);
                 after.onRateRecorded(context, resourceId, recordedHits, limit);
             }
             @Override
-            public void onRateExceeded(Object context, Object resourceId, int recordedHits, CompositeRate limit) {
+            public void onRateExceeded(Object context, Object resourceId, int recordedHits, Bandwidths limit) {
                 RateRecordedListener.this.onRateExceeded(context, resourceId, recordedHits, limit);
                 after.onRateExceeded(context, resourceId, recordedHits, limit);
             }

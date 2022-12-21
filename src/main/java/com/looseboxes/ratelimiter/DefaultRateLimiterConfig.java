@@ -1,8 +1,7 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.util.Operator;
 import com.looseboxes.ratelimiter.util.SleepingTicker;
 
 import java.util.Map;
@@ -28,11 +27,11 @@ final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K, V>,
         }
 
         @Override
-        public BandwidthLimiter getBandwidthLimiter(K key, Bandwidth [] bandwidths, Operator operator) {
+        public BandwidthLimiter getBandwidthLimiter(K key, Bandwidths bandwidths) {
             BandwidthLimiter value;
             if ((value = this.resourceIdToBandwidthLimiters.get(key)) == null) {
                 BandwidthLimiter newValue;
-                if ((newValue = createNew(key, bandwidths, operator)) != null) {
+                if ((newValue = createNew(key, bandwidths)) != null) {
                     this.resourceIdToBandwidthLimiters.put(key, newValue);
                     return newValue;
                 }
@@ -40,32 +39,34 @@ final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K, V>,
             return value;
         }
 
-        private BandwidthLimiter createNew(K key, Bandwidth [] bandwidths, Operator operator) {
-            return new SmoothBandwidthLimiter(bandwidths, operator, getTicker(key));
+        private BandwidthLimiter createNew(K key, Bandwidths bandwidths) {
+            return new SmoothBandwidthLimiter(bandwidths, getTicker(key));
         }
     }
 
     private RateCache<K, V> rateCache;
-    private RateFactory rateFactory;
     private RateRecordedListener rateRecordedListener;
     private BandwidthLimiterProvider<K> bandwidthLimiterProvider;
 
     DefaultRateLimiterConfig() {
-        this(RateCache.ofMap(), RateFactory.newInstance(),
-                RateRecordedListener.NO_OP, new DefaultBandwidthLimiterProvider<>(
-                        SleepingTicker.systemTicker()
+        this(RateCache.ofMap(),
+                RateRecordedListener.NO_OP,
+                new DefaultBandwidthLimiterProvider<>(
+                        SleepingTicker.zeroOffset()
                 ));
     }
 
     DefaultRateLimiterConfig(RateLimiterConfig<K, V> rateLimiterConfig) {
-        this(rateLimiterConfig.getRateCache(), rateLimiterConfig.getRateFactory(),
-                rateLimiterConfig.getRateRecordedListener(), rateLimiterConfig.getBandwidthLimiterFactory());
+        this(rateLimiterConfig.getRateCache(),
+                rateLimiterConfig.getRateRecordedListener(),
+                rateLimiterConfig.getBandwidthLimiterProvider());
     }
 
-    DefaultRateLimiterConfig(RateCache<K, V> rateCache, RateFactory rateFactory,
-            RateRecordedListener rateRecordedListener, BandwidthLimiterProvider<K> bandwidthLimiterProvider) {
+    DefaultRateLimiterConfig(
+            RateCache<K, V> rateCache,
+            RateRecordedListener rateRecordedListener,
+            BandwidthLimiterProvider<K> bandwidthLimiterProvider) {
         this.rateCache = Objects.requireNonNull(rateCache);
-        this.rateFactory = Objects.requireNonNull(rateFactory);
         this.rateRecordedListener = Objects.requireNonNull(rateRecordedListener);
         this.bandwidthLimiterProvider = Objects.requireNonNull(bandwidthLimiterProvider);
     }
@@ -90,21 +91,6 @@ final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K, V>,
     }
 
     @Override
-    public DefaultRateLimiterConfig<K, V> rateFactory(RateFactory rateFactory) {
-        this.setRateFactory(rateFactory);
-        return this;
-    }
-
-    @Override
-    public RateFactory getRateFactory() {
-        return rateFactory;
-    }
-
-    public void setRateFactory(RateFactory rateFactory) {
-        this.rateFactory = rateFactory;
-    }
-
-    @Override
     public DefaultRateLimiterConfig<K, V> rateRecordedListener(RateRecordedListener rateRecordedListener) {
         this.setRateRecordedListener(rateRecordedListener);
         return this;
@@ -120,18 +106,18 @@ final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K, V>,
     }
 
     @Override
-    public DefaultRateLimiterConfig<K, V> bandwidthLimiterFactory(
+    public DefaultRateLimiterConfig<K, V> bandwidthLimiterProvider(
             BandwidthLimiterProvider<K> bandwidthLimiterProvider) {
         this.bandwidthLimiterProvider = bandwidthLimiterProvider;
         return this;
     }
 
     @Override
-    public BandwidthLimiterProvider<K> getBandwidthLimiterFactory() {
+    public BandwidthLimiterProvider<K> getBandwidthLimiterProvider() {
         return bandwidthLimiterProvider;
     }
 
-    public void setBandwidthLimiterFactory(BandwidthLimiterProvider<K> bandwidthLimiterProvider) {
+    public void setBandwidthLimiterProvider(BandwidthLimiterProvider<K> bandwidthLimiterProvider) {
         this.bandwidthLimiterProvider = bandwidthLimiterProvider;
     }
 }

@@ -1,6 +1,7 @@
 package com.looseboxes.ratelimiter;
 
 import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.util.Operator;
 import com.looseboxes.ratelimiter.util.SleepingTicker;
 
@@ -73,8 +74,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 // would mean a maximum rate of "1MB/s", which might be small in some cases.
 final class SmoothBandwidthLimiter extends BandwidthLimiter {
 
-    private final Bandwidth [] bandwidths;
-    private final Operator operator;
+    private final Bandwidths bandwidths;
 
     /**
      * The underlying timer; used both to measure elapsed time and sleep as necessary. A separate
@@ -98,9 +98,8 @@ final class SmoothBandwidthLimiter extends BandwidthLimiter {
         return mutex;
     }
 
-    SmoothBandwidthLimiter(Bandwidth [] bandwidths, Operator operator, SleepingTicker ticker) {
+    SmoothBandwidthLimiter(Bandwidths bandwidths, SleepingTicker ticker) {
         this.bandwidths = Objects.requireNonNull(bandwidths);
-        this.operator = Objects.requireNonNull(operator);
         this.ticker = Objects.requireNonNull(ticker);
     }
 
@@ -122,36 +121,30 @@ final class SmoothBandwidthLimiter extends BandwidthLimiter {
      * @param permitsPerSecond the new stable rate of this {@code RateLimiter}
      * @throws IllegalArgumentException if {@code permitsPerSecond} is negative or zero
      */
-    @Override
-    public BandwidthLimiter copy(double permitsPerSecond) {
-        Checks.requireTrue(permitsPerSecond > 0.0
-                && !Double.isNaN(permitsPerSecond), "rate must be positive");
+    //@VisibleForTesting
+    BandwidthLimiter setRate(double... permitsPerSecond) {
+        for (double d : permitsPerSecond) {
+            Checks.requireTrue(d > 0.0
+                    && !Double.isNaN(d), "rate must be positive");
+        }
         synchronized (mutex()) {
-            return new SmoothBandwidthLimiter(copyBandwidths(permitsPerSecond), operator, ticker);
+            final Bandwidth [] members = bandwidths.getMembers();;
+            for (int i = 0; i < members.length; i++) {
+                members[i].setRate(permitsPerSecond[i], ticker.elapsedMicros());
+            }
         }
-    }
-
-    private Bandwidth[] copyBandwidths(double permitsPerSecond) {
-        final Bandwidth [] result = new Bandwidth[bandwidths.length];
-        final long elapsedMicros = ticker.elapsed(MICROSECONDS);
-        for (int i = 0; i < result.length; i++) {
-            result[i] = bandwidths[i].copy(permitsPerSecond, elapsedMicros);
-        }
-        return result;
+        return this;
     }
 
     /**
-     * Returns the stable rate (as {@code permits per seconds}) with which this {@code RateLimiter} is
-     * configured with. The initial value of this is the same as the {@code permitsPerSecond} argument
-     * passed in the factory method that produced this {@code RateLimiter}.
+     * Returns the stable rates (as {@code permits per seconds}) with which each {@code Bandwidth} in this
+     * {@code BandwidthLimiter} is configured with. The initial value of each, is the same as the {@code permitsPerSecond}
+     * argument passed in the factory method that produced each {@code Bandwidth} of this {@code BandwithLimiter}.
      */
+    @Override
     public final double [] getPermitsPerSecond() {
         synchronized (mutex()) {
-            final double [] permitsPerSecond = new double[bandwidths.length];
-            for(int i = 0; i < bandwidths.length; i++) {
-                permitsPerSecond[i] = bandwidths[i].getRate();
-            }
-            return permitsPerSecond;
+            return bandwidths.getPermitsPerSecond();
         }
     }
 
@@ -180,7 +173,7 @@ final class SmoothBandwidthLimiter extends BandwidthLimiter {
     final long reserve(int permits) {
         checkPermits(permits);
         synchronized (mutex()) {
-            return reserveAndGetWaitLength(permits, ticker.elapsed(MICROSECONDS));
+            return reserveAndGetWaitLength(permits, ticker.elapsedMicros());
         }
     }
 
@@ -201,7 +194,7 @@ final class SmoothBandwidthLimiter extends BandwidthLimiter {
         long timeoutMicros = max(unit.toMicros(timeout), 0);
         checkPermits(permits);
         synchronized (mutex()) {
-            long nowMicros = ticker.elapsed(MICROSECONDS);
+            long nowMicros = ticker.elapsedMicros();
             if (!canAcquire(nowMicros, timeoutMicros)) {
                 return false;
             }
@@ -213,22 +206,16 @@ final class SmoothBandwidthLimiter extends BandwidthLimiter {
 
     private boolean canAcquire(long nowMicros, long timeoutMicros) {
         int failureCount = 0;
-        for (Bandwidth bandwidth : bandwidths) {
+        for (Bandwidth bandwidth : bandwidths.getMembers()) {
             if (!canAcquire(bandwidth, nowMicros, timeoutMicros)) {
                 ++failureCount;
             }
         }
-        return !isExceeded(failureCount);
+        return !bandwidths.isExceeded(failureCount);
     }
 
     private boolean canAcquire(Bandwidth bandwidth, long nowMicros, long timeoutMicros) {
         return bandwidth.microsTillNextAvailable(nowMicros) - timeoutMicros <= nowMicros;
-    }
-
-    // TODO - Use CompositeRate
-    private boolean isExceeded(int numberOfHits) {
-        return (Operator.OR.equals(operator) && numberOfHits > 0)
-                || (Operator.AND.equals(operator) && numberOfHits >= bandwidths.length);
     }
 
     /**
@@ -237,9 +224,9 @@ final class SmoothBandwidthLimiter extends BandwidthLimiter {
      * @return the required wait time, never negative
      */
     final long reserveAndGetWaitLength(int permits, long nowMicros) {
-        final boolean all = Operator.AND.equals(operator);
+        final boolean all = Operator.AND.equals(bandwidths.getOperator());
         long waitTime = 0;
-        for(Bandwidth bandwidth : bandwidths) {
+        for(Bandwidth bandwidth : bandwidths.getMembers()) {
             final long thisWaitTime = reserveAndGetWaitLength(bandwidth, permits, nowMicros);
             if (all && thisWaitTime > waitTime) {
                 waitTime = thisWaitTime;
@@ -255,16 +242,6 @@ final class SmoothBandwidthLimiter extends BandwidthLimiter {
     final long reserveAndGetWaitLength(Bandwidth bandwidth, int permits, long nowMicros) {
         final long momentAvailable = bandwidth.reserveNextAvailable(permits, nowMicros);
         return max(momentAvailable - nowMicros, 0);
-    }
-
-    //@VisibleForTesting
-    Bandwidth[] getBandwidths() {
-        return bandwidths;
-    }
-
-    //@VisibleForTesting
-    SleepingTicker getTicker() {
-        return ticker;
     }
 
     @Override

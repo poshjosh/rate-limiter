@@ -1,5 +1,7 @@
 package com.looseboxes.ratelimiter.annotation;
 
+import com.looseboxes.ratelimiter.BandwidthFactory;
+
 import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;
 
@@ -14,6 +16,8 @@ public @interface RateLimit {
     long duration() default 0;
 
     TimeUnit timeUnit() default TimeUnit.MILLISECONDS;
+
+    Class<? extends BandwidthFactory> factoryClass() default BandwidthFactory.SmoothBurstyBandwidthFactory.class;
 
     @Documented
     @Retention(RetentionPolicy.RUNTIME)

@@ -4,6 +4,8 @@ import com.looseboxes.ratelimiter.MemoryUtil;
 
 import java.util.Objects;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 public final class Usage {
 
     public static Usage bookmark() {
@@ -19,6 +21,14 @@ public final class Usage {
     public Usage(long duration, long memory) {
         this.duration = duration;
         this.memory = memory;
+    }
+
+    public void assertUsageLessThan(Usage limit) {
+        Usage usage = usage();
+        System.out.printf("Spent %s", DurationText.of(usage.getDuration()));
+        assertThat(usage.getDuration()).isLessThanOrEqualTo(limit.getDuration());
+        System.out.printf(", %s", ByteText.of(usage.getMemory()));
+        assertThat(usage.getMemory()).isLessThanOrEqualTo(limit.getMemory());
     }
 
     public long getDuration() {
@@ -49,6 +59,6 @@ public final class Usage {
 
     @Override
     public String toString() {
-        return super.toString() + "{duration=" + duration + ", memory=" + memory + '}';
+        return "Usage{duration=" + duration + ", memory=" + memory + '}';
     }
 }

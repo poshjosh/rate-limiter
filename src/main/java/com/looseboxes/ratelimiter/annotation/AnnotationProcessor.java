@@ -1,12 +1,12 @@
 package com.looseboxes.ratelimiter.annotation;
 
-import com.looseboxes.ratelimiter.RateFactory;
-import com.looseboxes.ratelimiter.util.CompositeRate;
+import com.looseboxes.ratelimiter.BandwidthFactory;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
+import com.looseboxes.ratelimiter.node.Node;
 import com.looseboxes.ratelimiter.node.formatters.NodeFormatters;
-import com.looseboxes.ratelimiter.util.Operator;
-import com.looseboxes.ratelimiter.Rate;
 import com.looseboxes.ratelimiter.util.Nullable;
-import com.looseboxes.ratelimiter.node.*;
+import com.looseboxes.ratelimiter.util.Operator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,53 +16,51 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-public abstract class RateLimitTreeBuilder<S extends GenericDeclaration>
-        implements AnnotationTreeBuilder<S> {
+public abstract class AnnotationProcessor<S extends GenericDeclaration> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RateLimitTreeBuilder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AnnotationProcessor.class);
 
-    public static RateLimitTreeBuilder<Class<?>> newInstance(RateFactory rateFactory) {
-        return newInstance(IdProvider.forClass(), IdProvider.forMethod(), rateFactory);
+    public static AnnotationProcessor<Class<?>> newInstance() {
+        return newInstance(IdProvider.forClass(), IdProvider.forMethod());
     }
 
-    public static RateLimitTreeBuilder<Class<?>> newInstance(
+    public static AnnotationProcessor<Class<?>> newInstance(
             IdProvider<Class<?>, String> idProviderForClass,
-            IdProvider<Method, String> idProviderForMethod,
-            RateFactory rateFactory) {
-        return new RateLimitTreeBuilderForClass(idProviderForClass, rateFactory,
-                new RateLimitTreeBuilderForMethod(idProviderForMethod, rateFactory));
+            IdProvider<Method, String> idProviderForMethod) {
+        return new ClassAnnotationProcessor(idProviderForClass,
+                new MethodAnnotationProcessor(idProviderForMethod));
     }
 
     private final IdProvider<S, String> idProvider;
 
-    private final RateFactory rateFactory;
-
-    protected RateLimitTreeBuilder(IdProvider<S, String> idProvider, RateFactory rateFactory) {
+    protected AnnotationProcessor(IdProvider<S, String> idProvider) {
         this.idProvider = Objects.requireNonNull(idProvider);
-        this.rateFactory = Objects.requireNonNull(rateFactory);
     }
 
-    protected abstract Node<NodeData<CompositeRate>> getOrCreateParent(
-            @Nullable Node<NodeData<CompositeRate>> root, S element,
+    protected abstract Node<NodeData<Bandwidths>> getOrCreateParent(
+            @Nullable Node<NodeData<Bandwidths>> root, S element,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits);
 
-    @Override
-    public void build(@Nullable Node<NodeData<CompositeRate>> root, List<S> elements, BiConsumer<Object, Node<NodeData<CompositeRate>>> consumer) {
-        elements.forEach(clazz -> build(root, clazz, consumer));
+    public void process(Node<NodeData<Bandwidths>> root, List<S> elements) {
+        process(root, elements, (element, node) -> {});
     }
 
-    protected Node<NodeData<CompositeRate>> build(@Nullable Node<NodeData<CompositeRate>> root, S element, BiConsumer<Object, Node<NodeData<CompositeRate>>> consumer){
+    public void process(@Nullable Node<NodeData<Bandwidths>> root, List<S> elements, BiConsumer<Object, Node<NodeData<Bandwidths>>> consumer) {
+        elements.forEach(clazz -> process(root, clazz, consumer));
+    }
+
+    protected Node<NodeData<Bandwidths>> process(@Nullable Node<NodeData<Bandwidths>> root, S element, BiConsumer<Object, Node<NodeData<Bandwidths>>> consumer){
 
         final RateLimit [] rateLimits = element.getAnnotationsByType(RateLimit.class);
 
-        final Node<NodeData<CompositeRate>> node;
+        final Node<NodeData<Bandwidths>> node;
 
         if(rateLimits.length > 0 ) {
 
             RateLimitGroup rateLimitGroup = element.getAnnotation(RateLimitGroup.class);
-            Node<NodeData<CompositeRate>> created = getOrCreateParent(root, element, rateLimitGroup, rateLimits);
+            Node<NodeData<Bandwidths>> created = getOrCreateParent(root, element, rateLimitGroup, rateLimits);
 
-            Node<NodeData<CompositeRate>> parentNode = created == null ? root : created;
+            Node<NodeData<Bandwidths>> parentNode = created == null ? root : created;
             String name = idProvider.getId(element);
             node = createNodeForElementOrNull(parentNode, name, element, rateLimitGroup, rateLimits);
 
@@ -78,11 +76,11 @@ public abstract class RateLimitTreeBuilder<S extends GenericDeclaration>
         return node;
     }
 
-    protected Node<NodeData<CompositeRate>> findOrCreateNodeForRateLimitGroupOrNull(
-            @Nullable Node<NodeData<CompositeRate>> root, Node<NodeData<CompositeRate>> parent,
+    protected Node<NodeData<Bandwidths>> findOrCreateNodeForRateLimitGroupOrNull(
+            @Nullable Node<NodeData<Bandwidths>> root, Node<NodeData<Bandwidths>> parent,
             GenericDeclaration annotatedElement, RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         String name = getName(rateLimitGroup);
-        final Node<NodeData<CompositeRate>> node;
+        final Node<NodeData<Bandwidths>> node;
         if(root == null || rateLimitGroup == null || name.isEmpty()) {
             node = null;
         }else{
@@ -107,8 +105,8 @@ public abstract class RateLimitTreeBuilder<S extends GenericDeclaration>
         return "";
     }
 
-    private Node<NodeData<CompositeRate>> createNodeForGroupOrNull(
-            Node<NodeData<CompositeRate>> parentNode, String name,
+    private Node<NodeData<Bandwidths>> createNodeForGroupOrNull(
+            Node<NodeData<Bandwidths>> parentNode, String name,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         if(rateLimits.length == 0) {
             return null;
@@ -117,19 +115,19 @@ public abstract class RateLimitTreeBuilder<S extends GenericDeclaration>
         }
     }
 
-    protected Node<NodeData<CompositeRate>> createNodeForElementOrNull(
-            @Nullable Node<NodeData<CompositeRate>> parentNode, String name, Object element,
+    protected Node<NodeData<Bandwidths>> createNodeForElementOrNull(
+            @Nullable Node<NodeData<Bandwidths>> parentNode, String name, Object element,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         if(rateLimits.length == 0) {
             return null;
         }else{
-            CompositeRate limit = createLimit(rateLimitGroup, rateLimits);
+            Bandwidths limit = createLimit(rateLimitGroup, rateLimits);
             return NodeUtil.createNode(parentNode, name, element, limit);
         }
     }
 
-    private Node<NodeData<CompositeRate>> requireConsistentData(
-            Node<NodeData<CompositeRate>> rateLimitGroupNode, GenericDeclaration annotatedElement,
+    private Node<NodeData<Bandwidths>> requireConsistentData(
+            Node<NodeData<Bandwidths>> rateLimitGroupNode, GenericDeclaration annotatedElement,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         if(rateLimitGroup != null && rateLimits.length != 0) {
             final Operator operator = logic(rateLimitGroup);
@@ -149,27 +147,28 @@ public abstract class RateLimitTreeBuilder<S extends GenericDeclaration>
         }
     }
 
-    private CompositeRate createLimit(RateLimitGroup rateLimitGroup) {
+    private Bandwidths createLimit(RateLimitGroup rateLimitGroup) {
         return createLimit(rateLimitGroup, new RateLimit[0]);
     }
 
-    private CompositeRate createLimit(RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
+    private Bandwidths createLimit(RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         final Operator operator = logic(rateLimitGroup);
         if (rateLimits.length == 0) {
-            return CompositeRate.empty(operator);
+            return Bandwidths.empty(operator);
         }
-        Rate [] rates = new Rate[rateLimits.length];
+        Bandwidth[] bandwidths = new Bandwidth[rateLimits.length];
         for (int i = 0; i < rateLimits.length; i++) {
-            rates[i] = createRate(rateLimits[i]);
+            bandwidths[i] = createBandwidth(rateLimits[i]);
         }
-        return CompositeRate.of(logic(rateLimitGroup), rates);
+        return Bandwidths.of(logic(rateLimitGroup), bandwidths);
     }
 
     private Operator logic(RateLimitGroup rateLimitGroup) {
         return rateLimitGroup == null ? Operator.OR : rateLimitGroup.logic();
     }
 
-    private Rate createRate(RateLimit rateLimit) {
-        return rateFactory.createNew(rateLimit.limit(), rateLimit.timeUnit().toMillis(rateLimit.duration()));
+    private Bandwidth createBandwidth(RateLimit rateLimit) {
+        BandwidthFactory bandwidthFactory = BandwidthFactory.getOrCreateBandwidthFactory(rateLimit.factoryClass());
+        return bandwidthFactory.createNew(rateLimit.limit(), rateLimit.duration(), rateLimit.timeUnit());
     }
 }

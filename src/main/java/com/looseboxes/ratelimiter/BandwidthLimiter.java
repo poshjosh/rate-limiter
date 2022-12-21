@@ -1,8 +1,8 @@
 package com.looseboxes.ratelimiter;
 
 import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.bandwidths.SmoothBandwidth;
-import com.looseboxes.ratelimiter.util.Operator;
 import com.looseboxes.ratelimiter.util.SleepingTicker;
 
 import java.time.Duration;
@@ -43,14 +43,13 @@ public abstract class BandwidthLimiter {
          * Due to the slight delay of T1, T2 would have to sleep till 2.05 seconds, and T3 would also
          * have to sleep till 3.05 seconds.
          */
-        return create(permitsPerSecond, SleepingTicker.systemTicker());
+        return create(permitsPerSecond, SleepingTicker.zeroOffset());
     }
 
     //@VisibleForTesting
-    public static BandwidthLimiter create(double permitsPerSecond,
-            SleepingTicker stopwatch) {
-        Bandwidth bandwidth = SmoothBandwidth.bursty(permitsPerSecond, stopwatch.elapsed(MICROSECONDS));
-        return new SmoothBandwidthLimiter(new Bandwidth[]{bandwidth}, Operator.OR, stopwatch);
+    public static BandwidthLimiter create(double permitsPerSecond, SleepingTicker ticker) {
+        Bandwidth bandwidth = SmoothBandwidth.bursty(permitsPerSecond, ticker.elapsedMicros());
+        return new SmoothBandwidthLimiter(Bandwidths.of(bandwidth), ticker);
     }
 
     /**
@@ -108,23 +107,25 @@ public abstract class BandwidthLimiter {
     @SuppressWarnings("GoodTime") // should accept a java.time.Duration
     public static BandwidthLimiter create(double permitsPerSecond, long warmupPeriod, TimeUnit unit) {
         Checks.requireTrue(warmupPeriod >= 0, "warmupPeriod must not be negative: %s", warmupPeriod);
-        SleepingTicker stopwatch = SleepingTicker
-                .systemTicker();
+        SleepingTicker ticker = SleepingTicker.zeroOffset();
         Bandwidth bandwidth = SmoothBandwidth
-                .warmingUp(permitsPerSecond, stopwatch.elapsed(MICROSECONDS), unit.toSeconds(warmupPeriod));
-        return new SmoothBandwidthLimiter(new Bandwidth[]{bandwidth}, Operator.OR, stopwatch);
+                .warmingUp(permitsPerSecond, ticker.elapsedMicros(), unit.toSeconds(warmupPeriod));
+        return new SmoothBandwidthLimiter(Bandwidths.of(bandwidth), ticker);
     }
 
     //@VisibleForTesting
     public static BandwidthLimiter create(double permitsPerSecond, long warmupPeriod, TimeUnit unit,
-            double coldFactor, SleepingTicker stopwatch) {
+            double coldFactor, SleepingTicker ticker) {
         Bandwidth bandwidth = SmoothBandwidth
-                .warmingUp(permitsPerSecond, stopwatch.elapsed(MICROSECONDS), warmupPeriod, unit, coldFactor);
-        return new SmoothBandwidthLimiter(new Bandwidth[]{bandwidth}, Operator.OR, stopwatch);
+                .warmingUp(permitsPerSecond, ticker.elapsedMicros(), warmupPeriod, unit, coldFactor);
+        return new SmoothBandwidthLimiter(Bandwidths.of(bandwidth), ticker);
     }
 
-    public abstract BandwidthLimiter copy(double permitsPerSecond);
-
+    /**
+     * Returns the stable rates (as {@code permits per seconds}) with which each {@code Bandwidth} in this
+     * {@code BandwidthLimiter} is configured with. The initial value of each, is the same as the {@code permitsPerSecond}
+     * argument passed in the factory method that produced each {@code Bandwidth} of this {@code BandwithLimiter}.
+     */
     public abstract double [] getPermitsPerSecond();
 
     /**

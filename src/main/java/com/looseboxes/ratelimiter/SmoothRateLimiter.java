@@ -1,20 +1,17 @@
 package com.looseboxes.ratelimiter;
 
+import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.util.CompositeRate;
-import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
-import com.looseboxes.ratelimiter.bandwidths.SmoothBandwidth;
 import com.looseboxes.ratelimiter.util.SleepingTicker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public abstract class SmoothRateLimiter<K> implements RateLimiter<K> {
+public class SmoothRateLimiter<K> implements RateLimiter<K> {
 
     private static final Logger LOG = LoggerFactory.getLogger(SmoothRateLimiter.class);
 
@@ -22,58 +19,25 @@ public abstract class SmoothRateLimiter<K> implements RateLimiter<K> {
 
     private final RateCache<K, Object> rateCache;
 
-    private final Bandwidth [] defaultBandwidths;
-
     private final RateRecordedListener rateRecordedListener;
-
-    private final CompositeRate limit;
 
     private final BandwidthLimiterProvider<K> bandwidthLimiterProvider;
 
-    public static <K> SmoothRateLimiter<K> bursty(RateLimiterConfig<K, ?> rateLimiterConfig, CompositeRate limit) {
-        return new SmoothRateLimiter<K>(rateLimiterConfig, limit) {
-            @Override
-            protected Bandwidth toBandwidth(double permitsPerSeconds, long nowMicros) {
-                return SmoothBandwidth.bursty(permitsPerSeconds, nowMicros);
-            };
-        };
-    }
+    private final Bandwidths defaultBandwidths;
 
-    public static <K> SmoothRateLimiter<K> warmingUp(
-            RateLimiterConfig<K, ?> rateLimiterConfig, CompositeRate limit, long warmupPeriodSeconds) {
-        return new SmoothRateLimiter<K>(rateLimiterConfig, limit) {
-            @Override
-            protected Bandwidth toBandwidth(double permitsPerSeconds, long nowMicros) {
-                return SmoothBandwidth.warmingUp(permitsPerSeconds, nowMicros, warmupPeriodSeconds);
-            };
-        };
-    }
-
-    protected SmoothRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, CompositeRate limit) {
-        this.defaultBandwidths = toBandwidths(limit);
+    public SmoothRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths bandwidths) {
         this.rateCache = (RateCache<K, Object>)Objects.requireNonNull(rateLimiterConfig.getRateCache());
-        this.limit = Objects.requireNonNull(limit);
         this.rateRecordedListener = Objects.requireNonNull(rateLimiterConfig.getRateRecordedListener());
-        this.bandwidthLimiterProvider = Objects.requireNonNull(rateLimiterConfig.getBandwidthLimiterFactory());
+        this.bandwidthLimiterProvider = Objects.requireNonNull(rateLimiterConfig.getBandwidthLimiterProvider());
+        this.defaultBandwidths = Objects.requireNonNull(bandwidths);
     }
-
-    protected Bandwidth [] toBandwidths(CompositeRate limit) {
-        Rate [] rates = limit.getRates();
-        Bandwidth [] result = new Bandwidth[rates.length];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = toBandwidth(rates[i].getRateMillis() * 1000, 0);
-        }
-        return result;
-    }
-
-    protected abstract Bandwidth toBandwidth(double permitsPerSeconds, long nowMicros);
 
     @Override
     public boolean tryConsume(Object context, K resourceId, int permits, long timeout, TimeUnit unit) {
 
-        final Bandwidth [] existingBandwidths = getRateFromCache(resourceId);
+        final Bandwidths existingBandwidths = getBandwidthsFromCache(resourceId);
 
-        final Bandwidth [] targetBandwidths;
+        final Bandwidths targetBandwidths;
 
         final SleepingTicker ticker = bandwidthLimiterProvider.getTicker(resourceId);
         if (existingBandwidths == null) {
@@ -82,85 +46,64 @@ public abstract class SmoothRateLimiter<K> implements RateLimiter<K> {
             targetBandwidths = existingBandwidths;
         }
 
-        BandwidthLimiter limiter = bandwidthLimiterProvider
-                .getBandwidthLimiter(resourceId, targetBandwidths, limit.getOperator());
+        BandwidthLimiter limiter = bandwidthLimiterProvider.getBandwidthLimiter(resourceId, targetBandwidths);
 
         final boolean acquired = limiter.tryAcquire(permits, timeout, unit);
 
-        if(acquired && !Arrays.equals(existingBandwidths, targetBandwidths)) {
+        if(acquired || existingBandwidths == null) {
             // Initial foray to Cache for this resourceId
             // This should mitigate different threads attempting to put a new rate, at the same time
             final boolean putOnlyIfAbsent = existingBandwidths == null;
-            addRateToCache(resourceId, targetBandwidths, putOnlyIfAbsent);
+            addBandwidthsToCache(resourceId, targetBandwidths, putOnlyIfAbsent);
         }
 
         //System.out.printf("%s SmoothRateLimiter limit exceeded: %b, for: %s, limit: %s\n",
-        //        java.time.LocalTime.now(), !acquired, resourceId, limit);
+        //        java.time.LocalTime.now(), !acquired, resourceId, targetBandwidths);
 
         if(LOG.isTraceEnabled()) {
-            LOG.trace("Limit exceeded: {}, for: {}, limit: {}", !acquired, resourceId, limit);
+            LOG.trace("Limit exceeded: {}, for: {}, limit: {}", !acquired, resourceId, targetBandwidths);
         }
 
-        rateRecordedListener.onRateRecorded(context, resourceId, permits, limit);
+        rateRecordedListener.onRateRecorded(context, resourceId, permits, targetBandwidths);
 
         if (acquired) {
             return true;
         }
 
-        rateRecordedListener.onRateExceeded(context, resourceId, permits, limit);
+        rateRecordedListener.onRateExceeded(context, resourceId, permits, targetBandwidths);
 
         return false;
     }
 
-    private Bandwidth[] getRateFromCache(K key) {
+    private Bandwidths getBandwidthsFromCache(K key) {
         try{
             cacheLock.readLock().lock();
-            return (Bandwidth[]) rateCache.get(key);
+            return (Bandwidths) rateCache.get(key);
         }finally {
             cacheLock.readLock().unlock();
         }
     }
 
-    private void addRateToCache(K key, Bandwidth[] rate, boolean onlyIfAbsent) {
+    private void addBandwidthsToCache(K key, Bandwidths bandwidths, boolean onlyIfAbsent) {
         try {
             cacheLock.writeLock().lock();
             if (onlyIfAbsent) {
                 // This should mitigate different threads attempting to put a new rate, at the same time
-                rateCache.putIfAbsent(key, rate);
+                rateCache.putIfAbsent(key, bandwidths);
             } else {
-                rateCache.put(key, rate);
+                rateCache.put(key, bandwidths);
             }
         }finally {
             cacheLock.writeLock().unlock();
         }
     }
 
-    private Bandwidth[] newInitialRate(SleepingTicker ticker) {
-        Bandwidth [] result = new Bandwidth[defaultBandwidths.length];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = defaultBandwidths[i].copy(ticker.elapsed(TimeUnit.MICROSECONDS));
-        }
-        return result;
-    }
-
-    public CompositeRate getLimit() {
-        return limit;
-    }
-
-    public RateCache<K, ?> getRateCache() {
-        return rateCache;
-    }
-
-    public RateRecordedListener getRateRecordedListener() {
-        return rateRecordedListener;
-    }
-
-    public BandwidthLimiterProvider<K> getBandwidthLimiterProvider() {
-        return bandwidthLimiterProvider;
+    private Bandwidths newInitialRate(SleepingTicker ticker) {
+        return Bandwidths.copyOf(defaultBandwidths, ticker.elapsedMicros());
     }
 
     @Override
     public String toString() {
-        return "SmoothRateLimiter@" + Integer.toHexString(hashCode()) + '_' + limit;
+        return "SmoothRateLimiter@" + Integer.toHexString(hashCode()) + '_' + defaultBandwidths;
     }
 }

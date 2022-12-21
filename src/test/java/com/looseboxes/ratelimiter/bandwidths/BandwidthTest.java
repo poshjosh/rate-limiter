@@ -5,15 +5,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.concurrent.TimeUnit;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 abstract class BandwidthTest {
 
     double permitsPerSeconds = 1;
 
-    final SleepingTicker ticker = SleepingTicker.systemTicker();
+    final SleepingTicker ticker = SleepingTicker.zeroOffset();
 
     protected Bandwidth getBandwidth() {
         return getBandwidth(permitsPerSeconds);
@@ -79,6 +77,6 @@ abstract class BandwidthTest {
     }
 
     protected long readMicros() {
-        return ticker.elapsed(TimeUnit.MICROSECONDS);
+        return ticker.elapsedMicros();
     }
 }

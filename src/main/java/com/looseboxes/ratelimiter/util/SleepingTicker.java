@@ -11,13 +11,20 @@ public abstract class SleepingTicker extends Ticker {
 
     protected SleepingTicker() { }
 
+    public long elapsedMicros() {
+        return elapsed(MICROSECONDS);
+    }
+
     public void sleepMicrosUninterruptibly(long micros) {
         if (micros > 0) {
             sleepUninterruptibly(micros, MICROSECONDS);
         }
     }
 
-    public static SleepingTicker systemTicker() {
+    /**
+     * @return a ticker which starts counting from zero.
+     */
+    public static SleepingTicker zeroOffset() {
         return new SleepingTicker() {
             private final Stopwatch stopwatch = Stopwatch.createStarted();
             @Override

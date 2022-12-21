@@ -10,11 +10,9 @@ public interface RateLimiterConfig<K, V> {
 
         Builder<K, V> rateCache(RateCache<K, V> rateCache);
 
-        Builder<K, V> rateFactory(RateFactory rateFactory);
-
         Builder<K, V> rateRecordedListener(RateRecordedListener rateRecordedListener);
 
-        Builder<K, V> bandwidthLimiterFactory(BandwidthLimiterProvider<K> bandwidthLimiterProvider);
+        Builder<K, V> bandwidthLimiterProvider(BandwidthLimiterProvider<K> bandwidthLimiterProvider);
     }
 
     static <K, V> Builder<K, V> builder() {
@@ -35,9 +33,7 @@ public interface RateLimiterConfig<K, V> {
 
     RateCache<K, V> getRateCache();
 
-    RateFactory getRateFactory();
-
     RateRecordedListener getRateRecordedListener();
 
-    BandwidthLimiterProvider<K> getBandwidthLimiterFactory();
+    BandwidthLimiterProvider<K> getBandwidthLimiterProvider();
 }

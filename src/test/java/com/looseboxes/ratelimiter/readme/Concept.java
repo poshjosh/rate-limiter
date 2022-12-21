@@ -1,14 +1,14 @@
 package com.looseboxes.ratelimiter.readme;
 
 import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.Rate;
+import com.looseboxes.ratelimiter.bandwidths.SmoothBandwidth;
 
 public class Concept {
 
     public static void main(String... args) {
 
-        // Only one consumption is allowed within a minute (for each unique recording key)
-        RateLimiter<String> rateLimiter = RateLimiter.of(Rate.of(1,  60 * 1000));
+        // 1 permit is allowed every 10 seconds (for each unique recording key)
+        RateLimiter<String> rateLimiter = RateLimiter.of(SmoothBandwidth.bursty(0.1));
 
         // We use numbers as recording keys
         rateLimiter.tryConsume("resource_1");
