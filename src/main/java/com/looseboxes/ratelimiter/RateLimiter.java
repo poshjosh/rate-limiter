@@ -34,7 +34,7 @@ public interface RateLimiter<K> {
     }
 
     static <K> RateLimiter<K> bursty(RateLimiterConfig<K, ?> rateLimiterConfig, CompositeRate limit) {
-        return BandwidthRateLimiter.bursty(rateLimiterConfig, limit);
+        return SmoothRateLimiter.bursty(rateLimiterConfig, limit);
     }
 
     static <K> RateLimiter<K> warmingUp(CompositeRate limit, long warmupPeriodSeconds) {
@@ -42,7 +42,7 @@ public interface RateLimiter<K> {
     }
 
     static <K> RateLimiter<K> warmingUp(RateLimiterConfig<K, ?> rateLimiterConfig, CompositeRate limit, long warmupPeriodSeconds) {
-        return BandwidthRateLimiter.warmingUp(rateLimiterConfig, limit, warmupPeriodSeconds);
+        return SmoothRateLimiter.warmingUp(rateLimiterConfig, limit, warmupPeriodSeconds);
     }
 
     /**

@@ -66,13 +66,13 @@ final class SimpleRateLimiter<K> implements RateLimiter<K> {
             addRateToCache(resourceId, result, putOnlyIfAbsent);
         }
 
-        rateRecordedListener.onRateRecorded(context, resourceId, amount, limit, targetRate);
+        rateRecordedListener.onRateRecorded(context, resourceId, amount, limit);
 
         if (comparison != 1) {
             return true;
         }
 
-        rateRecordedListener.onRateExceeded(context, resourceId, amount, limit, targetRate);
+        rateRecordedListener.onRateExceeded(context, resourceId, amount, limit);
 
         return false;
     }

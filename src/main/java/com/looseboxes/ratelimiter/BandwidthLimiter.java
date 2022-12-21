@@ -2,6 +2,7 @@ package com.looseboxes.ratelimiter;
 
 import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
 import com.looseboxes.ratelimiter.bandwidths.SmoothBandwidth;
+import com.looseboxes.ratelimiter.util.Operator;
 import com.looseboxes.ratelimiter.util.SleepingTicker;
 
 import java.time.Duration;
@@ -49,7 +50,7 @@ public abstract class BandwidthLimiter {
     public static BandwidthLimiter create(double permitsPerSecond,
             SleepingTicker stopwatch) {
         Bandwidth bandwidth = SmoothBandwidth.bursty(permitsPerSecond, stopwatch.elapsed(MICROSECONDS));
-        return new SmoothBandwidthLimiter(bandwidth, stopwatch);
+        return new SmoothBandwidthLimiter(new Bandwidth[]{bandwidth}, Operator.OR, stopwatch);
     }
 
     /**
@@ -111,7 +112,7 @@ public abstract class BandwidthLimiter {
                 .systemTicker();
         Bandwidth bandwidth = SmoothBandwidth
                 .warmingUp(permitsPerSecond, stopwatch.elapsed(MICROSECONDS), unit.toSeconds(warmupPeriod));
-        return new SmoothBandwidthLimiter(bandwidth, stopwatch);
+        return new SmoothBandwidthLimiter(new Bandwidth[]{bandwidth}, Operator.OR, stopwatch);
     }
 
     //@VisibleForTesting
@@ -119,12 +120,12 @@ public abstract class BandwidthLimiter {
             double coldFactor, SleepingTicker stopwatch) {
         Bandwidth bandwidth = SmoothBandwidth
                 .warmingUp(permitsPerSecond, stopwatch.elapsed(MICROSECONDS), warmupPeriod, unit, coldFactor);
-        return new SmoothBandwidthLimiter(bandwidth, stopwatch);
+        return new SmoothBandwidthLimiter(new Bandwidth[]{bandwidth}, Operator.OR, stopwatch);
     }
 
     public abstract BandwidthLimiter copy(double permitsPerSecond);
 
-    public abstract double getPermitsPerSecond();
+    public abstract double [] getPermitsPerSecond();
 
     /**
      * Acquires a single permit from this {@code RateLimiter}, blocking until the request can be

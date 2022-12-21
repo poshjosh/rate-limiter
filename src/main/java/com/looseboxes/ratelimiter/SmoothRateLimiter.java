@@ -14,9 +14,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public abstract class BandwidthRateLimiter<K> implements RateLimiter<K> {
+public abstract class SmoothRateLimiter<K> implements RateLimiter<K> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BandwidthRateLimiter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SmoothRateLimiter.class);
 
     private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
 
@@ -30,8 +30,8 @@ public abstract class BandwidthRateLimiter<K> implements RateLimiter<K> {
 
     private final BandwidthLimiterProvider<K> bandwidthLimiterProvider;
 
-    public static <K> BandwidthRateLimiter<K> bursty(RateLimiterConfig<K, ?> rateLimiterConfig, CompositeRate limit) {
-        return new BandwidthRateLimiter<K>(rateLimiterConfig, limit) {
+    public static <K> SmoothRateLimiter<K> bursty(RateLimiterConfig<K, ?> rateLimiterConfig, CompositeRate limit) {
+        return new SmoothRateLimiter<K>(rateLimiterConfig, limit) {
             @Override
             protected Bandwidth toBandwidth(double permitsPerSeconds, long nowMicros) {
                 return SmoothBandwidth.bursty(permitsPerSeconds, nowMicros);
@@ -39,9 +39,9 @@ public abstract class BandwidthRateLimiter<K> implements RateLimiter<K> {
         };
     }
 
-    public static <K> BandwidthRateLimiter<K> warmingUp(
+    public static <K> SmoothRateLimiter<K> warmingUp(
             RateLimiterConfig<K, ?> rateLimiterConfig, CompositeRate limit, long warmupPeriodSeconds) {
-        return new BandwidthRateLimiter<K>(rateLimiterConfig, limit) {
+        return new SmoothRateLimiter<K>(rateLimiterConfig, limit) {
             @Override
             protected Bandwidth toBandwidth(double permitsPerSeconds, long nowMicros) {
                 return SmoothBandwidth.warmingUp(permitsPerSeconds, nowMicros, warmupPeriodSeconds);
@@ -49,7 +49,7 @@ public abstract class BandwidthRateLimiter<K> implements RateLimiter<K> {
         };
     }
 
-    protected BandwidthRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, CompositeRate limit) {
+    protected SmoothRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, CompositeRate limit) {
         this.defaultBandwidths = toBandwidths(limit);
         this.rateCache = (RateCache<K, Object>)Objects.requireNonNull(rateLimiterConfig.getRateCache());
         this.limit = Objects.requireNonNull(limit);
@@ -82,54 +82,32 @@ public abstract class BandwidthRateLimiter<K> implements RateLimiter<K> {
             targetBandwidths = existingBandwidths;
         }
 
-        int failCount = 0;
-        Bandwidth firstExceeded = null;
+        BandwidthLimiter limiter = bandwidthLimiterProvider
+                .getBandwidthLimiter(resourceId, targetBandwidths, limit.getOperator());
 
-        for (Bandwidth bandwidth : targetBandwidths) {
+        final boolean acquired = limiter.tryAcquire(permits, timeout, unit);
 
-            BandwidthLimiter limiter = bandwidthLimiterProvider
-                    .getBandwidthLimiter(resourceId, bandwidth);
-
-            //System.out.printf("%s BandwidthRateLimiter bandwidth: %s\n permits/sec: %s, limiter: %s\n",
-            //        java.time.LocalTime.now(), bandwidth, limiter.getPermitsPerSecond(), limiter);
-
-            final boolean acquired = limiter.tryAcquire(permits, timeout, unit);
-
-            //System.out.printf("%s BandwidthRateLimiter acquired: %b\n",
-            //        java.time.LocalTime.now(), acquired);
-
-            if (acquired) {
-                continue;
-            }
-
-            if (firstExceeded == null) {
-                firstExceeded = bandwidth;
-            }
-            ++failCount;
-        }
-
-        final boolean limitExceeded = limit.isExceeded(failCount);
-
-        final boolean changed = failCount != targetBandwidths.length;
-
-        if(changed && !Arrays.equals(existingBandwidths, targetBandwidths)) {
+        if(acquired && !Arrays.equals(existingBandwidths, targetBandwidths)) {
             // Initial foray to Cache for this resourceId
             // This should mitigate different threads attempting to put a new rate, at the same time
             final boolean putOnlyIfAbsent = existingBandwidths == null;
             addRateToCache(resourceId, targetBandwidths, putOnlyIfAbsent);
         }
 
+        //System.out.printf("%s SmoothRateLimiter limit exceeded: %b, for: %s, limit: %s\n",
+        //        java.time.LocalTime.now(), !acquired, resourceId, limit);
+
         if(LOG.isTraceEnabled()) {
-            LOG.trace("Limit exceeded: {}, for: {}, rate: {}, limit: {}", limitExceeded, resourceId, limit, firstExceeded);
+            LOG.trace("Limit exceeded: {}, for: {}, limit: {}", !acquired, resourceId, limit);
         }
 
-        rateRecordedListener.onRateRecorded(context, resourceId, permits, limit, firstExceeded);
+        rateRecordedListener.onRateRecorded(context, resourceId, permits, limit);
 
-        if (!limitExceeded) {
+        if (acquired) {
             return true;
         }
 
-        rateRecordedListener.onRateExceeded(context, resourceId, permits, limit, firstExceeded);
+        rateRecordedListener.onRateExceeded(context, resourceId, permits, limit);
 
         return false;
     }
@@ -183,6 +161,6 @@ public abstract class BandwidthRateLimiter<K> implements RateLimiter<K> {
 
     @Override
     public String toString() {
-        return "BandwidthRateLimiter@" + Integer.toHexString(hashCode()) + '_' + limit;
+        return "SmoothRateLimiter@" + Integer.toHexString(hashCode()) + '_' + limit;
     }
 }

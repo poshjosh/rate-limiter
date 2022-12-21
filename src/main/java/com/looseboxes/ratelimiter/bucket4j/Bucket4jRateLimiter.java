@@ -62,8 +62,6 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
 
         int failCount = 0;
 
-        Bucket firstExceeded = null;
-
         for (int i = 0; i < configurationSuppliers.length; i++) {
 
             Bucket bucket = buckets.getProxy(resourceId, configurationSuppliers[i]);
@@ -72,23 +70,23 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
                 continue;
             }
 
-            if (firstExceeded == null) {
-                firstExceeded = bucket;
-            }
             ++failCount;
         }
 
+        final boolean limitExceeded = limit.isExceeded(failCount);
+
         if(LOG.isTraceEnabled()) {
-            LOG.trace("Limit exceeded: {}, for: {}, limit: {}", limit.isExceeded(failCount), resourceId, limit);
+            LOG.trace("Limit exceeded: {}, for: {}, failures: {}/{}, limit: {}",
+                    limitExceeded, resourceId, failCount, configurationSuppliers.length, limit);
         }
 
-        rateRecordedListener.onRateRecorded(context, resourceId, amount, limit, firstExceeded);
+        rateRecordedListener.onRateRecorded(context, resourceId, amount, limit);
 
-        if (!limit.isExceeded(failCount)) {
+        if (!limitExceeded) {
             return true;
         }
 
-        rateRecordedListener.onRateExceeded(context, resourceId, amount, limit, firstExceeded);
+        rateRecordedListener.onRateExceeded(context, resourceId, amount, limit);
 
         return false;
     }

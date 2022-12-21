@@ -28,8 +28,8 @@ public final class Rate implements Comparable<Rate>, Serializable {
 
     public static final Rate NONE = new Rate(0, 0);
 
-    public static Rate of(long amount, long duration) {
-        return new Rate(amount, duration);
+    public static Rate of(long amount, long durationMillis) {
+        return new Rate(amount, durationMillis);
     }
 
     private static final long serialVersionUID = 9081726354000000010L;

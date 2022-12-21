@@ -2,6 +2,7 @@ package com.looseboxes.ratelimiter;
 
 import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
 import com.looseboxes.ratelimiter.cache.RateCache;
+import com.looseboxes.ratelimiter.util.Operator;
 import com.looseboxes.ratelimiter.util.SleepingTicker;
 
 import java.util.Map;
@@ -27,11 +28,11 @@ final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K, V>,
         }
 
         @Override
-        public BandwidthLimiter getBandwidthLimiter(K key, Bandwidth bandwidth) {
+        public BandwidthLimiter getBandwidthLimiter(K key, Bandwidth [] bandwidths, Operator operator) {
             BandwidthLimiter value;
             if ((value = this.resourceIdToBandwidthLimiters.get(key)) == null) {
                 BandwidthLimiter newValue;
-                if ((newValue = createNew(key, bandwidth)) != null) {
+                if ((newValue = createNew(key, bandwidths, operator)) != null) {
                     this.resourceIdToBandwidthLimiters.put(key, newValue);
                     return newValue;
                 }
@@ -39,8 +40,8 @@ final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K, V>,
             return value;
         }
 
-        private BandwidthLimiter createNew(K key, Bandwidth bandwidth) {
-            return new SmoothBandwidthLimiter(bandwidth, getTicker(key));
+        private BandwidthLimiter createNew(K key, Bandwidth [] bandwidths, Operator operator) {
+            return new SmoothBandwidthLimiter(bandwidths, operator, getTicker(key));
         }
     }
 

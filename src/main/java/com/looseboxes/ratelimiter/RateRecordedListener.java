@@ -11,12 +11,12 @@ public interface RateRecordedListener {
     /**
      * Called when a rate is recorded
      */
-    default void onRateRecorded(Object context, Object resourceId, int recordedHits, CompositeRate limit, Object rate) { }
+    default void onRateRecorded(Object context, Object resourceId, int recordedHits, CompositeRate limit) { }
 
     /**
      * Called when a rate is exceeded
      */
-    default void onRateExceeded(Object context, Object resourceId, int recordedHits, CompositeRate limit, Object rate) { }
+    default void onRateExceeded(Object context, Object resourceId, int recordedHits, CompositeRate limit) { }
 
     /**
      * Returns a composed {@code RateRecordedListener} that performs, in sequence, this
@@ -34,14 +34,14 @@ public interface RateRecordedListener {
         Objects.requireNonNull(after);
         return new RateRecordedListener() {
             @Override
-            public void onRateRecorded(Object context, Object resourceId, int recordedHits, CompositeRate limit, Object rate) {
-                RateRecordedListener.this.onRateRecorded(context, resourceId, recordedHits, limit, rate);
-                after.onRateRecorded(context, resourceId, recordedHits, limit, rate);
+            public void onRateRecorded(Object context, Object resourceId, int recordedHits, CompositeRate limit) {
+                RateRecordedListener.this.onRateRecorded(context, resourceId, recordedHits, limit);
+                after.onRateRecorded(context, resourceId, recordedHits, limit);
             }
             @Override
-            public void onRateExceeded(Object context, Object resourceId, int recordedHits, CompositeRate limit, Object rate) {
-                RateRecordedListener.this.onRateExceeded(context, resourceId, recordedHits, limit, rate);
-                after.onRateExceeded(context, resourceId, recordedHits, limit, rate);
+            public void onRateExceeded(Object context, Object resourceId, int recordedHits, CompositeRate limit) {
+                RateRecordedListener.this.onRateExceeded(context, resourceId, recordedHits, limit);
+                after.onRateExceeded(context, resourceId, recordedHits, limit);
             }
         };
     }

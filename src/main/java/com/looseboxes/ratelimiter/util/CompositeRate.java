@@ -18,6 +18,14 @@ public interface CompositeRate {
         return of(Operator.OR, rates);
     }
 
+    static CompositeRate and(Rate... rates) {
+        return of(Operator.AND, rates);
+    }
+
+    static CompositeRate or(Rate... rates) {
+        return of(Operator.OR, rates);
+    }
+
     static CompositeRate of(Operator operator, Rate... rates) {
         return new SimpleCompositeRate(rates, operator);
     }
