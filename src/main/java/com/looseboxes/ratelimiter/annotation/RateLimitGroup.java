@@ -9,7 +9,11 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface RateLimitGroup {
 
+    /** Alias for value() */
     String name() default "";
+
+    /** Alias for name() */
     String value() default "";
+
     Operator logic() default Operator.OR;
 }

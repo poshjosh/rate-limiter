@@ -16,19 +16,14 @@
 package com.looseboxes.ratelimiter;
 
 import static java.lang.reflect.Modifier.isStatic;
-import static java.util.concurrent.TimeUnit.MICROSECONDS;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
-import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
-import com.looseboxes.ratelimiter.bandwidths.SmoothBandwidth;
+import com.looseboxes.ratelimiter.bandwidths.*;
 import com.looseboxes.ratelimiter.util.Operator;
 import com.looseboxes.ratelimiter.util.SleepingTicker;
 import org.junit.jupiter.api.Assertions;
@@ -37,9 +32,7 @@ import org.junit.jupiter.api.function.Executable;
 import org.mockito.Mockito;
 
 /**
- * Tests for RateLimiter.
- *
- * @author Dimitris Andreou
+ * Tests for BandwidthLimiter.
  */
 class BandwidthLimiterTest {
     private static final double EPSILON = 1e-8;
@@ -47,60 +40,54 @@ class BandwidthLimiterTest {
     private final FakeTicker ticker = new FakeTicker();
 
     @Test
-    public void testBurstyAnd() {
-        final int min = 1;
-        final int max = 5;
+    public void testBurstyAndBandwidths() {
+        testBandwidths(BandwidthFactory.bursty(), Operator.AND, 1, 5);
+    }
+
+    @Test
+    public void testBurstyOrBandwidths() {
+        testBandwidths(BandwidthFactory.bursty(), Operator.AND, 1, 5);
+    }
+
+    @Test
+    public void testWarmingUpAndBandwidths() {
+        // Note the behaviour differs for different values of: warmupPeriod and coldFactor.
+        testBandwidths(BandwidthFactory.warmingUp(1, SECONDS, 1), Operator.AND, 1, 5);
+    }
+
+    @Test
+    public void testWarmingUpOrBandwidths() {
+        testBandwidths(BandwidthFactory.warmingUp(), Operator.OR, 1, 5);
+    }
+
+    private void testBandwidths(BandwidthFactory bandwidthFactory, Operator operator, int min, int max) {
+        testBandwidths(bandwidthFactory, operator, min, max, true);
+    }
+
+    private void testBandwidths(BandwidthFactory bandwidthFactory, Operator operator, int min, int max, boolean useInterval) {
+        final SleepingTicker ticker = SleepingTicker.zeroOffset();
         final long nowMicros = ticker.elapsedMicros();
-        Bandwidth a = SmoothBandwidth.bursty(min, nowMicros);
-        Bandwidth b = SmoothBandwidth.bursty(max, nowMicros);
+
+        Bandwidth a = bandwidthFactory.createNew(min, nowMicros);
+        Bandwidth b = bandwidthFactory.createNew(max, nowMicros);
+
+        Bandwidths bandwidths = Bandwidths.of(operator, a, b);
 
         // TODO - Create and use static factory method for composite Bandwidths
-        BandwidthLimiter limiter = new SmoothBandwidthLimiter(Bandwidths.and(a, b), ticker);
+        BandwidthLimiter limiter = new DefaultBandwidthLimiter(bandwidths, ticker);
 
-        for( int i = 0; i < max; i++) {
-            if (i == 0) {
+        final int limit = Operator.AND.equals(operator) ? max : min;
+
+        for( int i = 0; i < limit; i++) {
+            //System.out.println(i);
+            if (useInterval) {
+                assertTrue("Unable to acquire permit: " + i,
+                        limiter.tryAcquire(bandwidths.getStableIntervalMicros(), MICROSECONDS));
+            } else {
                 assertTrue("Unable to acquire permit: " + i, limiter.tryAcquire());
-                continue;
             }
-            if (i == 1) {
-                final long timeout = getTimeoutMicros(limiter, Operator.AND);
-                assertTrue("Unable to acquire permit: " + i, limiter.tryAcquire(timeout, MICROSECONDS));
-                System.out.println(java.time.LocalTime.now() + " " + i + " timeout " + (timeout / 1000) + " millis");
-                continue;
-            }
-            assertTrue("Unable to acquire permit: " + i, limiter.tryAcquire());
         }
-        //TODO - Why does this fail
-        //assertFalse("Capable of acquiring permit: " + max, limiter.tryAcquire());
-    }
-
-    //TODO
-    public void testBurstyOr() {}
-    public void testWarmingUpAnd() { }
-    public void testWarmingUpOr() { }
-
-    private long getTimeoutMicros(BandwidthLimiter limiter, Operator operator) {
-        final double maxPermitsPerSec = Operator.AND.equals(operator) ?
-                getMaxPermitsPerSecond(limiter) : getMinPermitsPerSecond(limiter);
-        return (long)(SECONDS.toMicros(1L) / maxPermitsPerSec);
-    }
-
-    private double getMaxPermitsPerSecond(BandwidthLimiter limiter) {
-        double [] arr = limiter.getPermitsPerSecond();
-        double max = -1;
-        for(double e : arr) {
-            max = max == - 1 ? e : Math.max(e, max);
-        }
-        return max;
-    }
-
-    private double getMinPermitsPerSecond(BandwidthLimiter limiter) {
-        double [] arr = limiter.getPermitsPerSecond();
-        double min = -1;
-        for(double e : arr) {
-            min = min == - 1 ? e : Math.min(e, min);
-        }
-        return min;
+        assertFalse("Capable of acquiring permit: " + max, limiter.tryAcquire());
     }
 
     @Test
@@ -131,9 +118,9 @@ class BandwidthLimiterTest {
     @Test
     public void testSimpleRateUpdate() {
         BandwidthLimiter limiter = BandwidthLimiter.create(5.0, 5, SECONDS);
-        assertEquals(5.0, limiter.getPermitsPerSecond()[0]);
+        assertEquals(5.0, limiter.getPermitsPerSecond());
         limiter = setRate(limiter, 10.0);
-        assertEquals(10.0, limiter.getPermitsPerSecond()[0]);
+        assertEquals(10.0, limiter.getPermitsPerSecond());
     }
 
     @Test
@@ -523,7 +510,7 @@ class BandwidthLimiterTest {
     }
     
     private BandwidthLimiter setRate(BandwidthLimiter limiter, double permitsPerSecond) {
-        ((SmoothBandwidthLimiter)limiter).setRate(permitsPerSecond);
+        ((DefaultBandwidthLimiter)limiter).setRate(permitsPerSecond);
         return limiter;
     }
 

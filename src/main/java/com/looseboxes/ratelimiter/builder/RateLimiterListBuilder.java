@@ -35,7 +35,7 @@ class RateLimiterListBuilder<K> implements RateLimitersBuilder<K, List<NodeData<
     }
 
     public RateLimiterListBuilder<K> annotationProcessor(
-            AnnotationProcessor<Class<?>> annotationProcessor) {
+            AnnotationProcessor<Class<?>, Bandwidths> annotationProcessor) {
         this.rateLimiterTreeBuilder.annotationProcessor(annotationProcessor);
         return this;
     }

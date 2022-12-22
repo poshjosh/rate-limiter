@@ -1,7 +1,5 @@
 package com.looseboxes.ratelimiter.annotation;
 
-import com.looseboxes.ratelimiter.BandwidthFactory;
-import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
 import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.node.Node;
 import com.looseboxes.ratelimiter.node.formatters.NodeFormatters;
@@ -16,51 +14,62 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-public abstract class AnnotationProcessor<S extends GenericDeclaration> {
+public abstract class AnnotationProcessor<S extends GenericDeclaration, T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationProcessor.class);
 
-    public static AnnotationProcessor<Class<?>> newInstance() {
-        return newInstance(IdProvider.forClass(), IdProvider.forMethod());
+    public static final Operator DEFAULT_OPERATOR = Operator.OR;
+
+    public interface Converter<T>{
+        T convert(RateLimitGroup rateLimitGroup, RateLimit [] rateLimits);
+        boolean isOperatorEqual(T type, Operator operator);
     }
 
-    public static AnnotationProcessor<Class<?>> newInstance(
+    public static AnnotationProcessor<Class<?>, Bandwidths> newInstance() {
+        return newInstance(IdProvider.forClass(), IdProvider.forMethod(), new AnnotationToBandwidthConverter());
+    }
+
+    public static <T> AnnotationProcessor<Class<?>, T> newInstance(
             IdProvider<Class<?>, String> idProviderForClass,
-            IdProvider<Method, String> idProviderForMethod) {
-        return new ClassAnnotationProcessor(idProviderForClass,
-                new MethodAnnotationProcessor(idProviderForMethod));
+            IdProvider<Method, String> idProviderForMethod,
+            Converter<T> converter) {
+        return new ClassAnnotationProcessor<>(idProviderForClass, converter,
+                new MethodAnnotationProcessor<>(idProviderForMethod, converter));
     }
 
     private final IdProvider<S, String> idProvider;
 
-    protected AnnotationProcessor(IdProvider<S, String> idProvider) {
+    private final Converter<T> converter;
+
+    protected AnnotationProcessor(IdProvider<S, String> idProvider, Converter<T> converter) {
         this.idProvider = Objects.requireNonNull(idProvider);
+        this.converter = Objects.requireNonNull(converter);
     }
 
-    protected abstract Node<NodeData<Bandwidths>> getOrCreateParent(
-            @Nullable Node<NodeData<Bandwidths>> root, S element,
+    protected abstract Node<NodeData<T>> getOrCreateParent(
+            @Nullable Node<NodeData<T>> root, S element,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits);
 
-    public void process(Node<NodeData<Bandwidths>> root, List<S> elements) {
+    public void process(Node<NodeData<T>> root, List<S> elements) {
         process(root, elements, (element, node) -> {});
     }
 
-    public void process(@Nullable Node<NodeData<Bandwidths>> root, List<S> elements, BiConsumer<Object, Node<NodeData<Bandwidths>>> consumer) {
+    public void process(@Nullable Node<NodeData<T>> root, List<S> elements, BiConsumer<Object, Node<NodeData<T>>> consumer) {
         elements.forEach(clazz -> process(root, clazz, consumer));
     }
 
-    protected Node<NodeData<Bandwidths>> process(@Nullable Node<NodeData<Bandwidths>> root, S element, BiConsumer<Object, Node<NodeData<Bandwidths>>> consumer){
+    protected Node<NodeData<T>> process(@Nullable Node<NodeData<T>> root, S element, BiConsumer<Object, Node<NodeData<T>>> consumer){
 
         final RateLimit [] rateLimits = element.getAnnotationsByType(RateLimit.class);
 
-        final Node<NodeData<Bandwidths>> node;
+        final Node<NodeData<T>> node;
 
         if(rateLimits.length > 0 ) {
 
             RateLimitGroup rateLimitGroup = element.getAnnotation(RateLimitGroup.class);
-            Node<NodeData<Bandwidths>> created = getOrCreateParent(root, element, rateLimitGroup, rateLimits);
+            Node<NodeData<T>> created = getOrCreateParent(root, element, rateLimitGroup, rateLimits);
 
-            Node<NodeData<Bandwidths>> parentNode = created == null ? root : created;
+            Node<NodeData<T>> parentNode = created == null ? root : created;
             String name = idProvider.getId(element);
             node = createNodeForElementOrNull(parentNode, name, element, rateLimitGroup, rateLimits);
 
@@ -76,11 +85,11 @@ public abstract class AnnotationProcessor<S extends GenericDeclaration> {
         return node;
     }
 
-    protected Node<NodeData<Bandwidths>> findOrCreateNodeForRateLimitGroupOrNull(
-            @Nullable Node<NodeData<Bandwidths>> root, Node<NodeData<Bandwidths>> parent,
+    protected Node<NodeData<T>> findOrCreateNodeForRateLimitGroupOrNull(
+            @Nullable Node<NodeData<T>> root, Node<NodeData<T>> parent,
             GenericDeclaration annotatedElement, RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         String name = getName(rateLimitGroup);
-        final Node<NodeData<Bandwidths>> node;
+        final Node<NodeData<T>> node;
         if(root == null || rateLimitGroup == null || name.isEmpty()) {
             node = null;
         }else{
@@ -105,70 +114,53 @@ public abstract class AnnotationProcessor<S extends GenericDeclaration> {
         return "";
     }
 
-    private Node<NodeData<Bandwidths>> createNodeForGroupOrNull(
-            Node<NodeData<Bandwidths>> parentNode, String name,
+    private Node<NodeData<T>> createNodeForGroupOrNull(
+            Node<NodeData<T>> parentNode, String name,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         if(rateLimits.length == 0) {
             return null;
         }else{
-            return NodeUtil.createGroupNode(parentNode, name, createLimit(rateLimitGroup));
+            return NodeUtil.createGroupNode(parentNode, name, process(rateLimitGroup));
         }
     }
 
-    protected Node<NodeData<Bandwidths>> createNodeForElementOrNull(
-            @Nullable Node<NodeData<Bandwidths>> parentNode, String name, Object element,
+    protected Node<NodeData<T>> createNodeForElementOrNull(
+            @Nullable Node<NodeData<T>> parentNode, String name, Object element,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         if(rateLimits.length == 0) {
             return null;
         }else{
-            Bandwidths limit = createLimit(rateLimitGroup, rateLimits);
+            T limit = converter.convert(rateLimitGroup, rateLimits);
             return NodeUtil.createNode(parentNode, name, element, limit);
         }
     }
 
-    private Node<NodeData<Bandwidths>> requireConsistentData(
-            Node<NodeData<Bandwidths>> rateLimitGroupNode, GenericDeclaration annotatedElement,
+    private Node<NodeData<T>> requireConsistentData(
+            Node<NodeData<T>> rateLimitGroupNode, GenericDeclaration annotatedElement,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         if(rateLimitGroup != null && rateLimits.length != 0) {
-            final Operator operator = logic(rateLimitGroup);
+            final Operator operator = operator(rateLimitGroup);
             rateLimitGroupNode.getChildren().stream()
                     .map(childNode -> childNode.getValueOptional().orElseThrow(NodeUtil::newExceptionForRequiredValue))
                     .map(NodeData::getValue)
-                    .forEach(existing -> requireEqual(annotatedElement, rateLimitGroup, operator, existing.getOperator()));
+                    .forEach(existing -> requireEqual(annotatedElement, rateLimitGroup, operator, existing));
         }
 
         return rateLimitGroupNode;
     }
 
-    private void requireEqual(GenericDeclaration annotatedElement, RateLimitGroup rateLimitGroup, Operator lhs, Operator rhs) {
-        if(!Objects.equals(lhs, rhs)) {
-            throw new AnnotationProcessingException("Found inconsistent declaration of logic, for " +
+    private Operator operator(RateLimitGroup rateLimitGroup) {
+        return rateLimitGroup == null ? AnnotationProcessor.DEFAULT_OPERATOR : rateLimitGroup.logic();
+    }
+
+    private void requireEqual(GenericDeclaration annotatedElement, RateLimitGroup rateLimitGroup, Operator lhs, T existing) {
+        if(!converter.isOperatorEqual(existing, lhs)) {
+            throw new AnnotationProcessingException("Found inconsistent operator, for " +
                     rateLimitGroup + " declared at " + annotatedElement);
         }
     }
 
-    private Bandwidths createLimit(RateLimitGroup rateLimitGroup) {
-        return createLimit(rateLimitGroup, new RateLimit[0]);
-    }
-
-    private Bandwidths createLimit(RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
-        final Operator operator = logic(rateLimitGroup);
-        if (rateLimits.length == 0) {
-            return Bandwidths.empty(operator);
-        }
-        Bandwidth[] bandwidths = new Bandwidth[rateLimits.length];
-        for (int i = 0; i < rateLimits.length; i++) {
-            bandwidths[i] = createBandwidth(rateLimits[i]);
-        }
-        return Bandwidths.of(logic(rateLimitGroup), bandwidths);
-    }
-
-    private Operator logic(RateLimitGroup rateLimitGroup) {
-        return rateLimitGroup == null ? Operator.OR : rateLimitGroup.logic();
-    }
-
-    private Bandwidth createBandwidth(RateLimit rateLimit) {
-        BandwidthFactory bandwidthFactory = BandwidthFactory.getOrCreateBandwidthFactory(rateLimit.factoryClass());
-        return bandwidthFactory.createNew(rateLimit.limit(), rateLimit.duration(), rateLimit.timeUnit());
+    private T process(RateLimitGroup rateLimitGroup) {
+        return converter.convert(rateLimitGroup, new RateLimit[0]);
     }
 }

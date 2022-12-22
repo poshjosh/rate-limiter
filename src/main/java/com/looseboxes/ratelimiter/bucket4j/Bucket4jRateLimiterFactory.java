@@ -25,7 +25,7 @@ public class Bucket4jRateLimiterFactory<K extends Serializable> implements RateL
     }
 
     @Override
-    public RateLimiter<K> createRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths limit) {
+    public RateLimiter<K> createRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths bandwidths) {
 
         RateCache<K, ?> rateCache = rateLimiterConfig.getRateCache();
 
@@ -33,6 +33,6 @@ public class Bucket4jRateLimiterFactory<K extends Serializable> implements RateL
 
         RateRecordedListener rateRecordedListener = rateLimiterConfig.getRateRecordedListener();
 
-        return new Bucket4jRateLimiter<>(proxyManager, bucketConfigurationProvider, rateRecordedListener, limit);
+        return new Bucket4jRateLimiter<>(proxyManager, bucketConfigurationProvider, rateRecordedListener, bandwidths);
     }
 }

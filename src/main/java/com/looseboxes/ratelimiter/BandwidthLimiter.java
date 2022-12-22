@@ -49,7 +49,7 @@ public abstract class BandwidthLimiter {
     //@VisibleForTesting
     public static BandwidthLimiter create(double permitsPerSecond, SleepingTicker ticker) {
         Bandwidth bandwidth = SmoothBandwidth.bursty(permitsPerSecond, ticker.elapsedMicros());
-        return new SmoothBandwidthLimiter(Bandwidths.of(bandwidth), ticker);
+        return new DefaultBandwidthLimiter(Bandwidths.of(bandwidth), ticker);
     }
 
     /**
@@ -110,7 +110,7 @@ public abstract class BandwidthLimiter {
         SleepingTicker ticker = SleepingTicker.zeroOffset();
         Bandwidth bandwidth = SmoothBandwidth
                 .warmingUp(permitsPerSecond, ticker.elapsedMicros(), unit.toSeconds(warmupPeriod));
-        return new SmoothBandwidthLimiter(Bandwidths.of(bandwidth), ticker);
+        return new DefaultBandwidthLimiter(Bandwidths.of(bandwidth), ticker);
     }
 
     //@VisibleForTesting
@@ -118,15 +118,15 @@ public abstract class BandwidthLimiter {
             double coldFactor, SleepingTicker ticker) {
         Bandwidth bandwidth = SmoothBandwidth
                 .warmingUp(permitsPerSecond, ticker.elapsedMicros(), warmupPeriod, unit, coldFactor);
-        return new SmoothBandwidthLimiter(Bandwidths.of(bandwidth), ticker);
+        return new DefaultBandwidthLimiter(Bandwidths.of(bandwidth), ticker);
     }
 
     /**
-     * Returns the stable rates (as {@code permits per seconds}) with which each {@code Bandwidth} in this
-     * {@code BandwidthLimiter} is configured with. The initial value of each, is the same as the {@code permitsPerSecond}
-     * argument passed in the factory method that produced each {@code Bandwidth} of this {@code BandwithLimiter}.
+     * Returns the stable rate (as {@code permits per seconds}) with which the currently eligible {@code Bandwidth}
+     * in this {@code BandwidthLimiter} is configured with. The initial value is same as the {@code permitsPerSecond}
+     * argument passed in the factory method that produced the {@code Bandwidth}
      */
-    public abstract double [] getPermitsPerSecond();
+    public abstract double getPermitsPerSecond();
 
     /**
      * Acquires a single permit from this {@code RateLimiter}, blocking until the request can be
@@ -186,7 +186,7 @@ public abstract class BandwidthLimiter {
     }
 
     /**
-     * Acquires permits from this {@link SmoothBandwidthLimiter} if it can be acquired immediately without delay.
+     * Acquires permits from this {@link BandwidthLimiter} if it can be acquired immediately without delay.
      *
      * <p>This method is equivalent to {@code tryAcquire(permits, 0, anyUnit)}.
      *
@@ -200,7 +200,7 @@ public abstract class BandwidthLimiter {
     }
 
     /**
-     * Acquires a permit from this {@link SmoothBandwidthLimiter} if it can be acquired immediately without
+     * Acquires a permit from this {@link BandwidthLimiter} if it can be acquired immediately without
      * delay.
      *
      * <p>This method is equivalent to {@code tryAcquire(1)}.

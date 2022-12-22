@@ -1,5 +1,6 @@
 package com.looseboxes.ratelimiter.bandwidths;
 
+import com.looseboxes.ratelimiter.util.Experimental;
 import com.looseboxes.ratelimiter.util.Operator;
 
 import java.io.InvalidObjectException;
@@ -8,6 +9,8 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Stream;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public final class Bandwidths implements Serializable{
 
@@ -18,15 +21,15 @@ public final class Bandwidths implements Serializable{
         return Operator.AND.equals(operator) ? EMPTY_AND : EMPTY_OR;
     }
 
-    public static Bandwidths of(Bandwidth... bandwidths) {
-        return of(Operator.OR, bandwidths);
-    }
-
     public static Bandwidths and(Bandwidth... bandwidths) {
         return of(Operator.AND, bandwidths);
     }
 
     public static Bandwidths or(Bandwidth... bandwidths) {
+        return of(Operator.OR, bandwidths);
+    }
+
+    public static Bandwidths of(Bandwidth... bandwidths) {
         return of(Operator.OR, bandwidths);
     }
 
@@ -90,11 +93,38 @@ public final class Bandwidths implements Serializable{
     }
 
     /**
+     * The interval between two unit requests, at our stable rate. E.g., a stable rate of 5 permits
+     * per second has a stable interval of 200ms.
+     */
+    @Experimental
+    public long getStableIntervalMicros() {
+        final double permitsPerSecond = getPermitsPerSecond();
+        return (long)(SECONDS.toMicros(1L) / permitsPerSecond);
+    }
+
+    /**
+     * Returns the stable rate (as {@code permits per seconds}) with which an eligible {@code Bandwidth} in this
+     * {@code Bandwidths} is configured with. The initial value is the same as the {@code permitsPerSecond}
+     * argument passed in the factory method that produced the {@code Bandwidth}.
+     * @see #getAllPermitsPerSecond()
+     */
+    @Experimental
+    public double getPermitsPerSecond() {
+        final boolean isAnd = Operator.AND.equals(operator);
+        double [] arr = getAllPermitsPerSecond();
+        double result = -1;
+        for(double e : arr) {
+            result = result == - 1 ? e : (isAnd ? Math.max(e, result) : Math.min(e, result));
+        }
+        return result;
+    }
+
+    /**
      * Returns the stable rates (as {@code permits per seconds}) with which each {@code Bandwidth} in this
      * {@code Bandwidths} is configured with. The initial value of each, is the same as the {@code permitsPerSecond}
      * argument passed in the factory method that produced each {@code Bandwidth}.
      */
-    public double [] getPermitsPerSecond() {
+    private double [] getAllPermitsPerSecond() {
         final double [] permitsPerSecond = new double[members.length];
         for(int i = 0; i < members.length; i++) {
             permitsPerSecond[i] = members[i].getRate();

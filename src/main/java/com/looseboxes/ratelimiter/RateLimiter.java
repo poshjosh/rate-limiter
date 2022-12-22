@@ -35,7 +35,7 @@ public interface RateLimiter<K> {
     }
 
     static <K> RateLimiter<K> bursty(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths bandwidths) {
-        return new SmoothRateLimiter(rateLimiterConfig, bandwidths);
+        return new DefaultRateLimiter(rateLimiterConfig, bandwidths);
     }
 
     static <K> RateLimiter<K> warmingUp(Bandwidths bandwidths) {
@@ -43,7 +43,7 @@ public interface RateLimiter<K> {
     }
 
     static <K> RateLimiter<K> warmingUp(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths bandwidths) {
-        return new SmoothRateLimiter(rateLimiterConfig, bandwidths);
+        return new DefaultRateLimiter(rateLimiterConfig, bandwidths);
     }
 
     /**
@@ -103,7 +103,7 @@ public interface RateLimiter<K> {
     }
 
     /**
-     * Acquires permits from this {@link SmoothBandwidthLimiter} if it can be acquired immediately without delay.
+     * Acquires permits from this {@link RateLimiter} if it can be acquired immediately without delay.
      *
      * <p>This method is equivalent to {@code tryAcquire(permits, 0, anyUnit)}.
      *
@@ -117,7 +117,7 @@ public interface RateLimiter<K> {
     }
 
     /**
-     * Acquires a permit from this {@link SmoothBandwidthLimiter} if it can be acquired immediately without
+     * Acquires a permit from this {@link RateLimiter} if it can be acquired immediately without
      * delay.
      *
      * <p>This method is equivalent to {@code tryAcquire(1)}.

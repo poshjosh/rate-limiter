@@ -5,6 +5,12 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Objects;
 
+/**
+ * This implements a "bursty" {@link Bandwidth}, where storedPermits are translated to zero throttling.
+ * The maximum number of permits that can be saved (when the Bandwidth is unused) is defined in
+ * terms of time, in this sense: if a Bandwidth is 2qps, and this time is specified as 10
+ * seconds, we can save up to 2 * 10 = 20 permits.
+ */
 final class SmoothBurstyBandwidth extends SmoothBandwidth implements Serializable {
 
     private static final long serialVersionUID = 9081726354000000070L;

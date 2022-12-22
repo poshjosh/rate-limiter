@@ -11,9 +11,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class SmoothRateLimiter<K> implements RateLimiter<K> {
+public class DefaultRateLimiter<K> implements RateLimiter<K> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SmoothRateLimiter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultRateLimiter.class);
 
     private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
 
@@ -25,7 +25,7 @@ public class SmoothRateLimiter<K> implements RateLimiter<K> {
 
     private final Bandwidths defaultBandwidths;
 
-    public SmoothRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths bandwidths) {
+    public DefaultRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths bandwidths) {
         this.rateCache = (RateCache<K, Object>)Objects.requireNonNull(rateLimiterConfig.getRateCache());
         this.rateRecordedListener = Objects.requireNonNull(rateLimiterConfig.getRateRecordedListener());
         this.bandwidthLimiterProvider = Objects.requireNonNull(rateLimiterConfig.getBandwidthLimiterProvider());
@@ -37,14 +37,7 @@ public class SmoothRateLimiter<K> implements RateLimiter<K> {
 
         final Bandwidths existingBandwidths = getBandwidthsFromCache(resourceId);
 
-        final Bandwidths targetBandwidths;
-
-        final SleepingTicker ticker = bandwidthLimiterProvider.getTicker(resourceId);
-        if (existingBandwidths == null) {
-            targetBandwidths = newInitialRate(ticker);
-        } else {
-            targetBandwidths = existingBandwidths;
-        }
+        final Bandwidths targetBandwidths = existingBandwidths == null ? newInitialRate() : existingBandwidths;
 
         BandwidthLimiter limiter = bandwidthLimiterProvider.getBandwidthLimiter(resourceId, targetBandwidths);
 
@@ -57,7 +50,7 @@ public class SmoothRateLimiter<K> implements RateLimiter<K> {
             addBandwidthsToCache(resourceId, targetBandwidths, putOnlyIfAbsent);
         }
 
-        //System.out.printf("%s SmoothRateLimiter limit exceeded: %b, for: %s, limit: %s\n",
+        //System.out.printf("%s DefaultRateLimiter limit exceeded: %b, for: %s, limit: %s\n",
         //        java.time.LocalTime.now(), !acquired, resourceId, targetBandwidths);
 
         if(LOG.isTraceEnabled()) {
@@ -98,12 +91,13 @@ public class SmoothRateLimiter<K> implements RateLimiter<K> {
         }
     }
 
-    private Bandwidths newInitialRate(SleepingTicker ticker) {
+    private Bandwidths newInitialRate() {
+        final SleepingTicker ticker = bandwidthLimiterProvider.getTicker();
         return Bandwidths.copyOf(defaultBandwidths, ticker.elapsedMicros());
     }
 
     @Override
     public String toString() {
-        return "SmoothRateLimiter@" + Integer.toHexString(hashCode()) + '_' + defaultBandwidths;
+        return "DefaultRateLimiter@" + Integer.toHexString(hashCode()) + "{" + defaultBandwidths + "}";
     }
 }

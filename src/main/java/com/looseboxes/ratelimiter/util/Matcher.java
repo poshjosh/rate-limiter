@@ -18,10 +18,10 @@ public interface Matcher<T, R> {
     }
 
     default boolean matches(T target) {
-        return matchOrNull(target) != null;
+        return matchingKeyOrNull(target) != null;
     }
 
-    R matchOrNull(T target);
+    R matchingKeyOrNull(T target);
 
     /**
      * Returns a composed {@code Matcher} that performs, in sequence, this
@@ -38,12 +38,12 @@ public interface Matcher<T, R> {
     default Matcher<T, R> andThen(Matcher<? super T, ? super R> after) {
         Objects.requireNonNull(after);
         return (T t) -> {
-            R result = matchOrNull(t);
+            R result = matchingKeyOrNull(t);
             // If there was no match, do not continue
             if(result == null) {
                 return result;
             }
-            return (R)after.matchOrNull(t);
+            return (R)after.matchingKeyOrNull(t);
         };
     }
 }

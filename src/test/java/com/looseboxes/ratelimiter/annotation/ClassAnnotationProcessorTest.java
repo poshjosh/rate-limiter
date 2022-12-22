@@ -39,8 +39,8 @@ class ClassAnnotationProcessorTest extends AbstractAnnotationProcessorTest<Class
                 ClassWithClassAnnotations.SecondClassGroupOnlyNamedFire.class);
     }
 
-    AnnotationProcessor<Class<?>> getInstance() {
-        return AnnotationProcessor.newInstance(this::getId, IdProvider.forMethod());
+    AnnotationProcessor<Class<?>, Bandwidths> getInstance() {
+        return AnnotationProcessor.newInstance(this::getId, IdProvider.forMethod(), new AnnotationToBandwidthConverter());
     }
 
     String getId(Class<?> element) {

@@ -13,9 +13,6 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-/**
- * @author hp
- */
 final class DefaultClassesInPackageFinder implements ClassesInPackageFinder{
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultClassesInPackageFinder.class);

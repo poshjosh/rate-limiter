@@ -1,6 +1,5 @@
 package com.looseboxes.ratelimiter.annotation;
 
-import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.node.Node;
 import com.looseboxes.ratelimiter.util.Nullable;
 
@@ -8,32 +7,33 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-class ClassAnnotationProcessor extends AnnotationProcessor<Class<?>> {
+class ClassAnnotationProcessor<T> extends AnnotationProcessor<Class<?>, T> {
 
-    private final AnnotationProcessor<Method> methodAnnotationProcessor;
+    private final AnnotationProcessor<Method, T> methodAnnotationProcessor;
 
     ClassAnnotationProcessor(
             IdProvider<Class<?>, String> idProvider,
-            AnnotationProcessor<Method> methodAnnotationProcessor) {
-        super(idProvider);
+            AnnotationProcessor.Converter<T> converter,
+            AnnotationProcessor<Method, T> methodAnnotationProcessor) {
+        super(idProvider, converter);
         this.methodAnnotationProcessor = Objects.requireNonNull(methodAnnotationProcessor);
     }
 
     // We override this here so we can process the class and its super classes
     @Override
-    protected Node<NodeData<Bandwidths>> process(@Nullable Node<NodeData<Bandwidths>> root, Class<?> element,
-                                                 BiConsumer<Object, Node<NodeData<Bandwidths>>> consumer){
-        Node<NodeData<Bandwidths>> classNode = null;
+    protected Node<NodeData<T>> process(@Nullable Node<NodeData<T>> root, Class<?> element,
+                                        BiConsumer<Object, Node<NodeData<T>>> consumer){
+        Node<NodeData<T>> classNode = null;
         List<Class<?>> superClasses = new ArrayList<>();
-        List<Node<NodeData<Bandwidths>>> superClassNodes = new ArrayList<>();
-        BiConsumer<Object, Node<NodeData<Bandwidths>>> collectSuperClassNodes = (source, superClassNode) -> {
+        List<Node<NodeData<T>>> superClassNodes = new ArrayList<>();
+        BiConsumer<Object, Node<NodeData<T>>> collectSuperClassNodes = (source, superClassNode) -> {
             if(superClasses.contains(source)) {
                 superClassNodes.add(superClassNode);
             }
         };
         do{
 
-            Node<NodeData<Bandwidths>> node = super.process(root, element, collectSuperClassNodes.andThen(consumer));
+            Node<NodeData<T>> node = super.process(root, element, collectSuperClassNodes.andThen(consumer));
 
             final boolean mainNode = classNode == null;
 
@@ -57,7 +57,7 @@ class ClassAnnotationProcessor extends AnnotationProcessor<Class<?>> {
         return classNode;
     }
 
-    private void processMethods(@Nullable Node<NodeData<Bandwidths>> root, Class<?> element, BiConsumer<Object, Node<NodeData<Bandwidths>>> consumer) {
+    private void processMethods(@Nullable Node<NodeData<T>> root, Class<?> element, BiConsumer<Object, Node<NodeData<T>>> consumer) {
         Method[] methods = element.getDeclaredMethods();
         methodAnnotationProcessor.process(root, Arrays.asList(methods), consumer);
     }
@@ -68,12 +68,12 @@ class ClassAnnotationProcessor extends AnnotationProcessor<Class<?>> {
      * @param classNode The receiving class
      * @param superClassNodes The giving class
      */
-    private void transferMethodNodesFromSuperClassNodes(Node<NodeData<Bandwidths>> classNode, List<Node<NodeData<Bandwidths>>> superClassNodes) {
+    private void transferMethodNodesFromSuperClassNodes(Node<NodeData<T>> classNode, List<Node<NodeData<T>>> superClassNodes) {
         if(classNode != null && !superClassNodes.isEmpty()) {
 
-            for(Node<NodeData<Bandwidths>> superClassNode : superClassNodes) {
+            for(Node<NodeData<T>> superClassNode : superClassNodes) {
 
-                List<Node<NodeData<Bandwidths>>> superClassMethodNodes = superClassNode.getChildren();
+                List<Node<NodeData<T>>> superClassMethodNodes = superClassNode.getChildren();
 
                 // Transfer method nodes from the super class
                 superClassMethodNodes.forEach(node -> node.copyTo(classNode));
@@ -82,9 +82,9 @@ class ClassAnnotationProcessor extends AnnotationProcessor<Class<?>> {
     }
 
     @Override
-    protected Node<NodeData<Bandwidths>> getOrCreateParent(@Nullable Node<NodeData<Bandwidths>> root, Class<?> element,
-                                                           RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
-        Node<NodeData<Bandwidths>> node = findOrCreateNodeForRateLimitGroupOrNull(root, root, element, rateLimitGroup, rateLimits);
+    protected Node<NodeData<T>> getOrCreateParent(@Nullable Node<NodeData<T>> root, Class<?> element,
+                                                  RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
+        Node<NodeData<T>> node = findOrCreateNodeForRateLimitGroupOrNull(root, root, element, rateLimitGroup, rateLimits);
         return node == null ? root : node;
     }
 }

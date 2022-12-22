@@ -5,7 +5,7 @@ import com.looseboxes.ratelimiter.util.SleepingTicker;
 
 public interface BandwidthLimiterProvider<K> {
 
-    SleepingTicker getTicker(K key);
+    SleepingTicker getTicker();
 
     BandwidthLimiter getBandwidthLimiter(K key, Bandwidths bandwidths);
 }

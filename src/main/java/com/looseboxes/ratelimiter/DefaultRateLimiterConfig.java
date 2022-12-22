@@ -22,7 +22,7 @@ final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K, V>,
         }
 
         @Override
-        public SleepingTicker getTicker(K key) {
+        public SleepingTicker getTicker() {
             return ticker;
         }
 
@@ -31,7 +31,7 @@ final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K, V>,
             BandwidthLimiter value;
             if ((value = this.resourceIdToBandwidthLimiters.get(key)) == null) {
                 BandwidthLimiter newValue;
-                if ((newValue = createNew(key, bandwidths)) != null) {
+                if ((newValue = createNew(bandwidths)) != null) {
                     this.resourceIdToBandwidthLimiters.put(key, newValue);
                     return newValue;
                 }
@@ -39,8 +39,8 @@ final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K, V>,
             return value;
         }
 
-        private BandwidthLimiter createNew(K key, Bandwidths bandwidths) {
-            return new SmoothBandwidthLimiter(bandwidths, getTicker(key));
+        private BandwidthLimiter createNew(Bandwidths bandwidths) {
+            return new DefaultBandwidthLimiter(bandwidths, getTicker());
         }
     }
 

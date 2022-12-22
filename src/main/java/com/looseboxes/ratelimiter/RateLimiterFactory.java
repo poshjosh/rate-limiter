@@ -8,9 +8,9 @@ public interface RateLimiterFactory<K> {
         return new DefaultRateLimiterFactory<>();
     }
 
-    default RateLimiter<K> createRateLimiter(Bandwidths limit) {
-        return createRateLimiter(RateLimiterConfig.newInstance(), limit);
+    default RateLimiter<K> createRateLimiter(Bandwidths bandwidths) {
+        return createRateLimiter(RateLimiterConfig.newInstance(), bandwidths);
     }
 
-    RateLimiter<K> createRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths limit);
+    RateLimiter<K> createRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths bandwidths);
 }

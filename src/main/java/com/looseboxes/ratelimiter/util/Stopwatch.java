@@ -62,8 +62,6 @@ import static java.util.concurrent.TimeUnit.*;
  *      });
  * }</pre>
  *
- * @author Kevin Bourrillion
- * @since 10.0
  */
 @SuppressWarnings("GoodTime")
 public final class Stopwatch {

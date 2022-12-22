@@ -22,13 +22,18 @@ public abstract class SleepingTicker extends Ticker {
     }
 
     /**
-     * @return a ticker which starts counting from zero.
+     * Create a ticker which starts ticking from zero. The first call to method {@link Ticker#elapsedNanos()}
+     * will return a number as close to zero as possible.
+     * @return a ticker which starts ticking from zero.
      */
     public static SleepingTicker zeroOffset() {
         return new SleepingTicker() {
-            private final Stopwatch stopwatch = Stopwatch.createStarted();
+            private final Stopwatch stopwatch = Stopwatch.createUnstarted();
             @Override
             public long elapsedNanos() {
+                if (!stopwatch.isRunning()) {
+                    stopwatch.start();
+                }
                 return stopwatch.elapsedNanos();
             }
             @Override

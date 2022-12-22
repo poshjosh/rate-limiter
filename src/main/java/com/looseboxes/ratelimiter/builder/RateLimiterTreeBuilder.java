@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 class RateLimiterTreeBuilder<K> implements RateLimitersBuilder<K, Node<NodeData<RateLimiter<K>>>> {
 
     private final AtomicBoolean buildAttempted = new AtomicBoolean();
-    private AnnotationProcessor<Class<?>> annotationProcessor;
+    private AnnotationProcessor<Class<?>, Bandwidths> annotationProcessor;
     private Node<NodeData<Bandwidths>> rootNode;
     private RateLimiterConfig.Builder<K, ?> rateLimiterConfigBuilder;
     private RateLimiterConfig<K, ?> rateLimiterConfig;
@@ -64,7 +64,7 @@ class RateLimiterTreeBuilder<K> implements RateLimitersBuilder<K, Node<NodeData<
 
     @Override
     public RateLimiterTreeBuilder<K> annotationProcessor(
-            AnnotationProcessor<Class<?>> annotationProcessor) {
+            AnnotationProcessor<Class<?>, Bandwidths> annotationProcessor) {
         this.annotationProcessor = annotationProcessor;
         return this;
     }

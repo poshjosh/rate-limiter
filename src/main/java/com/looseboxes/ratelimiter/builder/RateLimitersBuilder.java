@@ -32,7 +32,7 @@ public interface RateLimitersBuilder<K, R> {
     R build(List<Class<?>> classes);
 
     RateLimitersBuilder<K, R> annotationProcessor(
-            AnnotationProcessor<Class<?>> annotationProcessor);
+            AnnotationProcessor<Class<?>, Bandwidths> annotationProcessor);
 
     RateLimitersBuilder<K, R> rootNodeName(String name) ;
 
