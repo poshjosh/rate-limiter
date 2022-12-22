@@ -1,6 +1,6 @@
 package com.wip;
 
-import com.looseboxes.ratelimiter.annotation.RateLimitProcessor;
+import com.looseboxes.ratelimiter.Checks;
 
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
@@ -16,14 +16,8 @@ public final class AmountPerDuration implements Comparable<AmountPerDuration>, S
     private final long timeCreatedMillis;
 
     AmountPerDuration(long amount, long durationMillis, long timeCreatedMillis) {
-        final String limitError = RateLimitProcessor.getErrorMessageIfInvalidLimit(amount, null);
-        if(limitError != null) {
-            throw new IllegalArgumentException(limitError);
-        }
-        final String durationError = RateLimitProcessor.getErrorMessageIfInvalidDuration(durationMillis, null);
-        if(durationError != null) {
-            throw new IllegalArgumentException(durationError);
-        }
+        Checks.requireFalse(amount < 0, "Limit must positive. Limit: " + amount);
+        Checks.requireFalse(durationMillis < 0, "Duration must be positive. Duration: " + durationMillis + " millis");
         this.amount = amount;
         this.durationMillis = durationMillis;
         this.timeCreatedMillis = timeCreatedMillis;

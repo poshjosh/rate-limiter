@@ -6,7 +6,7 @@ import com.looseboxes.ratelimiter.annotation.NodeData;
 import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.node.BreadthFirstNodeVisitor;
 import com.looseboxes.ratelimiter.node.Node;
-import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
+import com.looseboxes.ratelimiter.util.Rates;
 
 import java.util.*;
 
@@ -35,7 +35,7 @@ class RateLimiterListBuilder<K> implements RateLimitersBuilder<K, List<NodeData<
     }
 
     public RateLimiterListBuilder<K> annotationProcessor(
-            AnnotationProcessor<Class<?>, Bandwidths> annotationProcessor) {
+            AnnotationProcessor<Class<?>, Rates> annotationProcessor) {
         this.rateLimiterTreeBuilder.annotationProcessor(annotationProcessor);
         return this;
     }
@@ -45,7 +45,7 @@ class RateLimiterListBuilder<K> implements RateLimitersBuilder<K, List<NodeData<
         return this;
     }
 
-    public RateLimiterListBuilder<K> rootNode(Node<NodeData<Bandwidths>> rootNode) {
+    public RateLimiterListBuilder<K> rootNode(Node<NodeData<Rates>> rootNode) {
         this.rateLimiterTreeBuilder.rootNode(rootNode);
         return this;
     }

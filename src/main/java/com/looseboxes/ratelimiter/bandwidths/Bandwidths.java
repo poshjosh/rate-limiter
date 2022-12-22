@@ -37,33 +37,6 @@ public final class Bandwidths implements Serializable{
         return new Bandwidths(operator, bandwidths);
     }
 
-    public static Bandwidths copyOf(Bandwidths bandwidths) {
-        final Bandwidth [] members = bandwidths.getMembers();
-        final Bandwidth [] copy = new Bandwidth[members.length];
-        for (int i = 0; i < copy.length; i++) {
-            copy[i] = members[i].copy();
-        }
-        return Bandwidths.of(bandwidths.getOperator(), copy);
-    }
-
-    public static Bandwidths copyOf(Bandwidths bandwidths, long nowMicros) {
-        final Bandwidth [] members = bandwidths.getMembers();
-        final Bandwidth [] copy = new Bandwidth[members.length];
-        for (int i = 0; i < copy.length; i++) {
-            copy[i] = members[i].copy(nowMicros);
-        }
-        return Bandwidths.of(bandwidths.getOperator(), copy);
-    }
-
-    public static Bandwidths copyOf(Bandwidths bandwidths, long nowMicros, double... permitsPerSecond) {
-        final Bandwidth [] members = bandwidths.getMembers();
-        final Bandwidth [] copy = new Bandwidth[members.length];
-        for (int i = 0; i < copy.length; i++) {
-            copy[i] = members[i].copy(permitsPerSecond[i], nowMicros);
-        }
-        return Bandwidths.of(bandwidths.getOperator(), copy);
-    }
-
     private static final long serialVersionUID = 9081726354000000020L;
 
     private final Operator operator;
@@ -75,7 +48,6 @@ public final class Bandwidths implements Serializable{
         this.members = Arrays.copyOf(members, members.length);
     }
 
-
     public boolean hasMembers() { return memberCount() > 0; }
 
     public int memberCount() {
@@ -84,12 +56,6 @@ public final class Bandwidths implements Serializable{
 
     public Stream<Bandwidth> stream() {
         return Arrays.stream(getMembers());
-    }
-
-    public boolean isExceeded(int failureCount) {
-        Operator operator = getOperator();
-        return (Operator.OR.equals(operator) && failureCount > 0)
-                || (Operator.AND.equals(operator) && failureCount >= memberCount());
     }
 
     /**

@@ -43,7 +43,7 @@ public class Bucket4jJCacheRateLimiterProvider<K extends Serializable>{
         ProxyManager<K> proxyManager = Bucket4j.extension(JCache.class).proxyManagerForCache(cache);
 
         // Limited to one invocation every second
-        return new Bucket4jRateLimiter<>(proxyManager, SmoothBandwidth.bursty(1));
+        return new Bucket4jRateLimiter<>(proxyManager, Rate.of(1, Duration.ofSeconds(1)));
     }
 
     public List<NodeData<RateLimiter<K>>> newInstancesFromAnnotatedClass(Cache<K, GridBucketState> cache, Class<?> annotationSource) {
@@ -103,7 +103,7 @@ public class Bucket4jHazelcastRateLimiterProvider<K extends Serializable>{
         ProxyManager<K> proxyManager = Bucket4j.extension(Hazelcast.class).proxyManagerForMap(cache);
 
         // Limited to one invocation every second
-        return new Bucket4jRateLimiter<>(proxyManager, SmoothBandwidth.bursty(1));
+        return new Bucket4jRateLimiter<>(proxyManager, Rate.of(1, Duration.ofSeconds(1)));
     }
 
     public List<NodeData<RateLimiter<K>>> newInstancesFromAnnotatedClass(IMap<K, GridBucketState> cache, Class<?> annotationSource) {
@@ -166,7 +166,7 @@ public class Bucket4jIgniteRateLimiterProvider<K extends Serializable>{
         ProxyManager<K> proxyManager = Bucket4j.extension(Ignite.class).proxyManagerForCache(cache);
 
         // Limited to one invocation every second
-        return new Bucket4jRateLimiter<>(proxyManager, SmoothBandwidth.bursty(1));
+        return new Bucket4jRateLimiter<>(proxyManager, Rate.of(1, Duration.ofSeconds(1)));
     }
 
     public List<NodeData<RateLimiter<K>>> newInstancesFromAnnotatedClass(IgniteCache<K, GridBucketState> cache, Class<?> annotationSource) {

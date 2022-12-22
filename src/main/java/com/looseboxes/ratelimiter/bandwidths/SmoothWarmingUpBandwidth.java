@@ -94,20 +94,6 @@ final class SmoothWarmingUpBandwidth extends SmoothBandwidth implements Serializ
         setRate(permitsPerSecond, nowMicros);
     }
 
-    private SmoothWarmingUpBandwidth(SmoothWarmingUpBandwidth smoothWarmingUpBandwidth) {
-        super(smoothWarmingUpBandwidth);
-        this.nowMicros = smoothWarmingUpBandwidth.nowMicros;
-        this.warmupPeriodMicros = smoothWarmingUpBandwidth.warmupPeriodMicros;
-        this.coldFactor = smoothWarmingUpBandwidth.coldFactor;
-        this.slope = smoothWarmingUpBandwidth.slope;
-        this.thresholdPermits = smoothWarmingUpBandwidth.thresholdPermits;
-    }
-
-    @Override
-    public SmoothWarmingUpBandwidth copy() {
-        return new SmoothWarmingUpBandwidth(this);
-    }
-
     @Override
     protected void doSetRate(double permitsPerSecond, double stableIntervalMicros) {
         double oldMaxPermits = maxPermits;

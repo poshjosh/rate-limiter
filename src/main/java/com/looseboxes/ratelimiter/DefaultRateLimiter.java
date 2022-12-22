@@ -2,7 +2,7 @@ package com.looseboxes.ratelimiter;
 
 import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.util.SleepingTicker;
+import com.looseboxes.ratelimiter.util.Rates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,13 +23,13 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
 
     private final BandwidthLimiterProvider<K> bandwidthLimiterProvider;
 
-    private final Bandwidths defaultBandwidths;
+    private final Rates rates;
 
-    public DefaultRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths bandwidths) {
+    public DefaultRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Rates rates) {
         this.rateCache = (RateCache<K, Object>)Objects.requireNonNull(rateLimiterConfig.getRateCache());
         this.rateRecordedListener = Objects.requireNonNull(rateLimiterConfig.getRateRecordedListener());
         this.bandwidthLimiterProvider = Objects.requireNonNull(rateLimiterConfig.getBandwidthLimiterProvider());
-        this.defaultBandwidths = Objects.requireNonNull(bandwidths);
+        this.rates = Rates.of(rates);
     }
 
     @Override
@@ -37,9 +37,9 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
 
         final Bandwidths existingBandwidths = getBandwidthsFromCache(resourceId);
 
-        final Bandwidths targetBandwidths = existingBandwidths == null ? newInitialRate() : existingBandwidths;
+        final Bandwidths targetBandwidths = existingBandwidths == null ? createBandwidths(resourceId) : existingBandwidths;
 
-        BandwidthLimiter limiter = bandwidthLimiterProvider.getBandwidthLimiter(resourceId, targetBandwidths);
+        BandwidthLimiter limiter = bandwidthLimiterProvider.getOrCreateBandwidthLimiter(resourceId, targetBandwidths);
 
         final boolean acquired = limiter.tryAcquire(permits, timeout, unit);
 
@@ -91,13 +91,12 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
         }
     }
 
-    private Bandwidths newInitialRate() {
-        final SleepingTicker ticker = bandwidthLimiterProvider.getTicker();
-        return Bandwidths.copyOf(defaultBandwidths, ticker.elapsedMicros());
+    private Bandwidths createBandwidths(K key) {
+        return bandwidthLimiterProvider.createBandwidths(key, rates);
     }
 
     @Override
     public String toString() {
-        return "DefaultRateLimiter@" + Integer.toHexString(hashCode()) + "{" + defaultBandwidths + "}";
+        return "DefaultRateLimiter@" + Integer.toHexString(hashCode()) + "{" + rates + "}";
     }
 }

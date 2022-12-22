@@ -3,9 +3,9 @@ package com.looseboxes.ratelimiter.builder;
 import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.annotation.AnnotationProcessor;
 import com.looseboxes.ratelimiter.annotation.NodeData;
-import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.node.Node;
+import com.looseboxes.ratelimiter.util.Rates;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,11 +32,11 @@ public interface RateLimitersBuilder<K, R> {
     R build(List<Class<?>> classes);
 
     RateLimitersBuilder<K, R> annotationProcessor(
-            AnnotationProcessor<Class<?>, Bandwidths> annotationProcessor);
+            AnnotationProcessor<Class<?>, Rates> annotationProcessor);
 
     RateLimitersBuilder<K, R> rootNodeName(String name) ;
 
-    RateLimitersBuilder<K, R> rootNode(Node<NodeData<Bandwidths>> rootNode);
+    RateLimitersBuilder<K, R> rootNode(Node<NodeData<Rates>> rootNode);
 
     RateLimitersBuilder<K, R> rateCache(RateCache<K, ?> rateCache);
 

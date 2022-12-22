@@ -26,17 +26,6 @@ final class SmoothBurstyBandwidth extends SmoothBandwidth implements Serializabl
         setRate(permitsPerSecond, nowMicros);
     }
 
-    private SmoothBurstyBandwidth(SmoothBurstyBandwidth smoothBurstyBandwidth) {
-        super(smoothBurstyBandwidth);
-        this.nowMicros = smoothBurstyBandwidth.nowMicros;
-        this.maxBurstSeconds = smoothBurstyBandwidth.maxBurstSeconds;
-    }
-
-    @Override
-    public SmoothBurstyBandwidth copy() {
-        return new SmoothBurstyBandwidth(this);
-    }
-
     @Override
     protected void doSetRate(double permitsPerSecond, double stableIntervalMicros) {
         double oldMaxPermits = this.maxPermits;

@@ -1,10 +1,10 @@
 package com.looseboxes.ratelimiter.annotation;
 
-import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.node.Node;
 import com.looseboxes.ratelimiter.node.formatters.NodeFormatters;
 import com.looseboxes.ratelimiter.util.Nullable;
 import com.looseboxes.ratelimiter.util.Operator;
+import com.looseboxes.ratelimiter.util.Rates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,8 +25,8 @@ public abstract class AnnotationProcessor<S extends GenericDeclaration, T> {
         boolean isOperatorEqual(T type, Operator operator);
     }
 
-    public static AnnotationProcessor<Class<?>, Bandwidths> newInstance() {
-        return newInstance(IdProvider.forClass(), IdProvider.forMethod(), new AnnotationToBandwidthConverter());
+    public static AnnotationProcessor<Class<?>, Rates> newInstance() {
+        return newInstance(IdProvider.forClass(), IdProvider.forMethod(), new AnnotationToRatesConverter());
     }
 
     public static <T> AnnotationProcessor<Class<?>, T> newInstance(

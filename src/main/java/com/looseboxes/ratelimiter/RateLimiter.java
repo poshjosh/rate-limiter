@@ -1,7 +1,7 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
-import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
+import com.looseboxes.ratelimiter.util.Rate;
+import com.looseboxes.ratelimiter.util.Rates;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -18,32 +18,36 @@ public interface RateLimiter<K> {
         return (RateLimiter<T>)NO_OP;
     }
 
-    static <K> RateLimiter<K> of(Bandwidth... bandwidth) {
-        return of(Bandwidths.of(bandwidth));
+    static <K> RateLimiter<K> of(Rate... limits) {
+        return of(Rates.of(limits));
     }
 
-    static <K> RateLimiter<K> of(Bandwidths bandwidths) {
-        return of(RateLimiterConfig.newInstance(), bandwidths);
+    static <K> RateLimiter<K> of(Rates limits) {
+        return of(RateLimiterConfig.newInstance(), limits);
     }
 
-    static <K> RateLimiter<K> of(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths bandwidths) {
-        return bursty(rateLimiterConfig, bandwidths);
+    static <K> RateLimiter<K> of(RateLimiterConfig<K, ?> rateLimiterConfig, Rate limit) {
+        return of(rateLimiterConfig, Rates.of(limit));
     }
 
-    static <K> RateLimiter<K> bursty(Bandwidths bandwidths) {
-        return bursty(RateLimiterConfig.newInstance(), bandwidths);
+    static <K> RateLimiter<K> of(RateLimiterConfig<K, ?> rateLimiterConfig, Rates limits) {
+        return bursty(rateLimiterConfig, limits);
     }
 
-    static <K> RateLimiter<K> bursty(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths bandwidths) {
-        return new DefaultRateLimiter(rateLimiterConfig, bandwidths);
+    static <K> RateLimiter<K> bursty(Rates limits) {
+        return bursty(RateLimiterConfig.newInstance(), limits);
     }
 
-    static <K> RateLimiter<K> warmingUp(Bandwidths bandwidths) {
-        return warmingUp(RateLimiterConfig.newInstance(), bandwidths);
+    static <K> RateLimiter<K> bursty(RateLimiterConfig<K, ?> rateLimiterConfig, Rates limits) {
+        return new DefaultRateLimiter(rateLimiterConfig, limits);
     }
 
-    static <K> RateLimiter<K> warmingUp(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths bandwidths) {
-        return new DefaultRateLimiter(rateLimiterConfig, bandwidths);
+    static <K> RateLimiter<K> warmingUp(Rates limits) {
+        return warmingUp(RateLimiterConfig.newInstance(), limits);
+    }
+
+    static <K> RateLimiter<K> warmingUp(RateLimiterConfig<K, ?> rateLimiterConfig, Rates limits) {
+        return new DefaultRateLimiter(rateLimiterConfig, limits);
     }
 
     /**

@@ -1,21 +1,15 @@
 package com.looseboxes.ratelimiter.bucket4j;
 
-import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
+import com.looseboxes.ratelimiter.util.Rate;
 import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.BucketConfiguration;
-
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 public interface BucketConfigurationProvider {
     final class SimpleBucketConfigurationProvider implements BucketConfigurationProvider {
         @Override
-        public BucketConfiguration getBucketConfiguration(Bandwidth bandwidth) {
-            // We convert to the largest possible, to reduce our loss of precision
-            // (when casting from double to long) to the barest minimum.
-            final long permitsPerDay = (long)bandwidth.getRate() * TimeUnit.SECONDS.toDays(1L);
+        public BucketConfiguration getBucketConfiguration(Rate rate) {
             return Bucket4j.configurationBuilder()
-                    .addLimit(io.github.bucket4j.Bandwidth.simple(permitsPerDay, Duration.ofDays(1))).build();
+                    .addLimit(io.github.bucket4j.Bandwidth.simple(rate.getLimit(), rate.getDuration())).build();
         }
     }
 
@@ -23,5 +17,5 @@ public interface BucketConfigurationProvider {
         return new SimpleBucketConfigurationProvider();
     }
 
-    <R extends Bandwidth> BucketConfiguration getBucketConfiguration(R rate);
+    <R extends Rate> BucketConfiguration getBucketConfiguration(R rate);
 }

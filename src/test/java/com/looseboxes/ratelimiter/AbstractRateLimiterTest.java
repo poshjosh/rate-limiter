@@ -1,13 +1,13 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
+import com.looseboxes.ratelimiter.util.Rate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.Duration;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -129,25 +129,25 @@ abstract class AbstractRateLimiterTest {
         assertThrows(RuntimeException.class, executable);
     }
 
-    public <T> RateLimiter<T> getRateLimiter(Bandwidth... rates) {
+    public <T> RateLimiter<T> getRateLimiter(Rate... rates) {
         return RateLimiter.of(rates);
     }
 
-    protected Bandwidth [] getDefaultLimits() { return new Bandwidth[]{getDefaultLimit()}; }
+    protected Rate[] getDefaultLimits() { return new Rate[]{getDefaultLimit()}; }
 
-    protected Bandwidth getDefaultLimit() {
+    protected Rate getDefaultLimit() {
         return getRate(1, durationMillis);
     }
 
-    protected Bandwidth [] getLimitsThatWillLeadToReset() {
-        return new Bandwidth[] {getBaseRate()};
+    protected Rate[] getLimitsThatWillLeadToReset() {
+        return new Rate[] {getBaseRate()};
     }
 
-    protected Bandwidth getBaseRate() {
+    protected Rate getBaseRate() {
         return getRate(1, 0);
     }
 
-    protected Bandwidth getRate(long amount, long durationMillis) {
-        return bandwidthFactory.createNew(amount, durationMillis, TimeUnit.MILLISECONDS);
+    protected Rate getRate(long permits, long durationMillis) {
+        return Rate.of(permits, Duration.ofMillis(durationMillis));
     }
 }

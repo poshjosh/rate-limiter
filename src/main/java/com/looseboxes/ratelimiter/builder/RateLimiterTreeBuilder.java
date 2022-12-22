@@ -4,9 +4,9 @@ import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.annotation.AnnotationProcessor;
 import com.looseboxes.ratelimiter.annotation.NodeData;
 import com.looseboxes.ratelimiter.annotation.NodeUtil;
-import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.cache.RateCache;
 import com.looseboxes.ratelimiter.node.Node;
+import com.looseboxes.ratelimiter.util.Rates;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -14,8 +14,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 class RateLimiterTreeBuilder<K> implements RateLimitersBuilder<K, Node<NodeData<RateLimiter<K>>>> {
 
     private final AtomicBoolean buildAttempted = new AtomicBoolean();
-    private AnnotationProcessor<Class<?>, Bandwidths> annotationProcessor;
-    private Node<NodeData<Bandwidths>> rootNode;
+    private AnnotationProcessor<Class<?>, Rates> annotationProcessor;
+    private Node<NodeData<Rates>> rootNode;
     private RateLimiterConfig.Builder<K, ?> rateLimiterConfigBuilder;
     private RateLimiterConfig<K, ?> rateLimiterConfig;
     private RateLimiterFactory<K> rateLimiterFactory;
@@ -52,19 +52,19 @@ class RateLimiterTreeBuilder<K> implements RateLimitersBuilder<K, Node<NodeData<
         annotationProcessor.process(rootNode, classes);
     }
 
-    private RateLimiter<K> createRateLimiter(Bandwidths bandwidths) {
-        if(bandwidths == null) {
+    private RateLimiter<K> createRateLimiter(Rates rates) {
+        if(rates == null || !rates.hasLimits()) {
             return RateLimiter.noop();
         }
         if(rateLimiterFactory == null) {
             rateLimiterFactory = RateLimiterFactory.newInstance();
         }
-        return rateLimiterFactory.createRateLimiter(rateLimiterConfig, bandwidths);
+        return rateLimiterFactory.createRateLimiter(rateLimiterConfig, rates);
     }
 
     @Override
     public RateLimiterTreeBuilder<K> annotationProcessor(
-            AnnotationProcessor<Class<?>, Bandwidths> annotationProcessor) {
+            AnnotationProcessor<Class<?>, Rates> annotationProcessor) {
         this.annotationProcessor = annotationProcessor;
         return this;
     }
@@ -75,7 +75,7 @@ class RateLimiterTreeBuilder<K> implements RateLimitersBuilder<K, Node<NodeData<
     }
 
     @Override
-    public RateLimiterTreeBuilder<K> rootNode(Node<NodeData<Bandwidths>> rootNode) {
+    public RateLimiterTreeBuilder<K> rootNode(Node<NodeData<Rates>> rootNode) {
         this.rootNode = rootNode;
         return this;
     }

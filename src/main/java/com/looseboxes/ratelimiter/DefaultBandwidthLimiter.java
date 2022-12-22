@@ -209,14 +209,17 @@ final class DefaultBandwidthLimiter extends BandwidthLimiter {
                 ++failureCount;
             }
         }
-        return !bandwidths.isExceeded(failureCount);
+        return !isLimitExceeded(failureCount);
     }
 
     private boolean canAcquire(Bandwidth bandwidth, long nowMicros, long timeoutMicros) {
         final long microsTillNextAvailable = bandwidth.microsTillNextAvailable(nowMicros);
         return microsTillNextAvailable - timeoutMicros <= nowMicros;
-        //System.out.printf("%s DefaultBandwidthLimiter#canAcquire() %b, micros till next: %d, elapsed since start: %d, %s\n",
-        //        java.time.LocalTime.now(), success, microsTillNextAvailable, nowMicros, bandwidth);
+    }
+
+    private boolean isLimitExceeded(int failureCount) {
+        return (Operator.OR.equals(bandwidths.getOperator()) && failureCount > 0)
+                || (Operator.AND.equals(bandwidths.getOperator()) && failureCount >= bandwidths.memberCount());
     }
 
     /**

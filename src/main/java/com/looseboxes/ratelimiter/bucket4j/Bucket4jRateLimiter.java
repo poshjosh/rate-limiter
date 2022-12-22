@@ -1,9 +1,10 @@
 package com.looseboxes.ratelimiter.bucket4j;
 
-import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
-import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.RateRecordedListener;
 import com.looseboxes.ratelimiter.RateLimiter;
+import com.looseboxes.ratelimiter.util.Operator;
+import com.looseboxes.ratelimiter.util.Rate;
+import com.looseboxes.ratelimiter.util.Rates;
 import com.looseboxes.ratelimiter.util.SleepingTicker;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
@@ -29,29 +30,29 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
     private final SleepingTicker ticker = SleepingTicker.zeroOffset();
 
     private final ProxyManager<K> buckets;
-    private final Bandwidths limit;
     private final Supplier<BucketConfiguration>[] configurationSuppliers;
     private final RateRecordedListener rateRecordedListener;
+    private final Rates limits;
 
-    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, Bandwidth... bandwidths) {
-        this(proxyManager, Bandwidths.of(bandwidths));
+    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, Rate limit) {
+        this(proxyManager, Rates.of(limit));
     }
 
-    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, Bandwidths bandwidths) {
-        this(proxyManager, BucketConfigurationProvider.simple(), RateRecordedListener.NO_OP, bandwidths);
+    public Bucket4jRateLimiter(ProxyManager<K> proxyManager, Rates limits) {
+        this(proxyManager, BucketConfigurationProvider.simple(), RateRecordedListener.NO_OP, limits);
     }
 
     public Bucket4jRateLimiter(
             ProxyManager<K> proxyManager,
             BucketConfigurationProvider bucketConfigurationProvider,
             RateRecordedListener rateRecordedListener,
-            Bandwidths bandwidths) {
+            Rates limits) {
         this.buckets = Objects.requireNonNull(proxyManager);
-        this.limit = Objects.requireNonNull(bandwidths);
-        final Bandwidth [] members = bandwidths.getMembers();
-        this.configurationSuppliers = new Supplier[members.length];
-        for(int i = 0; i < members.length; i++) {
-            BucketConfiguration configuration = bucketConfigurationProvider.getBucketConfiguration(members[i]);
+        this.limits = Objects.requireNonNull(limits);
+        List<Rate> members = limits.getLimits();
+        this.configurationSuppliers = new Supplier[members.size()];
+        for(int i = 0; i < members.size(); i++) {
+            BucketConfiguration configuration = bucketConfigurationProvider.getBucketConfiguration(members.get(i));
             this.configurationSuppliers[i] = () -> configuration;
         }
         this.rateRecordedListener = Objects.requireNonNull(rateRecordedListener);
@@ -73,20 +74,20 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
             ++failCount;
         }
 
-        final boolean limitExceeded = limit.isExceeded(failCount);
+        final boolean limitExceeded = isLimitExceeded(failCount);
 
         if(LOG.isTraceEnabled()) {
             LOG.trace("Limit exceeded: {}, for: {}, failures: {}/{}, limit: {}",
-                    limitExceeded, resourceId, failCount, configurationSuppliers.length, limit);
+                    limitExceeded, resourceId, failCount, configurationSuppliers.length, limits);
         }
 
-        rateRecordedListener.onRateRecorded(context, resourceId, amount, limit);
+        rateRecordedListener.onRateRecorded(context, resourceId, amount, limits);
 
         if (!limitExceeded) {
             return true;
         }
 
-        rateRecordedListener.onRateExceeded(context, resourceId, amount, limit);
+        rateRecordedListener.onRateExceeded(context, resourceId, amount, limits);
 
         return false;
     }
@@ -109,8 +110,13 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
         ticker.sleepMicrosUninterruptibly(TimeUnit.NANOSECONDS.toMicros(nanosToWait));
     }
 
+    private boolean isLimitExceeded(int failureCount) {
+        return (Operator.OR.equals(limits.getOperator()) && failureCount > 0)
+                || (Operator.AND.equals(limits.getOperator()) && failureCount >= limits.size());
+    }
+
     @Override
     public String toString() {
-        return "Bucket4jRateLimiter@" + Integer.toHexString(hashCode()) + limit;
+        return "Bucket4jRateLimiter@" + Integer.toHexString(hashCode()) + limits;
     }
 }

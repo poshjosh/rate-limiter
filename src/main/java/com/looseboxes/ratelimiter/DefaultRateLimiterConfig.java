@@ -1,9 +1,13 @@
 package com.looseboxes.ratelimiter;
 
+import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
 import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.cache.RateCache;
+import com.looseboxes.ratelimiter.util.Rate;
+import com.looseboxes.ratelimiter.util.Rates;
 import com.looseboxes.ratelimiter.util.SleepingTicker;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,12 +26,25 @@ final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K, V>,
         }
 
         @Override
-        public SleepingTicker getTicker() {
-            return ticker;
+        public Bandwidths createBandwidths(K key, Rates rates) {
+            final List<Rate> limits = rates.getLimits();
+            if (limits == null || limits.isEmpty()) {
+                return Bandwidths.empty(rates.getOperator());
+            }
+            Bandwidth[] members = new Bandwidth[limits.size()];
+            for (int i = 0; i < members.length; i++) {
+                members[i] = createBandwidth(limits.get(i));
+            }
+            return Bandwidths.of(rates.getOperator(), members);
+        }
+
+        private Bandwidth createBandwidth(Rate limit) {
+            BandwidthFactory factory = BandwidthFactory.getOrCreateBandwidthFactory(limit.getFactoryClass());
+            return factory.createNew(limit.getLimit(), limit.getDuration(), ticker.elapsedMicros());
         }
 
         @Override
-        public BandwidthLimiter getBandwidthLimiter(K key, Bandwidths bandwidths) {
+        public BandwidthLimiter getOrCreateBandwidthLimiter(K key, Bandwidths bandwidths) {
             BandwidthLimiter value;
             if ((value = this.resourceIdToBandwidthLimiters.get(key)) == null) {
                 BandwidthLimiter newValue;
@@ -40,7 +57,7 @@ final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K, V>,
         }
 
         private BandwidthLimiter createNew(Bandwidths bandwidths) {
-            return new DefaultBandwidthLimiter(bandwidths, getTicker());
+            return new DefaultBandwidthLimiter(bandwidths, ticker);
         }
     }
 

@@ -33,28 +33,18 @@ public class RateLimitProcessor extends AbstractProcessor {
             annotatedElements.forEach(annotatedElement ->{
 
                 RateLimit rateLimit = annotatedElement.getAnnotation(RateLimit.class);
-
-                final String limitError = getErrorMessageIfInvalidLimit(rateLimit.limit(), null);
-                if (limitError != null){
-                    messager.printMessage(Diagnostic.Kind.ERROR, limitError);
+                final long limit = rateLimit.limit();
+                if (limit < 0) {
+                    messager.printMessage(Diagnostic.Kind.ERROR, "Limit must be positive. Limit: " + limit);
                 }
-
-                final String durationError = getErrorMessageIfInvalidDuration(rateLimit.duration(), null);
-                if(durationError != null) {
-                    messager.printMessage(Diagnostic.Kind.ERROR, durationError);
+                final long duration = rateLimit.duration();
+                if (duration < 0) {
+                    messager.printMessage(Diagnostic.Kind.ERROR, "Duration must be positive. Duration: " + duration);
                 }
             });
         });
 
         return false;
-    }
-
-    public static String getErrorMessageIfInvalidLimit(long limit, String resultIfNone) {
-        return limit < 0 ? "Invalid limit: " + limit : resultIfNone;
-    }
-
-    public static String getErrorMessageIfInvalidDuration(long duration, String resultIfNone) {
-        return duration < 0 ? "Invalid duration: " + duration : resultIfNone;
     }
 
     @Override

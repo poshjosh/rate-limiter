@@ -2,7 +2,7 @@ package com.looseboxes.ratelimiter.bucket4j;
 
 import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
+import com.looseboxes.ratelimiter.util.Rates;
 import io.github.bucket4j.grid.ProxyManager;
 
 import java.io.Serializable;
@@ -25,7 +25,7 @@ public class Bucket4jRateLimiterFactory<K extends Serializable> implements RateL
     }
 
     @Override
-    public RateLimiter<K> createRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Bandwidths bandwidths) {
+    public RateLimiter<K> createRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Rates limits) {
 
         RateCache<K, ?> rateCache = rateLimiterConfig.getRateCache();
 
@@ -33,6 +33,6 @@ public class Bucket4jRateLimiterFactory<K extends Serializable> implements RateL
 
         RateRecordedListener rateRecordedListener = rateLimiterConfig.getRateRecordedListener();
 
-        return new Bucket4jRateLimiter<>(proxyManager, bucketConfigurationProvider, rateRecordedListener, bandwidths);
+        return new Bucket4jRateLimiter<>(proxyManager, bucketConfigurationProvider, rateRecordedListener, limits);
     }
 }

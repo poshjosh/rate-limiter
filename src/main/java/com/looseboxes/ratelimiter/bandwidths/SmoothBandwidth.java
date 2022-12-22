@@ -173,16 +173,7 @@ public abstract class SmoothBandwidth implements Bandwidth {
 
     protected SmoothBandwidth() { }
 
-    protected SmoothBandwidth(SmoothBandwidth smoothBandwidth) {
-        this.storedPermits = smoothBandwidth.storedPermits;
-        this.maxPermits = smoothBandwidth.maxPermits;
-        this.stableIntervalMicros = smoothBandwidth.stableIntervalMicros;
-        this.nextFreeTicketMicros = smoothBandwidth.nextFreeTicketMicros;
-    }
-
     protected abstract void doSetRate(double permitsPerSecond, double stableIntervalMicros);
-
-    public abstract SmoothBandwidth copy();
 
     public void setRate(double permitsPerSecond, long nowMicros) {
         Checks.requireTrue(permitsPerSecond > 0.0

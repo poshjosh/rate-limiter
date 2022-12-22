@@ -1,8 +1,8 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
+import com.looseboxes.ratelimiter.util.Rate;
+import com.looseboxes.ratelimiter.util.Rates;
 
 class RateLimiterWithSingletonCacheTest extends AbstractRateLimiterTest {
 
@@ -11,9 +11,9 @@ class RateLimiterWithSingletonCacheTest extends AbstractRateLimiterTest {
     }
 
     @Override
-    public RateLimiter<String> getRateLimiter(Bandwidth... rates) {
+    public RateLimiter<String> getRateLimiter(Rate... rates) {
         RateLimiterConfig<String, ?> config =
                 RateLimiterConfig.<String, Object>builder().rateCache(RateCache.singleton()).build();
-        return RateLimiter.<String>of(config, Bandwidths.of(rates));
+        return RateLimiter.<String>of(config, Rates.of(rates));
     }
 }

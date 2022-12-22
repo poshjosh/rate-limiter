@@ -14,23 +14,23 @@ We can thus:
   
 ### 
 
-Rather than use annotations: RateLimit and RateLimitGroup, we use classes RateConfig and RateConfigList
+Rather than use annotations: RateLimit and RateLimitGroup, we use classes Rate and RateList
 This is because we source data for rate limiting instructions from both annotations and properties
-Irrespective of the source, we collect the data using RateConfig and RateConfigList.
+Irrespective of the source, we collect the data using Rate and RateList.
 
 ### Misc
 
 - Our code is tightly coupled to a speicific type of Rate. One which comprises of limit and duration.
-  This is visiable in: RateConfig, RateConfigList, AbstractAnnotationProcessor and subclasses etc
+  This is visiable in: Rate, RateList, AbstractAnnotationProcessor and subclasses etc
   * AbstractAnnotationProcessor could have type parameters AnnotationType, GroupAnnotationType
-  * AbstractAnnotationProcessor could use a RateLimit annotation directly, rather than RateConfigList
+  * AbstractAnnotationProcessor could use a RateLimit annotation directly, rather than RateList
   * Could we re-name the RateLimit annotation, or its values from limit, duration to something more generic
 
   !!Note!!
 
-  Rather than use annotations: RateLimit and RateLimitGroup, we use classes RateConfig and RateConfigList
+  Rather than use annotations: RateLimit and RateLimitGroup, we use classes Rate and RateList
   This is because we source data for rate limiting instructions from both annotations and properties
-  Irrespective of the source, we collect the data using RateConfig and RateConfigList.
+  Irrespective of the source, we collect the data using Rate and RateList.
 
 Read
 

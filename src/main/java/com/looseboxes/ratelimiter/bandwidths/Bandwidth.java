@@ -2,18 +2,6 @@ package com.looseboxes.ratelimiter.bandwidths;
 
 public interface Bandwidth {
 
-    Bandwidth copy();
-
-    default Bandwidth copy(long nowMicros) {
-        return copy(getRate(), nowMicros);
-    }
-
-    default Bandwidth copy(double permitsPerSecond, long nowMicros) {
-        Bandwidth copy = copy();
-        copy.setRate(permitsPerSecond, nowMicros);
-        return copy;
-    }
-
     void setRate(double permitsPerSecond, long nowMicros);
 
     /**

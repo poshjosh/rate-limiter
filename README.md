@@ -181,14 +181,17 @@ Resource2#methodC                       Resource2#methodB                   Reso
 
 ```java
 import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.bandwidths.SmoothBandwidth;
+import com.looseboxes.ratelimiter.util.Rate;
+import com.looseboxes.ratelimiter.util.Rate;
+
+import java.time.Duration;
 
 public class Concept {
 
   public static void main(String... args) {
 
     // 1 permit is allowed every 10 seconds (for each unique recording key)
-    RateLimiter<String> rateLimiter = RateLimiter.of(SmoothBandwidth.bursty(0.1));
+    RateLimiter<String> rateLimiter = RateLimiter.of(Rate.of(1, Duration.ofSeconds(10)));
 
     // We use numbers as recording keys
     rateLimiter.tryConsume("resource_1");

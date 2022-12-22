@@ -1,11 +1,12 @@
 package com.looseboxes.ratelimiter.performance;
 
 import com.looseboxes.ratelimiter.*;
-import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
-import com.looseboxes.ratelimiter.bandwidths.SmoothBandwidth;
 import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
+import com.looseboxes.ratelimiter.util.Rate;
+import com.looseboxes.ratelimiter.util.Rates;
 import org.junit.jupiter.api.Test;
+
+import java.time.Duration;
 
 class RateLimiterPerformanceIT {
 
@@ -17,12 +18,12 @@ class RateLimiterPerformanceIT {
         // These stats were achieved under log level INFO
 
         // 2 Nov 2021
-        recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(1_000_000, Usage.of(250, 50_000_000));
+        recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(1_000_000, 20_000, Usage.of(250, 50_000_000));
     }
 
-    void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(int count, Usage limit) {
+    void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(int count, int permitsPerSecond, Usage limit) {
 
-        RateLimiter<Integer> rateLimiter = getRateLimiter((double)count + 1 / 60);
+        RateLimiter<Integer> rateLimiter = getRateLimiter(permitsPerSecond);
 
         Usage bookmark = Usage.bookmark();
 
@@ -34,13 +35,9 @@ class RateLimiterPerformanceIT {
         bookmark.assertUsageLessThan(limit);
     }
 
-    public RateLimiter<Integer> getRateLimiter(double permitsPerSecond) {
+    public RateLimiter<Integer> getRateLimiter(long permitsPerSecond) {
         RateLimiterConfig<Integer, ?> config =
             RateLimiterConfig.<Integer, Object>builder().rateCache(RateCache.singleton()).build();
-        return RateLimiter.<Integer>of(config, Bandwidths.of(getBandwidth(permitsPerSecond)));
-    }
-
-    private Bandwidth getBandwidth(double permitsPerSecond) {
-        return SmoothBandwidth.warmingUp(permitsPerSecond, 5);
+        return RateLimiter.<Integer>of(config, Rates.of(Rate.of(permitsPerSecond, Duration.ofSeconds(1))));
     }
 }
