@@ -40,7 +40,7 @@ class ClassAnnotationProcessorTest extends AbstractAnnotationProcessorTest<Class
     }
 
     AnnotationProcessor<Class<?>, Rates> getInstance() {
-        return AnnotationProcessor.newInstance(this::getId, IdProvider.forMethod(), new AnnotationToRatesConverter());
+        return AnnotationProcessor.of(this::getId, IdProvider.ofMethod(), new AnnotationToRatesConverter());
     }
 
     String getId(Class<?> element) {

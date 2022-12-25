@@ -43,7 +43,7 @@ class RateLimitedResource {
 
 ```java
 import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.annotation.RateLimit;
+import com.looseboxes.ratelimiter.annotations.RateLimit;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -61,8 +61,8 @@ public class SampleUsage {
     }
 
     // Limited to 3 invocations every 2 seconds OR 100 invocations every 1 minute
-    @RateLimit(limit = LIMIT, duration = 2000) 
-    @RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES) 
+    @RateLimit(limit = LIMIT, duration = 2000)
+    @RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES)
     void rateLimitedMethod() {
 
       if (!rateLimiter.tryConsume("rateLimitedMethodId")) {

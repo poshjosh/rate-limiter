@@ -1,7 +1,7 @@
 package com.looseboxes.ratelimiter.readme;
 
 import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.annotation.RateLimit;
+import com.looseboxes.ratelimiter.annotations.RateLimit;
 import com.looseboxes.ratelimiter.builder.RateLimitersBuilder;
 
 import java.util.Objects;

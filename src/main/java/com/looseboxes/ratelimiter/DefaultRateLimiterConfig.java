@@ -39,7 +39,7 @@ final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K, V>,
         }
 
         private Bandwidth createBandwidth(Rate limit) {
-            BandwidthFactory factory = BandwidthFactory.getOrCreateBandwidthFactory(limit.getFactoryClass());
+            BandwidthFactory factory = BandwidthFactories.getOrCreateBandwidthFactory(limit.getFactoryClass());
             return factory.createNew(limit.getLimit(), limit.getDuration(), ticker.elapsedMicros());
         }
 
@@ -57,7 +57,7 @@ final class DefaultRateLimiterConfig<K, V> implements RateLimiterConfig<K, V>,
         }
 
         private BandwidthLimiter createNew(Bandwidths bandwidths) {
-            return new DefaultBandwidthLimiter(bandwidths, ticker);
+            return BandwidthLimiter.of(bandwidths, ticker);
         }
     }
 

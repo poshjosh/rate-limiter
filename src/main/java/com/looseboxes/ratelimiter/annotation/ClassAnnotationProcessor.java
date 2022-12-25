@@ -1,13 +1,15 @@
 package com.looseboxes.ratelimiter.annotation;
 
+import com.looseboxes.ratelimiter.annotations.RateLimit;
+import com.looseboxes.ratelimiter.annotations.RateLimitGroup;
 import com.looseboxes.ratelimiter.node.Node;
-import com.looseboxes.ratelimiter.util.Nullable;
+import com.looseboxes.ratelimiter.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-class ClassAnnotationProcessor<T> extends AnnotationProcessor<Class<?>, T> {
+final class ClassAnnotationProcessor<T> extends AbstractAnnotationProcessor<Class<?>, T> {
 
     private final AnnotationProcessor<Method, T> methodAnnotationProcessor;
 
@@ -21,13 +23,13 @@ class ClassAnnotationProcessor<T> extends AnnotationProcessor<Class<?>, T> {
 
     // We override this here so we can process the class and its super classes
     @Override
-    protected Node<NodeData<T>> process(@Nullable Node<NodeData<T>> root, Class<?> element,
+    public Node<NodeData<T>> process(@Nullable Node<NodeData<T>> root, Class<?> element,
                                         BiConsumer<Object, Node<NodeData<T>>> consumer){
         Node<NodeData<T>> classNode = null;
         List<Class<?>> superClasses = new ArrayList<>();
         List<Node<NodeData<T>>> superClassNodes = new ArrayList<>();
         BiConsumer<Object, Node<NodeData<T>>> collectSuperClassNodes = (source, superClassNode) -> {
-            if(superClasses.contains(source)) {
+            if(superClasses.contains((Class<?>)source)) {
                 superClassNodes.add(superClassNode);
             }
         };
@@ -83,7 +85,7 @@ class ClassAnnotationProcessor<T> extends AnnotationProcessor<Class<?>, T> {
 
     @Override
     protected Node<NodeData<T>> getOrCreateParent(@Nullable Node<NodeData<T>> root, Class<?> element,
-                                                  RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
+                                                  RateLimitGroup rateLimitGroup, RateLimit[] rateLimits) {
         Node<NodeData<T>> node = findOrCreateNodeForRateLimitGroupOrNull(root, root, element, rateLimitGroup, rateLimits);
         return node == null ? root : node;
     }

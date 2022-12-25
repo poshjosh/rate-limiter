@@ -1,11 +1,12 @@
 package com.looseboxes.ratelimiter.node.formatters;
 
 import com.looseboxes.ratelimiter.node.Node;
-import com.looseboxes.ratelimiter.util.Experimental;
+import com.looseboxes.ratelimiter.annotations.Experimental;
 
 import java.util.List;
 import java.util.Objects;
 
+/** @Experimental */
 @Experimental
 public final class NodeFormatters {
 
@@ -82,11 +83,13 @@ public final class NodeFormatters {
 
     private static final Indented indented = new Indented();
 
+    /** @Experimental */
     @Experimental
     public static NodeFormatter indented() {
         return indented;
     }
 
+    /** @Experimental */
     @Experimental
     public static NodeFormatter indented(String indent) {
         return new Indented(indent);
@@ -94,9 +97,11 @@ public final class NodeFormatters {
 
     private static final NodeFormatter indentedHierarchy = new IndentedHeirarchy();
 
+    /** @Experimental */
     @Experimental
     public static NodeFormatter indentedHeirarchy() { return indentedHierarchy; }
 
+    /** @Experimental */
     @Experimental
     public static NodeFormatter indentedHeirarchy(String indent, int maxLevelsToPrint) {
         return new IndentedHeirarchy(indent, maxLevelsToPrint);

@@ -1,5 +1,7 @@
 package com.looseboxes.ratelimiter.annotation;
 
+import com.looseboxes.ratelimiter.annotations.RateLimit;
+
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -12,7 +14,7 @@ import java.util.Set;
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class RateLimitProcessor extends AbstractProcessor {
 
-    public static final String ANNOTATION_CLASS_NAME = "com.looseboxes.ratelimiter.annotation.RateLimit";
+    public static final String ANNOTATION_CLASS_NAME = "com.looseboxes.ratelimiter.annotations.RateLimit";
 
     private Messager messager;
 

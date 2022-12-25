@@ -13,11 +13,11 @@ import java.util.Objects;
  */
 final class SmoothBurstyBandwidth extends SmoothBandwidth implements Serializable {
 
-    private static final long serialVersionUID = 9081726354000000070L;
+    private static final long serialVersionUID = 70L;
 
     private final long nowMicros; // Only for serialization/copy purposes
 
-    /** The work (permits) of how many seconds can be saved up if this RateLimiter is unused? */
+    /** The work (permits) of how many seconds can be saved up if this Bandwidth is unused? */
     private final double maxBurstSeconds;
 
     SmoothBurstyBandwidth(double permitsPerSecond, long nowMicros, double maxBurstSeconds) {
@@ -68,14 +68,15 @@ final class SmoothBurstyBandwidth extends SmoothBandwidth implements Serializabl
 
     @Override
     public String toString() {
-        return "SmoothBurstyBandwidth{storedPermits=" + storedPermits + ", maxPermits=" + maxPermits
+        return "SmoothBurstyBandwidth{permitsPerSecond=" + getRate()
+                + ", storedPermits=" + storedPermits + ", maxPermits=" + maxPermits
                 + ", stableIntervalMicros=" + stableIntervalMicros + ", maxBurstSeconds="
                 + maxBurstSeconds + ", nextFreeTicketMicros=" + getNextFreeTicketMicros() + '}';
     }
 
     private static class SecureSerializationProxy implements Serializable{
 
-        private static final long serialVersionUID = 9081726354000000071L;
+        private static final long serialVersionUID = 71L;
 
         private final double permitsPerSecond;
         private final long nowMicros;

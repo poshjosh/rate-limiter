@@ -4,9 +4,9 @@ import com.looseboxes.ratelimiter.util.Rates;
 
 public interface RateLimiterFactory<K> {
 
-    static <K> RateLimiterFactory<K> newInstance() {
+    static <K> RateLimiterFactory<K> of() {
         return new DefaultRateLimiterFactory<>();
     }
 
-    RateLimiter<K> createRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Rates rates);
+    RateLimiter<K> createNew(RateLimiterConfig<K, ?> rateLimiterConfig, Rates rates);
 }

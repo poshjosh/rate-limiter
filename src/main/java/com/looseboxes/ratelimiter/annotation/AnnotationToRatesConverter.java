@@ -1,5 +1,7 @@
 package com.looseboxes.ratelimiter.annotation;
 
+import com.looseboxes.ratelimiter.annotations.RateLimit;
+import com.looseboxes.ratelimiter.annotations.RateLimitGroup;
 import com.looseboxes.ratelimiter.util.Operator;
 import com.looseboxes.ratelimiter.util.Rate;
 import com.looseboxes.ratelimiter.util.Rates;
@@ -9,9 +11,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public final class AnnotationToRatesConverter implements AnnotationProcessor.Converter<Rates> {
+final class AnnotationToRatesConverter implements AnnotationProcessor.Converter<Rates> {
 
-    public AnnotationToRatesConverter() {}
+    AnnotationToRatesConverter() {}
 
     public boolean isOperatorEqual(Rates rates, Operator operator) {
         return rates.getOperator().equals(operator);
@@ -21,13 +23,12 @@ public final class AnnotationToRatesConverter implements AnnotationProcessor.Con
     public Rates convert(RateLimitGroup rateLimitGroup, RateLimit[] rateLimits) {
         final Operator operator = operator(rateLimitGroup);
         if (rateLimits.length == 0) {
-            return Rates.of();
+            return Rates.of(operator);
         }
         final Rate[] configs = new Rate[rateLimits.length];
         for (int i = 0; i < rateLimits.length; i++) {
             configs[i] = createRate(rateLimits[i]);
         }
-
         return Rates.of(operator, configs);
     }
 

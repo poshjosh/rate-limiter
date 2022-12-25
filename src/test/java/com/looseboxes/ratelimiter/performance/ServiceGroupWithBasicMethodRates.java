@@ -1,7 +1,7 @@
 package com.looseboxes.ratelimiter.performance;
 
-import com.looseboxes.ratelimiter.annotation.RateLimit;
-import com.looseboxes.ratelimiter.annotation.RateLimitGroup;
+import com.looseboxes.ratelimiter.annotations.RateLimit;
+import com.looseboxes.ratelimiter.annotations.RateLimitGroup;
 import com.looseboxes.ratelimiter.util.Operator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

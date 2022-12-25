@@ -23,7 +23,7 @@ public interface RateLimiter<K> {
     }
 
     static <K> RateLimiter<K> of(Rates limits) {
-        return of(RateLimiterConfig.newInstance(), limits);
+        return of(RateLimiterConfig.of(), limits);
     }
 
     static <K> RateLimiter<K> of(RateLimiterConfig<K, ?> rateLimiterConfig, Rate limit) {
@@ -35,7 +35,7 @@ public interface RateLimiter<K> {
     }
 
     static <K> RateLimiter<K> bursty(Rates limits) {
-        return bursty(RateLimiterConfig.newInstance(), limits);
+        return bursty(RateLimiterConfig.of(), limits);
     }
 
     static <K> RateLimiter<K> bursty(RateLimiterConfig<K, ?> rateLimiterConfig, Rates limits) {
@@ -43,7 +43,7 @@ public interface RateLimiter<K> {
     }
 
     static <K> RateLimiter<K> warmingUp(Rates limits) {
-        return warmingUp(RateLimiterConfig.newInstance(), limits);
+        return warmingUp(RateLimiterConfig.of(), limits);
     }
 
     static <K> RateLimiter<K> warmingUp(RateLimiterConfig<K, ?> rateLimiterConfig, Rates limits) {

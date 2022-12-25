@@ -1,6 +1,7 @@
 package com.looseboxes.ratelimiter;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 final class Util {
     private Util() { }
@@ -19,5 +20,14 @@ final class Util {
         } catch (ArithmeticException tooBig) {
             return duration.isNegative() ? Long.MIN_VALUE : Long.MAX_VALUE;
         }
+    }
+
+    static double toPermitsPerSecond(final long amount, final long duration, final TimeUnit timeUnit) {
+        // We use the highest precision
+        final long nanosDuration = timeUnit.toNanos(duration);
+        final double perNanos = (double)amount / nanosDuration;
+        // Won't work because it will return zero if the result is a fraction
+        //SECONDS.convert((long)perNanos, NANOSECONDS);
+        return perNanos * TimeUnit.SECONDS.toNanos(1L);
     }
 }

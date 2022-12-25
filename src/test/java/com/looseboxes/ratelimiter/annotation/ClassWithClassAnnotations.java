@@ -1,5 +1,7 @@
 package com.looseboxes.ratelimiter.annotation;
 
+import com.looseboxes.ratelimiter.annotations.RateLimit;
+import com.looseboxes.ratelimiter.annotations.RateLimitGroup;
 import com.looseboxes.ratelimiter.util.Operator;
 
 public class ClassWithClassAnnotations {

@@ -1,6 +1,6 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.annotation.RateLimit;
+import com.looseboxes.ratelimiter.annotations.RateLimit;
 import com.looseboxes.ratelimiter.builder.RateLimitersBuilder;
 import com.looseboxes.ratelimiter.node.BreadthFirstNodeVisitor;
 import com.looseboxes.ratelimiter.node.Node;

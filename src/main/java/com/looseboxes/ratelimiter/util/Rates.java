@@ -21,7 +21,7 @@ public final class Rates {
     }
 
     public static Rates of(Operator operator, Rate... limits) {
-        return new Rates(operator, limits == null ? null : Arrays.asList(limits));
+        return new Rates(operator, limits == null ? Collections.emptyList() : Arrays.asList(limits));
     }
 
     private Operator operator = Operator.OR;
@@ -36,7 +36,7 @@ public final class Rates {
 
     Rates(Operator operator, List<Rate> limits) {
         this.operator = operator;
-        this.limits = limits == null ? null : limits.stream()
+        this.limits = limits == null ? Collections.emptyList() : limits.stream()
                 .map(Rate::new).collect(Collectors.toList());
     }
 

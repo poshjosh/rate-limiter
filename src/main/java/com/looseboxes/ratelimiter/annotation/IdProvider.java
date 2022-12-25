@@ -9,11 +9,11 @@ import java.lang.reflect.Method;
  */
 public interface IdProvider<SOURCE, ID> {
 
-    static IdProvider<Class<?>, String> forClass() {
+    static IdProvider<Class<?>, String> ofClass() {
         return new ClassNameProvider();
     }
 
-    static IdProvider<Method, String> forMethod() {
+    static IdProvider<Method, String> ofMethod() {
         return new MethodNameProvider();
     }
 

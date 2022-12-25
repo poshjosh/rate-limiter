@@ -23,7 +23,7 @@ public interface RateLimiterConfig<K, V> {
         return new DefaultRateLimiterConfig<>(rateLimiterConfig);
     }
 
-    static <K, V> RateLimiterConfig<K, V> newInstance() {
+    static <K, V> RateLimiterConfig<K, V> of() {
         return new DefaultRateLimiterConfig<>();
     }
 

@@ -9,7 +9,7 @@ import java.util.Objects;
 
 public final class AmountPerDuration implements Comparable<AmountPerDuration>, Serializable {
 
-    private static final long serialVersionUID = 9081726354000000010L;
+    private static final long serialVersionUID = 10L;
 
     private final long amount;
     private final long durationMillis;
@@ -91,7 +91,7 @@ public final class AmountPerDuration implements Comparable<AmountPerDuration>, S
 
     private static class SerializationProxy implements Serializable{
 
-        private static final long serialVersionUID = 9081726354000000011L;
+        private static final long serialVersionUID = 11L;
 
         private final long amount;
         private final long durationMillis;

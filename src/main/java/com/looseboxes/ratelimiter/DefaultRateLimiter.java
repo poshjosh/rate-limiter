@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class DefaultRateLimiter<K> implements RateLimiter<K> {
+final class DefaultRateLimiter<K> implements RateLimiter<K> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultRateLimiter.class);
 
@@ -25,7 +25,7 @@ public class DefaultRateLimiter<K> implements RateLimiter<K> {
 
     private final Rates rates;
 
-    public DefaultRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Rates rates) {
+    DefaultRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Rates rates) {
         this.rateCache = (RateCache<K, Object>)Objects.requireNonNull(rateLimiterConfig.getRateCache());
         this.rateRecordedListener = Objects.requireNonNull(rateLimiterConfig.getRateRecordedListener());
         this.bandwidthLimiterProvider = Objects.requireNonNull(rateLimiterConfig.getBandwidthLimiterProvider());

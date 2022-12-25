@@ -42,7 +42,7 @@ class RateLimiterTreeBuilder<K> implements RateLimitersBuilder<K, Node<NodeData<
         rateLimiterConfig = Objects.requireNonNull(rateLimiterConfigBuilder).build();
 
         if(annotationProcessor == null) {
-            annotationProcessor(AnnotationProcessor.newInstance());
+            annotationProcessor(AnnotationProcessor.ofRates());
         }
 
         if(rootNode == null) {
@@ -57,9 +57,9 @@ class RateLimiterTreeBuilder<K> implements RateLimitersBuilder<K, Node<NodeData<
             return RateLimiter.noop();
         }
         if(rateLimiterFactory == null) {
-            rateLimiterFactory = RateLimiterFactory.newInstance();
+            rateLimiterFactory = RateLimiterFactory.of();
         }
-        return rateLimiterFactory.createRateLimiter(rateLimiterConfig, rates);
+        return rateLimiterFactory.createNew(rateLimiterConfig, rates);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.looseboxes.ratelimiter.util;
+package com.looseboxes.ratelimiter.annotations;
 
 import java.lang.annotation.*;
 
@@ -10,5 +10,4 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD,
         ElementType.CONSTRUCTOR, ElementType.LOCAL_VARIABLE, ElementType.ANNOTATION_TYPE
 })
-public @interface Experimental {
-}
+public @interface Experimental { }

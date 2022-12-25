@@ -35,7 +35,7 @@ class MatcherTest {
 
     private void testAndThen(Matcher lhs, Matcher rhs, Object expected) {
         final Matcher composed = lhs.andThen(rhs);
-        final Object actual = composed.matchingKeyOrNull(key);
+        final Object actual = composed.matchOrNull(key);
         assertEquals(expected, actual);
     }
 }

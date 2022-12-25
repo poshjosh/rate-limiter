@@ -2,29 +2,30 @@ package com.looseboxes.ratelimiter.util;
 
 import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+
 /**
  * Counts the progress of time from a fixed arbitrary origin time.
  */
-public abstract class Ticker {
+public interface Ticker {
 
-    private static final Ticker SYSTEM_TICKER = new Ticker() {
-        public long elapsedNanos() {
-            return System.nanoTime();
-        }
-    };
+    Ticker SYSTEM_TICKER = System::nanoTime;
 
-    protected Ticker() {}
+    static Ticker systemTicker() {
+        return SYSTEM_TICKER;
+    }
 
-    public long elapsed(TimeUnit timeUnit) {
-        return timeUnit.convert(elapsedNanos(), TimeUnit.NANOSECONDS);
+    default long elapsed(TimeUnit timeUnit) {
+        return timeUnit.convert(elapsedNanos(), NANOSECONDS);
+    }
+
+    default long elapsedMicros() {
+        return elapsed(MICROSECONDS);
     }
 
     /**
      * @return The elapsed nanoseconds since some fixed but arbitrary origin time
      */
-    public abstract long elapsedNanos();
-
-    public static Ticker systemTicker() {
-        return SYSTEM_TICKER;
-    }
+    long elapsedNanos();
 }

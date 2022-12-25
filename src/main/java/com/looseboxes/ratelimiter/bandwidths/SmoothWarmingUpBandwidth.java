@@ -73,7 +73,7 @@ import static java.lang.Math.min;
  */
 final class SmoothWarmingUpBandwidth extends SmoothBandwidth implements Serializable{
 
-    private static final long serialVersionUID = 9081726354000000080L;
+    private static final long serialVersionUID = 80L;
 
     private final long nowMicros; // Only for serialization/copy purposes
     private final long warmupPeriodMicros;
@@ -120,7 +120,7 @@ final class SmoothWarmingUpBandwidth extends SmoothBandwidth implements Serializ
         // measuring the integral on the right part of the function (the climbing line)
         if (availablePermitsAboveThreshold > 0.0) {
             double permitsAboveThresholdToTake = min(availablePermitsAboveThreshold, permitsToTake);
-            // TODO(cpovirk): Figure out a good name for this variable.
+            // TODO Figure out a good name for this variable.
             double length =
                     permitsToTime(availablePermitsAboveThreshold)
                             + permitsToTime(availablePermitsAboveThreshold - permitsAboveThresholdToTake);
@@ -162,7 +162,8 @@ final class SmoothWarmingUpBandwidth extends SmoothBandwidth implements Serializ
 
     @Override
     public String toString() {
-        return "SmoothWarmingUpBandwidth{storedPermits=" + storedPermits + ", maxPermits="
+        return "SmoothWarmingUpBandwidth{permitsPerSecond=" + getRate()
+                + ", storedPermits=" + storedPermits + ", maxPermits="
                 + maxPermits + ", stableIntervalMicros=" + stableIntervalMicros
                 + ", warmupPeriodMicros=" + warmupPeriodMicros + ", slope=" + slope
                 + ", thresholdPermits=" + thresholdPermits + ", coldFactor=" + coldFactor
@@ -171,7 +172,7 @@ final class SmoothWarmingUpBandwidth extends SmoothBandwidth implements Serializ
 
     private static class SerializationProxy implements Serializable {
 
-        private static final long serialVersionUID = 9081726354000000081L;
+        private static final long serialVersionUID = 81L;
 
         private final double permitsPerSecond;
         private final long nowMicros; // Only for serialization/copy purposes

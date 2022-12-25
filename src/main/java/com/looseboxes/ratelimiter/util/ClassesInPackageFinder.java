@@ -8,11 +8,11 @@ import java.util.stream.Collectors;
 @FunctionalInterface
 public interface ClassesInPackageFinder {
 
-    static ClassesInPackageFinder newInstance() {
-        return newInstance(Thread.currentThread().getContextClassLoader());
+    static ClassesInPackageFinder of() {
+        return of(Thread.currentThread().getContextClassLoader());
     }
 
-    static ClassesInPackageFinder newInstance(ClassLoader classLoader) {
+    static ClassesInPackageFinder of(ClassLoader classLoader) {
         return new DefaultClassesInPackageFinder(classLoader);
     }
 

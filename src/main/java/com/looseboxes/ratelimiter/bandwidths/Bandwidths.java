@@ -1,6 +1,6 @@
 package com.looseboxes.ratelimiter.bandwidths;
 
-import com.looseboxes.ratelimiter.util.Experimental;
+import com.looseboxes.ratelimiter.annotations.Experimental;
 import com.looseboxes.ratelimiter.util.Operator;
 
 import java.io.InvalidObjectException;
@@ -9,8 +9,6 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Stream;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 public final class Bandwidths implements Serializable{
 
@@ -37,7 +35,7 @@ public final class Bandwidths implements Serializable{
         return new Bandwidths(operator, bandwidths);
     }
 
-    private static final long serialVersionUID = 9081726354000000020L;
+    private static final long serialVersionUID = 20L;
 
     private final Operator operator;
 
@@ -48,10 +46,49 @@ public final class Bandwidths implements Serializable{
         this.members = Arrays.copyOf(members, members.length);
     }
 
+    public boolean canAcquire(long nowMicros, long timeoutMicros) {
+        int failureCount = 0;
+        for (Bandwidth bandwidth : members) {
+            if (!bandwidth.canAcquire(nowMicros, timeoutMicros)) {
+                ++failureCount;
+            }
+        }
+        return !isLimitExceeded(failureCount);
+    }
+
+    private boolean isLimitExceeded(int failureCount) {
+        return (Operator.OR.equals(operator) && failureCount > 0)
+                || (Operator.AND.equals(operator) && failureCount >= memberCount());
+    }
+
+    /**
+     * Reserves next ticket and returns the wait time that the caller must wait for.
+     *
+     * @return the required wait time, never negative
+     */
+    public long reserveAndGetWaitLength(int permits, long nowMicros) {
+        final boolean AND = Operator.AND.equals(operator);
+        long waitTime = -1;
+        for(Bandwidth bandwidth : members) {
+            final long currWaitTime = bandwidth.reserveAndGetWaitLength(permits, nowMicros);
+            if (waitTime == -1) {
+                waitTime = currWaitTime;
+            }
+            if (AND && currWaitTime < waitTime) {
+                waitTime = currWaitTime;
+                continue;
+            }
+            if (!AND && currWaitTime > waitTime) {
+                waitTime = currWaitTime;
+            }
+        }
+        return waitTime;
+    }
+
     public boolean hasMembers() { return memberCount() > 0; }
 
     public int memberCount() {
-        return getMembers().length;
+        return members.length;
     }
 
     public Stream<Bandwidth> stream() {
@@ -59,25 +96,15 @@ public final class Bandwidths implements Serializable{
     }
 
     /**
-     * The interval between two unit requests, at our stable rate. E.g., a stable rate of 5 permits
-     * per second has a stable interval of 200ms.
-     */
-    @Experimental
-    public long getStableIntervalMicros() {
-        final double permitsPerSecond = getPermitsPerSecond();
-        return (long)(SECONDS.toMicros(1L) / permitsPerSecond);
-    }
-
-    /**
      * Returns the stable rate (as {@code permits per seconds}) with which an eligible {@code Bandwidth} in this
      * {@code Bandwidths} is configured with. The initial value is the same as the {@code permitsPerSecond}
      * argument passed in the factory method that produced the {@code Bandwidth}.
-     * @see #getAllPermitsPerSecond()
+     * @see #getAllRates()
      */
     @Experimental
-    public double getPermitsPerSecond() {
+    public double getRate() {
         final boolean isAnd = Operator.AND.equals(operator);
-        double [] arr = getAllPermitsPerSecond();
+        double [] arr = getAllRates();
         double result = -1;
         for(double e : arr) {
             result = result == - 1 ? e : (isAnd ? Math.max(e, result) : Math.min(e, result));
@@ -90,7 +117,7 @@ public final class Bandwidths implements Serializable{
      * {@code Bandwidths} is configured with. The initial value of each, is the same as the {@code permitsPerSecond}
      * argument passed in the factory method that produced each {@code Bandwidth}.
      */
-    private double [] getAllPermitsPerSecond() {
+    private double [] getAllRates() {
         final double [] permitsPerSecond = new double[members.length];
         for(int i = 0; i < members.length; i++) {
             permitsPerSecond[i] = members[i].getRate();
@@ -125,12 +152,12 @@ public final class Bandwidths implements Serializable{
 
     @Override
     public String toString() {
-        return "SimpleBandwidths{" + "operator=" + operator + " " + Arrays.toString(members) + "}";
+        return "Bandwidths{" + "operator=" + operator + " " + Arrays.toString(members) + "}";
     }
 
     private static class SecureSerializationProxy implements Serializable {
 
-        private static final long serialVersionUID = 9081726354000000021L;
+        private static final long serialVersionUID = 21L;
 
         private final Operator operator;
         private final Bandwidth[] members;

@@ -1,12 +1,14 @@
 package com.looseboxes.ratelimiter.annotation;
 
+import com.looseboxes.ratelimiter.annotations.RateLimit;
+import com.looseboxes.ratelimiter.annotations.RateLimitGroup;
 import com.looseboxes.ratelimiter.node.Node;
-import com.looseboxes.ratelimiter.util.Nullable;
+import com.looseboxes.ratelimiter.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.function.Predicate;
 
-class MethodAnnotationProcessor<T> extends AnnotationProcessor<Method, T> {
+final class MethodAnnotationProcessor<T> extends AbstractAnnotationProcessor<Method, T> {
 
     MethodAnnotationProcessor(IdProvider<Method, String> idProvider, Converter<T> converter) {
         super(idProvider, converter);

@@ -22,7 +22,7 @@ class AnnotationProcessingPerformanceIT {
     }
 
     Node<NodeData<RateLimiter<Object>>> buildRateLimiters() {
-        List<Class<?>> classList = ClassesInPackageFinder.newInstance().findClasses(
+        List<Class<?>> classList = ClassesInPackageFinder.of().findClasses(
                 Collections.singletonList(getClass().getPackage().getName()),
                 clazz -> true);
         return RateLimitersBuilder.tree().build(classList);

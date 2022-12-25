@@ -25,7 +25,7 @@ public class Bucket4jRateLimiterFactory<K extends Serializable> implements RateL
     }
 
     @Override
-    public RateLimiter<K> createRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Rates limits) {
+    public RateLimiter<K> createNew(RateLimiterConfig<K, ?> rateLimiterConfig, Rates limits) {
 
         RateCache<K, ?> rateCache = rateLimiterConfig.getRateCache();
 

@@ -1,4 +1,4 @@
-package com.looseboxes.ratelimiter.annotation;
+package com.looseboxes.ratelimiter.annotations;
 
 import com.looseboxes.ratelimiter.util.Operator;
 

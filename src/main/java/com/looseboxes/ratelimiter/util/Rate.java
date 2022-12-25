@@ -9,7 +9,7 @@ import java.util.Objects;
 public final class Rate {
 
     public static Rate of(long limit, Duration duration) {
-        return of(limit, duration, BandwidthFactory.SmoothBurstyBandwidthFactory.class);
+        return of(limit, duration, BandwidthFactory.SmoothBursty.class);
     }
 
     public static Rate of(long limit, Duration duration, Class<? extends BandwidthFactory> factoryClass) {
@@ -22,7 +22,13 @@ public final class Rate {
 
     private long limit;
     private Duration duration;
-    private Class<? extends BandwidthFactory> factoryClass;
+
+    /**
+     * A {@link BandwidthFactory} that will be dynamically instantiated and used to create
+     * {@link com.looseboxes.ratelimiter.bandwidths.Bandwidth}s from this rate limit.
+     * The class must have a zero-argument constructor.
+     */
+    private Class<? extends BandwidthFactory> factoryClass = BandwidthFactory.Default.class;
 
     public Rate() { }
 

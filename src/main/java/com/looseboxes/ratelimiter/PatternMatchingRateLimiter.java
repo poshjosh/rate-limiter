@@ -52,37 +52,9 @@ public class PatternMatchingRateLimiter<R> implements RateLimiter<R>{
     public boolean tryConsume(Object context, R request, int permits, long timeout, TimeUnit unit) {
 
         Function<Node<NodeData<RateLimiter<?>>>, RateLimitResult> consumePermits =
-                node -> consume(request, permits, timeout, unit, node);
+                node -> tryConsume(request, permits, timeout, unit, node);
 
         return visitNodes(consumePermits);
-    }
-
-    public List<RateLimiter<?>> collectRateLimiters(R request) {
-
-        final List<RateLimiter<?>> rateLimiters = new ArrayList<>();
-
-        Function<Node<NodeData<RateLimiter<?>>>, RateLimitResult> collectRateLimiters = node -> {
-
-            final RateLimiter<?> rateLimiter = getRateLimiter(node);
-
-            if(rateLimiter == RateLimiter.NO_OP) {
-                return RateLimitResult.NOMATCH;
-            }
-
-            Object key = matchingKeyOrNull(request, node);
-
-            if(key == null) {
-                return RateLimitResult.NOMATCH;
-            }
-
-            rateLimiters.add(rateLimiter);
-
-            return RateLimitResult.SUCCESS;
-        };
-
-        visitNodes(collectRateLimiters);
-
-        return Collections.unmodifiableList(rateLimiters);
     }
 
     public boolean visitNodes(Function<Node<NodeData<RateLimiter<?>>>, RateLimitResult> visitor) {
@@ -120,7 +92,7 @@ public class PatternMatchingRateLimiter<R> implements RateLimiter<R>{
         return globalFailureCount == 0;
     }
 
-    private RateLimitResult consume(R request, int permits, long timeout, TimeUnit unit, Node<NodeData<RateLimiter<?>>> node) {
+    private RateLimitResult tryConsume(R request, int permits, long timeout, TimeUnit unit, Node<NodeData<RateLimiter<?>>> node) {
 
         final RateLimiter<?> rateLimiter = getRateLimiter(node);
 
@@ -128,24 +100,24 @@ public class PatternMatchingRateLimiter<R> implements RateLimiter<R>{
             return RateLimitResult.NOMATCH;
         }
 
-        final Object key = matchingKeyOrNull(request, node);
+        final Object match = matchOrNull(request, node);
 
-        if(key == null) {
+        if(match == null) {
             return RateLimitResult.NOMATCH;
         }
 
-        return ((RateLimiter<Object>)rateLimiter).tryConsume(request, key, permits, timeout, unit) ? RateLimitResult.SUCCESS : RateLimitResult.FAILURE;
+        return ((RateLimiter<Object>)rateLimiter).tryConsume(request, match, permits, timeout, unit) ? RateLimitResult.SUCCESS : RateLimitResult.FAILURE;
     }
 
-    private Object matchingKeyOrNull(R request, Node<NodeData<RateLimiter<?>>> node) {
+    private Object matchOrNull(R request, Node<NodeData<RateLimiter<?>>> node) {
         final String nodeName = node.getName();
         final NodeData<RateLimiter<?>> nodeData = node.getValueOptional().orElseThrow(NullPointerException::new);
         final Matcher<R, ?> matcher = matcherProvider.getMatcher(nodeName, nodeData);
-        final Object key = matcher.matchingKeyOrNull(request);
+        final Object match = matcher.matchOrNull(request);
         if(log.isTraceEnabled()) {
-            log.trace("Name: {}, matched: {}, matcher: {}", nodeName, key != null, matcher);
+            log.trace("Name: {}, matched: {}, match: {}, matcher: {}", nodeName, match != null, match, matcher);
         }
-        return key;
+        return match;
     }
 
     private RateLimiter<?> getRateLimiter(Node<NodeData<RateLimiter<?>>> node) {
