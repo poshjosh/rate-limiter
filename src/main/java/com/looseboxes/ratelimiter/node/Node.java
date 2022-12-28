@@ -34,6 +34,18 @@ public interface Node<V> {
         return (Node<T>)EMPTY;
     }
 
+    static <T> Node<T> of(String name) {
+        return of(name, null);
+    }
+
+    static <T> Node<T> of(String name, T value) {
+        return of(name, value, null);
+    }
+
+    static <T> Node<T> of(String name, T value, Node<T> parent) {
+        return new NodeImpl(name, value, parent);
+    }
+
     /**
      * Copy this node and it's children onto the specified parent.
      *
@@ -48,6 +60,10 @@ public interface Node<V> {
         return transform(parent, (name, value) -> value);
     }
 
+    default <T> Node<T> transform(BiFunction<String, V, T> valueConverter) {
+        return transform(Node.of(getName()), valueConverter);
+    }
+
     /**
      * Copy a transformed version of this node and it's children onto the specified parent.
      *
@@ -59,6 +75,10 @@ public interface Node<V> {
      */
     default <T> Node<T> transform(Node<T> newParent, BiFunction<String, V, T> valueConverter) {
         return transform(newParent, (name, value) -> name, valueConverter);
+    }
+
+    default <T> Node<T> transform(BiFunction<String, V, String> nameConverter, BiFunction<String, V, T> valueConverter) {
+        return transform(Node.of(getName()), nameConverter, valueConverter);
     }
 
     /**

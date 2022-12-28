@@ -34,7 +34,7 @@ final class DefaultRateLimiter<K> implements RateLimiter<K> {
 
     @Override
     public boolean tryConsume(Object context, K resourceId, int permits, long timeout, TimeUnit unit) {
-
+        //System.out.printf("%s DefaultRateLimiter %s\n", java.time.LocalTime.now(), resourceId);
         final Bandwidths existingBandwidths = getBandwidthsFromCache(resourceId);
 
         final Bandwidths targetBandwidths = existingBandwidths == null ? createBandwidths(resourceId) : existingBandwidths;

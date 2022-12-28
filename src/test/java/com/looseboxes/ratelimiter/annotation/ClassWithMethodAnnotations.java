@@ -11,7 +11,7 @@ public class ClassWithMethodAnnotations {
         void anon() { }
     }
 
-    @RateLimitGroup(name = "Fire", logic = Operator.AND)
+    @RateLimitGroup(name = "Fire", operator = Operator.AND)
     @RateLimit(limit = 2, duration = 20)
     @RateLimit(limit = 1, duration = 10)
     void fire() { }

@@ -25,7 +25,7 @@ final class DefaultBandwidthLimiter implements BandwidthLimiter {
     // Can't be initialized in the constructor because mocks don't call the constructor.
     private volatile Object mutexDoNotUseDirectly;
 
-    private Object mutex() {
+    Object mutex() {
         Object mutex = mutexDoNotUseDirectly;
         if (mutex == null) {
             synchronized (this) {
@@ -39,7 +39,7 @@ final class DefaultBandwidthLimiter implements BandwidthLimiter {
     }
 
     DefaultBandwidthLimiter(Bandwidths bandwidths, SleepingTicker ticker) {
-        this.bandwidths = Objects.requireNonNull(bandwidths);
+        this.bandwidths = Bandwidths.of(bandwidths);
         this.ticker = Objects.requireNonNull(ticker);
     }
 
@@ -65,7 +65,7 @@ final class DefaultBandwidthLimiter implements BandwidthLimiter {
     BandwidthLimiter setRate(double... permitsPerSecond) {
         for (double d : permitsPerSecond) {
             Checks.requireTrue(d > 0.0
-                    && !Double.isNaN(d), "rate must be positive");
+                    && !Double.isNaN(d), "Must must be positive, rate: " + d);
         }
         synchronized (mutex()) {
             final Bandwidth [] members = bandwidths.getMembers();;
@@ -95,7 +95,6 @@ final class DefaultBandwidthLimiter implements BandwidthLimiter {
      * @param permits the number of permits to acquire
      * @return time spent sleeping to enforce rate, in seconds; 0.0 if not rate-limited
      * @throws IllegalArgumentException if the requested number of permits is negative or zero
-     * @since 16.0 (present in 13.0 with {@code void} return type})
      */
     @Override
     public double acquire(int permits) {
@@ -111,7 +110,7 @@ final class DefaultBandwidthLimiter implements BandwidthLimiter {
      * @return time in microseconds to wait until the resource can be acquired, never negative
      */
     final long reserve(int permits) {
-        checkPermits(permits);
+        Checks.requirePositive(permits, "permits");
         synchronized (mutex()) {
             return bandwidths.reserveAndGetWaitLength(permits, ticker.elapsedMicros());
         }
@@ -131,8 +130,9 @@ final class DefaultBandwidthLimiter implements BandwidthLimiter {
     @SuppressWarnings("GoodTime") // should accept a java.time.Duration
     @Override
     public boolean tryAcquire(int permits, long timeout, TimeUnit unit) {
+        //System.out.printf("%s DefaultBandwidthLimiter permits: %s\n", java.time.LocalTime.now(), permits);
+        Checks.requirePositive(permits, "permits");
         long timeoutMicros = max(unit.toMicros(timeout), 0);
-        checkPermits(permits);
         synchronized (mutex()) {
             long nowMicros = ticker.elapsedMicros();
             if (!bandwidths.canAcquire(nowMicros, timeoutMicros)) {
@@ -156,9 +156,5 @@ final class DefaultBandwidthLimiter implements BandwidthLimiter {
             }
         }
         return builder.append("}]").toString();
-    }
-
-    private static void checkPermits(int permits) {
-        Checks.requireTrue(permits > 0, "Requested permits (%s) must be positive", permits);
     }
 }

@@ -1,51 +1,97 @@
 package com.looseboxes.ratelimiter;
 
+import com.looseboxes.ratelimiter.annotation.NodeValue;
+import com.looseboxes.ratelimiter.annotation.RateLimiterFromAnnotationFactory;
 import com.looseboxes.ratelimiter.annotations.RateLimit;
-import com.looseboxes.ratelimiter.builder.RateLimitersBuilder;
+import com.looseboxes.ratelimiter.annotations.RateLimitGroup;
 import com.looseboxes.ratelimiter.node.BreadthFirstNodeVisitor;
 import com.looseboxes.ratelimiter.node.Node;
+import com.looseboxes.ratelimiter.util.Operator;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PatternMatchingRateLimiterTest {
 
     final Object key = "one";
 
-    static class RateLimitedClass0{
-        @RateLimit(limit = 1, duration = 1000)
-        void rateLimitedClass0_method_limit_1() { }
+    @RateLimit(limit = 1, duration = 1, timeUnit = SECONDS)
+    static class RateLimitedClass0{ }
+
+    @Test
+    void testRateLimitedClass() {
+        RateLimiter<Object> rateLimiter = buildRateLimiter(1, RateLimitedClass0.class);
+        assertTrue(rateLimiter.tryConsume(key));
+        assertFalse(rateLimiter.tryConsume(key));
+    }
+
+    static class RateLimitedClass1{
+        @RateLimit(limit = 1, duration = 1, timeUnit = SECONDS)
+        void rateLimitedClass1_method_0() { }
     }
 
     @Test
-    void testSingleRateLimitedMethod() {
-        RateLimiter<Object> rateLimiter = buildRateLimiter(1, RateLimitedClass0.class);
-        assertTrue(rateLimiter.tryConsume(key, 1));
-        assertFalse(rateLimiter.tryConsume(key, 1));
+    void testClassWithSingleRateLimitedMethod() {
+        RateLimiter<Object> rateLimiter = buildRateLimiter(1, RateLimitedClass1.class);
+        assertTrue(rateLimiter.tryConsume(key));
+        assertFalse(rateLimiter.tryConsume(key));
     }
 
-    @RateLimit(limit = 1)
-    static class RateLimitedClass1{
-        @RateLimit(limit = 1)
-        void rateLimitedClass1_method_limit_1() { }
+    @RateLimit(limit = 1, duration = 1, timeUnit = SECONDS)
+    static class RateLimitedClass2{
+        @RateLimit(limit = 1, duration = 1, timeUnit = SECONDS)
+        void rateLimitedClass2_method_0() { }
     }
 
     @Test
     void testRateLimitedClassWithSingleRateLimitedMethod() {
-        RateLimiter<Object> rateLimiter = buildRateLimiter(2, RateLimitedClass1.class);
-        assertTrue(rateLimiter.tryConsume(key, 1));
-        //TODO - Fix this flaky test
-        //assertFalse(rateLimiter.tryConsume(key, 1));
+        RateLimiter<Object> rateLimiter = buildRateLimiter(2, RateLimitedClass2.class);
+        assertTrue(rateLimiter.tryConsume(key));
+        assertFalse(rateLimiter.tryConsume(key));
+    }
+
+    @RateLimitGroup(operator = Operator.OR)
+    @RateLimit(limit = 1, duration = 1, timeUnit = SECONDS)
+    @RateLimit(limit = 3, duration = 1, timeUnit = SECONDS)
+    static class RateLimitedClass3{ }
+
+    @Test
+    void testRateLimitedClassWithOrLimits() {
+        RateLimiter<Object> rateLimiter = buildRateLimiter(1, RateLimitedClass3.class);
+        assertTrue(rateLimiter.tryConsume(key));
+        assertFalse(rateLimiter.tryConsume(key));
+    }
+
+    @RateLimitGroup(operator = Operator.AND)
+    @RateLimit(limit = 1, duration = 1, timeUnit = SECONDS)
+    @RateLimit(limit = 3, duration = 1, timeUnit = SECONDS)
+    static class RateLimitedClass4{ }
+
+    @Test
+    void testRateLimitedClassWithAndLimits() {
+        RateLimiter<Object> rateLimiter = buildRateLimiter(1, RateLimitedClass4.class);
+        assertTrue(rateLimiter.tryConsume(key));
+        assertTrue(rateLimiter.tryConsume(key));
+        assertTrue(rateLimiter.tryConsume(key));
+        assertFalse(rateLimiter.tryConsume(key));
     }
 
     private RateLimiter<Object> buildRateLimiter(int expectedNodes, Class<?>... classes) {
-        Node rootNode = RateLimitersBuilder.tree().build(classes);
-        //System.out.println(NodeFormatters.indentedHeirarchy().format(rootNode));
-        assertEquals(expectedNodes, numberOfNodes(rootNode));
+
+        Node<NodeValue<RateLimiter<Object>>> rateLimiterRootNode = RateLimiterFromAnnotationFactory.of().createNode(classes);
+        //System.out.println(NodeFormatters.indentedHeirarchy().format(rateLimiterRootNode));
+
+        assertEquals(expectedNodes, numberOfNodes(rateLimiterRootNode));
+
+        PatternMatchingRateLimiter.MatcherProvider<Object> matcherProvider = (nodeName, nodeValue) -> {
+            return key -> nodeName;
+        };
+
         boolean firstMatchOnly = false; // false for annotations, true for properties
-        return new PatternMatchingRateLimiter<Object>(rootNode, firstMatchOnly);
+        return new PatternMatchingRateLimiter<>(matcherProvider, (Node)rateLimiterRootNode, firstMatchOnly);
     }
 
     private int numberOfNodes(Node node) {

@@ -9,7 +9,7 @@ import java.util.Objects;
 public final class Rate {
 
     public static Rate of(long limit, Duration duration) {
-        return of(limit, duration, BandwidthFactory.SmoothBursty.class);
+        return of(limit, duration, BandwidthFactory.Default.class);
     }
 
     public static Rate of(long limit, Duration duration, Class<? extends BandwidthFactory> factoryClass) {
@@ -37,8 +37,8 @@ public final class Rate {
     }
 
     Rate(long limit, Duration duration, Class<? extends BandwidthFactory> factoryClass) {
-        Checks.requireFalse(limit < 0, "Limit must positive. Limit: " + limit);
-        Checks.requireFalse(duration.isNegative(), "Duration must be positive. Duration: " + duration);
+        Checks.requireNotNegative(limit, "limit");
+        Checks.requireFalse(duration.isNegative(), "Duration must be positive, duration: " + duration);
         this.limit = limit;
         this.duration = Objects.requireNonNull(duration);
         this.factoryClass = Objects.requireNonNull(factoryClass);
@@ -101,7 +101,7 @@ public final class Rate {
         return "Rate{" +
                 "limit=" + limit +
                 ", duration=" + duration +
-                ", factoryClass=" + factoryClass +
+                ", factoryClass=" + (factoryClass == null ? null : factoryClass.getSimpleName()) +
                 '}';
     }
 }

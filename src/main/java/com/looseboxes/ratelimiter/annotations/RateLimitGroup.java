@@ -15,5 +15,5 @@ public @interface RateLimitGroup {
     /** Alias for name() */
     String value() default "";
 
-    Operator logic() default Operator.OR;
+    Operator operator() default Operator.OR;
 }

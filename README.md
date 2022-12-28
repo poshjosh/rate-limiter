@@ -6,6 +6,8 @@ Limit how much a resource (class/method/key) is used within a given duration.
 
 The aim is to be simple but flexible, for example to limit a method to 3 invocations every 2 seconds:
 
+### Concept
+
 ```java
 class RateLimitedResource {
 
@@ -17,7 +19,33 @@ class RateLimitedResource {
 }
 ```
 
-A more complex example:
+```java
+import com.looseboxes.ratelimiter.RateLimiter;
+import com.looseboxes.ratelimiter.util.Rate;
+import com.looseboxes.ratelimiter.util.Rate;
+
+import java.time.Duration;
+
+public class Concept {
+
+  public static void main(String... args) {
+
+    // 1 permit is allowed every 10 seconds (for each unique recording key)
+    RateLimiter<String> rateLimiter = RateLimiter.of(Rate.of(1, Duration.ofSeconds(10)));
+
+    // We use numbers as recording keys
+    rateLimiter.tryConsume("resource_1");
+    rateLimiter.tryConsume("resource_2");
+    rateLimiter.tryConsume("resource_3");
+
+    // This will return false, it is the second consumption of resource_1
+    final boolean withinLimit = rateLimiter.tryConsume("resource_1");
+    System.out.printf("Within limit: %b", withinLimit);
+  }
+}
+```
+
+For flexibility, a robust support for annotations. 
 
 ```java
 // All methods collectively limited to 120 invocations every 1 minute
@@ -43,26 +71,25 @@ class RateLimitedResource {
 
 ```java
 import com.looseboxes.ratelimiter.RateLimiter;
+import com.looseboxes.ratelimiter.annotation.RateLimiterFromAnnotationFactory;
 import com.looseboxes.ratelimiter.annotations.RateLimit;
 
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class SampleUsage {
 
+  static final int LIMIT = 3;
+
   static class RateLimitedResource {
 
-    static final int LIMIT = 3;
+    final RateLimiter rateLimiter;
 
-    final RateLimiter<Object> rateLimiter;
-
-    RateLimitedResource(RateLimiter<Object> rateLimiter) {
-      this.rateLimiter = Objects.requireNonNull(rateLimiter);
+    RateLimitedResource(RateLimiter rateLimiter) {
+      this.rateLimiter = rateLimiter;
     }
 
-    // Limited to 3 invocations every 2 seconds OR 100 invocations every 1 minute
-    @RateLimit(limit = LIMIT, duration = 2000)
-    @RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES)
+    // Limited to 3 invocations every second
+    @RateLimit(limit = LIMIT, duration = 1, timeUnit = TimeUnit.SECONDS)
     void rateLimitedMethod() {
 
       if (!rateLimiter.tryConsume("rateLimitedMethodId")) {
@@ -73,22 +100,20 @@ public class SampleUsage {
 
   public static void main(String... args) {
 
-    RateLimiter<Object> rateLimiter = buildRateLimiter(RateLimitedResource.class);
+    RateLimiter rateLimiter = RateLimiterFromAnnotationFactory.of().create(RateLimitedResource.class);
 
     RateLimitedResource rateLimitedResource = new RateLimitedResource(rateLimiter);
 
-    // This will make the last invocation of the method from within the for loop fail
-    final int exceedsLimitByOne = RateLimitedResource.LIMIT + 1;
+    int i = 0;
+    for(; i < LIMIT; i++) {
 
-    for (int i = 0; i < exceedsLimitByOne; i++) {
-
+      System.out.println("Invocation " + i + " of " + LIMIT);
       rateLimitedResource.rateLimitedMethod();
     }
-  }
 
-  private static RateLimiter<Object> buildRateLimiter(Class<?> clazz) {
-    // Only one class/method is rate limited
-    return RateLimitersBuilder.list().build(clazz).get(0).getValue();
+    System.out.println("Invocation " + i + " of " + LIMIT + " should fail");
+    // Should fail
+    rateLimitedResource.rateLimitedMethod();
   }
 }
 ```
@@ -175,34 +200,6 @@ Resource2           Resource3                  |                            Reso
 Resource2#methodA   Resource3#methodA   Resource1#methodC                   Resource1#methodA
 Resource2#methodC                       Resource2#methodB                   Resource1#methodB
 
-```
-
-### Concept
-
-```java
-import com.looseboxes.ratelimiter.RateLimiter;
-import com.looseboxes.ratelimiter.util.Rate;
-import com.looseboxes.ratelimiter.util.Rate;
-
-import java.time.Duration;
-
-public class Concept {
-
-  public static void main(String... args) {
-
-    // 1 permit is allowed every 10 seconds (for each unique recording key)
-    RateLimiter<String> rateLimiter = RateLimiter.of(Rate.of(1, Duration.ofSeconds(10)));
-
-    // We use numbers as recording keys
-    rateLimiter.tryConsume("resource_1");
-    rateLimiter.tryConsume("resource_2");
-    rateLimiter.tryConsume("resource_3");
-
-    // This will return false, it is the second consumption of resource_1
-    final boolean withinLimit = rateLimiter.tryConsume("resource_1");
-    System.out.printf("Within limit: %b", withinLimit);
-  }
-}
 ```
 
 ### Performance

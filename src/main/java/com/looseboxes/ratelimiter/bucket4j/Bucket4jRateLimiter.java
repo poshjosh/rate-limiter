@@ -74,7 +74,7 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
             ++failCount;
         }
 
-        final boolean limitExceeded = isLimitExceeded(failCount);
+        final boolean limitExceeded = limits.isLimitExceeded(failCount);
 
         if(LOG.isTraceEnabled()) {
             LOG.trace("Limit exceeded: {}, for: {}, failures: {}/{}, limit: {}",
@@ -108,11 +108,6 @@ public class Bucket4jRateLimiter<K extends Serializable> implements RateLimiter<
 
     private void sleepNanosUninterruptibly(long nanosToWait) {
         ticker.sleepMicrosUninterruptibly(TimeUnit.NANOSECONDS.toMicros(nanosToWait));
-    }
-
-    private boolean isLimitExceeded(int failureCount) {
-        return (Operator.OR.equals(limits.getOperator()) && failureCount > 0)
-                || (Operator.AND.equals(limits.getOperator()) && failureCount >= limits.size());
     }
 
     @Override

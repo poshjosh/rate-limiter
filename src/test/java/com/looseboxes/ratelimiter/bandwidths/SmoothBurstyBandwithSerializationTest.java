@@ -14,6 +14,6 @@ class SmoothBurstyBandwithSerializationTest extends SerializationTest<SmoothBurs
 
     void testSerialization(double permitsPerSecond, long nowMicros, double maxBurstsSecond) {
         super.testSerialization((SmoothBurstyBandwidth)
-                SmoothBandwidth.bursty(permitsPerSecond, nowMicros, maxBurstsSecond));
+                Bandwidth.bursty(permitsPerSecond, nowMicros, maxBurstsSecond));
     }
 }

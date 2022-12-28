@@ -72,8 +72,6 @@ public final class Stopwatch {
 
     /**
      * Creates (but does not start) a new stopwatch using {@link System#nanoTime} as its time source.
-     *
-     * @since 15.0
      */
     public static Stopwatch createUnstarted() {
         return new Stopwatch();
@@ -81,8 +79,6 @@ public final class Stopwatch {
 
     /**
      * Creates (but does not start) a new stopwatch, using the specified time source.
-     *
-     * @since 15.0
      */
     public static Stopwatch createUnstarted(Ticker ticker) {
         return new Stopwatch(ticker);
@@ -90,8 +86,6 @@ public final class Stopwatch {
 
     /**
      * Creates (and starts) a new stopwatch using {@link System#nanoTime} as its time source.
-     *
-     * @since 15.0
      */
     public static Stopwatch createStarted() {
         return new Stopwatch().start();
@@ -99,8 +93,6 @@ public final class Stopwatch {
 
     /**
      * Creates (and starts) a new stopwatch, using the specified time source.
-     *
-     * @since 15.0
      */
     public static Stopwatch createStarted(Ticker ticker) {
         return new Stopwatch(ticker).start();
@@ -175,8 +167,6 @@ public final class Stopwatch {
      * <p>It is generally not a good idea to use an ambiguous, unitless {@code long} to represent
      * elapsed time. Therefore, we recommend using {@link #elapsed()} instead, which returns a
      * strongly-typed {@code Duration} instance.
-     *
-     * @since 14.0 (since 10.0 as {@code elapsedTime()})
      */
     public long elapsed(TimeUnit desiredUnit) {
         return desiredUnit.convert(elapsedNanos(), NANOSECONDS);
@@ -185,8 +175,6 @@ public final class Stopwatch {
     /**
      * Returns the current elapsed time shown on this stopwatch as a {@link Duration}. Unlike {@link
      * #elapsed(TimeUnit)}, this method does not lose any precision due to rounding.
-     *
-     * @since 22.0
      */
     public Duration elapsed() {
         return Duration.ofNanos(elapsedNanos());

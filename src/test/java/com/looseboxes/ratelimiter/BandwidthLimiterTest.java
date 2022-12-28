@@ -1,18 +1,3 @@
-/*
- * Copyright (C) 2012 The Guava Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.looseboxes.ratelimiter;
 
 import static java.lang.reflect.Modifier.isStatic;
@@ -20,6 +5,7 @@ import static java.util.concurrent.TimeUnit.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.lang.reflect.Method;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -44,42 +30,54 @@ class BandwidthLimiterTest {
 
     @ParameterizedTest
     @ValueSource(doubles = {0.1, 0.5, 1, 3, 33, 101})
-    void testBursty(double permitPerSecond) {
-        testBandwidth(BandwidthFactory.bursty(), permitPerSecond,true);
-    }
-
-    // TODO - Fix commented out test cases, they succeed when run individually, but failed here
-    @ParameterizedTest
-    @ValueSource(doubles = {/** 0.1, 0.5, 1,*/ 3, 33, 101})
-    void testAllOrNothingBursty(double permitPerSecond) {
-        BandwidthFactory delegate = BandwidthFactory.bursty();
-        testBandwidth(BandwidthFactory.allOrNothing(delegate), permitPerSecond,false);
+    void testBursty(double permitsPerSecond) {
+        testBandwidth(BandwidthFactory.bursty(), permitsPerSecond);
     }
 
     @ParameterizedTest
-    @ValueSource(doubles = {0.5, 1, 3, 33, 101})
-    void testWarmingUp(double permitPerSecond) {
-        testBandwidth(BandwidthFactory.warmingUp(1, SECONDS, 1), permitPerSecond, true);
+    @ValueSource(doubles = {0.1, 0.5, 1, 3, 33, 101})
+    void testWarmingUp(double permitsPerSecond) {
+        testBandwidth(BandwidthFactory.warmingUp(1, SECONDS, 1), permitsPerSecond);
     }
+    private void testBandwidth(BandwidthFactory bandwidthFactory, double permitsPerSecond) {
+        long permitsPerDay = (long)(permitsPerSecond * TimeUnit.DAYS.toSeconds(1));
+        final Bandwidth bandwidth = bandwidthFactory.createNew(permitsPerDay, 1, DAYS,  ticker.elapsedMicros());
+        final BandwidthLimiter limiter = createBandwidthLimiter(Bandwidths.of(bandwidth), ticker);
 
-    // TODO - Fix failing tests, then uncomment out code @related-all-or-nothing-warming-up
-    @ParameterizedTest
-    @ValueSource(doubles = {0.5, 1, /**3, 33, 101*/})
-    void testAllOrNothingWarmingUp(double permitPerSecond) {
-        BandwidthFactory delegate = BandwidthFactory.warmingUp(102, SECONDS, 102);
-        testBandwidth(BandwidthFactory.allOrNothing(delegate), permitPerSecond, false);
-    }
-
-    void testBandwidth(BandwidthFactory bandwidthFactory, double permitsPerSecond, boolean useInterval) {
-        final Bandwidth bandwidth = bandwidthFactory.createNew(permitsPerSecond, ticker.elapsedMicros());
-        final BandwidthLimiter limiter = BandwidthLimiter.of(Bandwidths.of(bandwidth), ticker);
         final double max = Math.max(permitsPerSecond, 1);
         int i = 0;
         for (; i < max; i++) {
             //System.out.println(i);
-            if (useInterval && i > 0) {
+            if (i > 0) {
                 ticker.sleepMicros("U", getStableIntervalMicros(bandwidth));
             }
+            assertTrue("Unable to acquire permit: " + i, limiter.tryAcquire());
+        }
+        //System.out.println(i);
+        assertFalse("Capable of acquiring permit: " + i, limiter.tryAcquire());
+    }
+
+    @Test
+    void testAllOrNothing() {
+        BandwidthFactory bandwidthFactory = BandwidthFactory.allOrNothing();
+        // This fails because by the time we get to 2, we would have entered the 2nd millisecond
+        //testAllOrNothing(bandwidthFactory, 2, 1, MILLISECONDS);
+        testAllOrNothing(bandwidthFactory, 1, 10, SECONDS);
+        testAllOrNothing(bandwidthFactory, 1, 2, SECONDS);
+        testAllOrNothing(bandwidthFactory, 1, 1, SECONDS);
+        testAllOrNothing(bandwidthFactory, 3, 1, SECONDS);
+        testAllOrNothing(bandwidthFactory, 33, 1, SECONDS);
+        // This fails because by the time we get to 101, we would have entered the 2nd second
+        //testAllOrNothing(bandwidthFactory, 101, 1, SECONDS);
+    }
+    private void testAllOrNothing(BandwidthFactory bandwidthFactory, long permits, long duration, TimeUnit unit) {
+        final SleepingTicker ticker = SleepingTicker.zeroOffset();
+        final Bandwidth bandwidth = bandwidthFactory.createNew(permits, duration, unit, ticker.elapsedMicros());
+        final BandwidthLimiter limiter = BandwidthLimiter.of(Bandwidths.of(bandwidth), ticker);
+        final double max = permits;
+        int i = 0;
+        for (; i < max; i++) {
+            //System.out.println(i);
             assertTrue("Unable to acquire permit: " + i, limiter.tryAcquire());
         }
         //System.out.println(i);
@@ -99,17 +97,23 @@ class BandwidthLimiterTest {
         testBandwidths(BandwidthFactory.warmingUp(1, SECONDS, 1), operator, true);
     }
 
+    @ParameterizedTest
+    @EnumSource(Operator.class)
+    void testAllOrNothingBandwidths(Operator operator) {
+        testBandwidths(BandwidthFactory.allOrNothing(), operator, false);
+    }
+
     private void testBandwidths(BandwidthFactory bandwidthFactory, Operator operator, boolean useInterval) {
         final int min = 1;
         final int max = 3;
         final long nowMicros = ticker.elapsedMicros();
 
-        Bandwidth a = bandwidthFactory.createNew(min, nowMicros);
-        Bandwidth b = bandwidthFactory.createNew(max, nowMicros);
+        Bandwidth a = bandwidthFactory.createNew(min, Duration.ofSeconds(1), nowMicros);
+        Bandwidth b = bandwidthFactory.createNew(max, Duration.ofSeconds(1), nowMicros);
 
         Bandwidths bandwidths = Bandwidths.of(operator, a, b);
 
-        BandwidthLimiter limiter = BandwidthLimiter.of(bandwidths, ticker);
+        BandwidthLimiter limiter = createBandwidthLimiter(bandwidths, ticker);
 
         int i = 0;
         final int limit = Operator.AND.equals(operator) ? max : min;
@@ -124,6 +128,10 @@ class BandwidthLimiterTest {
         assertFalse("Capable of acquiring permit: " + i, limiter.tryAcquire());
     }
 
+    private BandwidthLimiter createBandwidthLimiter(Bandwidths bandwidths, SleepingTicker ticker) {
+        return BandwidthLimiter.of(bandwidths, ticker);
+    }
+
     private long getStableIntervalMicros(Bandwidth bandwidth) {
         final double permitsPerSecond = bandwidth.getRate();
         return (long)(SECONDS.toMicros(1L) / permitsPerSecond);
@@ -136,7 +144,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testSimple() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(5.0, ticker);
+        BandwidthLimiter limiter = create(5.0, ticker);
         limiter.acquire(); // R0.00, since it's the first request
         limiter.acquire(); // R0.20
         limiter.acquire(); // R0.20
@@ -145,14 +153,14 @@ class BandwidthLimiterTest {
 
     @Test
     public void testImmediateTryAcquire() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(1);
+        BandwidthLimiter limiter = create(1);
         assertTrue("Unable to acquire initial permit", limiter.tryAcquire());
         assertFalse("Capable of acquiring secondary permit", limiter.tryAcquire());
     }
 
     @Test
     public void testDoubleMinValueCanAcquireExactlyOnce() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(Double.MIN_VALUE, ticker);
+        BandwidthLimiter limiter = create(Double.MIN_VALUE, ticker);
         assertTrue("Unable to acquire initial permit", limiter.tryAcquire());
         assertFalse("Capable of acquiring an additional permit", limiter.tryAcquire());
         ticker.sleepMillis(Integer.MAX_VALUE);
@@ -161,7 +169,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testSimpleRateUpdate() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(5.0, 5, SECONDS);
+        BandwidthLimiter limiter = create(5.0, 5, SECONDS);
         assertEquals(5.0, limiter.getPermitsPerSecond());
         limiter = setRate(limiter, 10.0);
         assertEquals(10.0, limiter.getPermitsPerSecond());
@@ -169,14 +177,14 @@ class BandwidthLimiterTest {
 
     @Test
     public void testWithParameterValidation() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(5.0, 5, SECONDS);
+        BandwidthLimiter limiter = create(5.0, 5, SECONDS);
         assertThrowsIllegalArgumentException(() -> setRate(limiter, 0.0));
         assertThrowsIllegalArgumentException(() -> setRate(limiter, -10.0));
     }
 
     @Test
     public void testAcquireParameterValidation() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(999);
+        BandwidthLimiter limiter = create(999);
         assertThrowsIllegalArgumentException(() -> limiter.acquire(0));
         assertThrowsIllegalArgumentException(() -> limiter.acquire(-1));
         assertThrowsIllegalArgumentException(() -> limiter.tryAcquire(0));
@@ -187,7 +195,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testSimpleWithWait() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(5.0, ticker);
+        BandwidthLimiter limiter = create(5.0, ticker);
         limiter.acquire(); // R0.00
         ticker.sleepMillis(200); // U0.20, we are ready for the next request...
         limiter.acquire(); // R0.00, ...which is granted immediately
@@ -197,7 +205,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testSimpleAcquireReturnValues() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(5.0, ticker);
+        BandwidthLimiter limiter = create(5.0, ticker);
         assertEquals(0.0, limiter.acquire(), EPSILON); // R0.00
         ticker.sleepMillis(200); // U0.20, we are ready for the next request...
         assertEquals(0.0, limiter.acquire(), EPSILON); // R0.00, ...which is granted immediately
@@ -207,7 +215,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testSimpleAcquireEarliestAvailableIsInPast() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(5.0, ticker);
+        BandwidthLimiter limiter = create(5.0, ticker);
         assertEquals(0.0, limiter.acquire(), EPSILON);
         ticker.sleepMillis(400);
         assertEquals(0.0, limiter.acquire(), EPSILON);
@@ -217,7 +225,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testOneSecondBurst() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(5.0, ticker);
+        BandwidthLimiter limiter = create(5.0, ticker);
         ticker.sleepMillis(1000); // max capacity reached
         ticker.sleepMillis(1000); // this makes no difference
         limiter.acquire(1); // R0.00, since it's the first request
@@ -235,12 +243,12 @@ class BandwidthLimiterTest {
     @Test
     public void testCreateWarmupParameterValidation() {
         BandwidthLimiter unused;
-        unused = BandwidthLimiterTestFactory.create(1.0, 1, NANOSECONDS);
-        unused = BandwidthLimiterTestFactory.create(1.0, 0, NANOSECONDS);
+        unused = create(1.0, 1, NANOSECONDS);
+        unused = create(1.0, 0, NANOSECONDS);
 
-        assertThrowsIllegalArgumentException(() -> BandwidthLimiterTestFactory.create(0.0, 1, NANOSECONDS));
-        assertThrowsIllegalArgumentException(() -> BandwidthLimiterTestFactory.create(-10.0, -1, NANOSECONDS));
-        assertThrowsIllegalArgumentException(() -> BandwidthLimiterTestFactory.create(1.0, -1, NANOSECONDS));
+        assertThrowsIllegalArgumentException(() -> create(0.0, 1, NANOSECONDS));
+        assertThrowsIllegalArgumentException(() -> create(-10.0, -1, NANOSECONDS));
+        assertThrowsIllegalArgumentException(() -> create(1.0, -1, NANOSECONDS));
     }
 
     private static void assertThrowsIllegalArgumentException(Executable executable) {
@@ -250,7 +258,7 @@ class BandwidthLimiterTest {
     //@AndroidIncompatible // difference in String.format rounding?
     @Test
     public void testWarmUp() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(2.0, 4000, MILLISECONDS, 3.0, ticker);
+        BandwidthLimiter limiter = create(2.0, 4000, MILLISECONDS, 3.0, ticker);
         for (int i = 0; i < 8; i++) {
             limiter.acquire(); // #1
         }
@@ -276,7 +284,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testWarmUpWithColdFactor() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(5.0, 4000, MILLISECONDS, 10.0, ticker);
+        BandwidthLimiter limiter = create(5.0, 4000, MILLISECONDS, 10.0, ticker);
         for (int i = 0; i < 8; i++) {
             limiter.acquire(); // #1
         }
@@ -302,8 +310,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testWarmUpWithColdFactor1() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory
-                .create(5.0, 4000, MILLISECONDS, 1.0, ticker);
+        BandwidthLimiter limiter = create(5.0, 4000, MILLISECONDS, 1.0, ticker);
         for (int i = 0; i < 8; i++) {
             limiter.acquire(); // #1
         }
@@ -320,8 +327,7 @@ class BandwidthLimiterTest {
     //@AndroidIncompatible // difference in String.format rounding?
     @Test
     public void testWarmUpAndUpdate() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory
-                .create(2.0, 4000, MILLISECONDS, 3.0, ticker);
+        BandwidthLimiter limiter = create(2.0, 4000, MILLISECONDS, 3.0, ticker);
         for (int i = 0; i < 8; i++) {
             limiter.acquire(); // // #1
         }
@@ -354,8 +360,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testWarmUpAndUpdateWithColdFactor() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory
-                .create(5.0, 4000, MILLISECONDS, 10.0, ticker);
+        BandwidthLimiter limiter = create(5.0, 4000, MILLISECONDS, 10.0, ticker);
         for (int i = 0; i < 8; i++) {
             limiter.acquire(); // #1
         }
@@ -388,7 +393,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testBurstyAndUpdate() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(1.0, ticker);
+        BandwidthLimiter limiter = create(1.0, ticker);
         limiter.acquire(1); // no wait
         limiter.acquire(1); // R1.00, to repay previous
 
@@ -403,7 +408,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testTryAcquire_noWaitAllowed() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(5.0, ticker);
+        BandwidthLimiter limiter = create(5.0, ticker);
         assertTrue(limiter.tryAcquire(0, SECONDS));
         assertFalse(limiter.tryAcquire(0, SECONDS));
         assertFalse(limiter.tryAcquire(0, SECONDS));
@@ -413,7 +418,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testTryAcquire_someWaitAllowed() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(5.0, ticker);
+        BandwidthLimiter limiter = create(5.0, ticker);
         assertTrue(limiter.tryAcquire(0, SECONDS));
         assertTrue(limiter.tryAcquire(200, MILLISECONDS));
         assertFalse(limiter.tryAcquire(100, MILLISECONDS));
@@ -423,7 +428,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testTryAcquire_overflow() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(5.0, ticker);
+        BandwidthLimiter limiter = create(5.0, ticker);
         assertTrue(limiter.tryAcquire(0, MICROSECONDS));
         ticker.sleepMillis(100);
         assertTrue(limiter.tryAcquire(Long.MAX_VALUE, MICROSECONDS));
@@ -431,7 +436,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testTryAcquire_negative() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(5.0, ticker);
+        BandwidthLimiter limiter = create(5.0, ticker);
         assertTrue(limiter.tryAcquire(5, 0, SECONDS));
         ticker.sleepMillis(900);
         assertFalse(limiter.tryAcquire(1, Long.MIN_VALUE, SECONDS));
@@ -441,7 +446,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testSimpleWeights() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(1.0, ticker);
+        BandwidthLimiter limiter = create(1.0, ticker);
         limiter.acquire(1); // no wait
         limiter.acquire(1); // R1.00, to repay previous
         limiter.acquire(2); // R1.00, to repay previous
@@ -453,7 +458,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testInfinity_Bursty() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(Double.POSITIVE_INFINITY, ticker);
+        BandwidthLimiter limiter = create(Double.POSITIVE_INFINITY, ticker);
         limiter.acquire(Integer.MAX_VALUE / 4);
         limiter.acquire(Integer.MAX_VALUE / 2);
         limiter.acquire(Integer.MAX_VALUE);
@@ -481,7 +486,7 @@ class BandwidthLimiterTest {
     /** https://code.google.com/p/guava-libraries/issues/detail?id=1791 */
     @Test
     public void testInfinity_BustyTimeElapsed() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(Double.POSITIVE_INFINITY, ticker);
+        BandwidthLimiter limiter = create(Double.POSITIVE_INFINITY, ticker);
         ticker.instant += 1000000;
         limiter = setRate(limiter, 2.0);
         for (int i = 0; i < 5; i++) {
@@ -496,8 +501,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testInfinity_WarmUp() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory
-                .create(Double.POSITIVE_INFINITY, 10, SECONDS, 3.0, ticker);
+        BandwidthLimiter limiter = create(Double.POSITIVE_INFINITY, 10, SECONDS, 3.0, ticker);
         limiter.acquire(Integer.MAX_VALUE / 4);
         limiter.acquire(Integer.MAX_VALUE / 2);
         limiter.acquire(Integer.MAX_VALUE);
@@ -518,8 +522,7 @@ class BandwidthLimiterTest {
 
     @Test
     public void testInfinity_WarmUpTimeElapsed() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory
-                .create(Double.POSITIVE_INFINITY, 10, SECONDS, 3.0, ticker);
+        BandwidthLimiter limiter = create(Double.POSITIVE_INFINITY, 10, SECONDS, 3.0, ticker);
         ticker.instant += 1000000;
         limiter = setRate(limiter, 1.0);
         for (int i = 0; i < 5; i++) {
@@ -534,7 +537,7 @@ class BandwidthLimiterTest {
      */
     @Test
     public void testWeNeverGetABurstMoreThanOneSec() {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(1.0, ticker);
+        BandwidthLimiter limiter = create(1.0, ticker);
         int[] rates = {1000, 1, 10, 1000000, 10, 1};
         for (int rate : rates) {
             int oneSecWorthOfWork = rate;
@@ -572,9 +575,7 @@ class BandwidthLimiterTest {
                     // If warmupPermits = maxPermits - thresholdPermits then
                     // warmupPeriod = (1 + coldFactor) * warmupPermits * stableInterval / 2
                     long warmupMillis = (long) ((1 + coldFactor) * warmupPermits / (2.0 * qps) * 1000.0);
-                    BandwidthLimiter limiter =
-                            BandwidthLimiterTestFactory
-                                    .create(qps, warmupMillis, MILLISECONDS, coldFactor, ticker);
+                    BandwidthLimiter limiter = create(qps, warmupMillis, MILLISECONDS, coldFactor, ticker);
                     assertEquals(warmupMillis, measureTotalTimeMillis(limiter, warmupPermits, random));
                 }
             }
@@ -587,8 +588,8 @@ class BandwidthLimiterTest {
     }
 
     @Test
-    public void testVerySmallDoubleValues() throws Exception {
-        BandwidthLimiter limiter = BandwidthLimiterTestFactory.create(Double.MIN_VALUE, ticker);
+    public void testVerySmallDoubleValues() {
+        BandwidthLimiter limiter = create(Double.MIN_VALUE, ticker);
         assertTrue("Should acquire initial permit", limiter.tryAcquire());
         assertFalse("Should not acquire additional permit", limiter.tryAcquire());
         ticker.sleepMillis(5000);
@@ -596,6 +597,27 @@ class BandwidthLimiterTest {
                 "Should not acquire additional permit even after sleeping", limiter.tryAcquire());
     }
 
+    private static BandwidthLimiter create(double permitsPerSecond) {
+        return create(permitsPerSecond, SleepingTicker.zeroOffset());
+    }
+
+    private static BandwidthLimiter create(double permitsPerSecond, SleepingTicker ticker) {
+        Bandwidth bandwidth = Bandwidth.bursty(permitsPerSecond, ticker.elapsedMicros());
+        return BandwidthLimiter.of(Bandwidths.of(bandwidth), ticker);
+    }
+
+    private static BandwidthLimiter create(double permitsPerSecond, long warmupPeriod, TimeUnit unit) {
+        SleepingTicker ticker = SleepingTicker.zeroOffset();
+        return create(permitsPerSecond, warmupPeriod, unit, 3.0, ticker);
+    }
+
+    private static BandwidthLimiter create(double permitsPerSecond, long warmupPeriod, TimeUnit unit,
+                                   double coldFactor, SleepingTicker ticker) {
+        Bandwidth bandwidth = Bandwidth
+                .warmingUp(permitsPerSecond, ticker.elapsedMicros(), warmupPeriod, unit, coldFactor);
+        return BandwidthLimiter.of(Bandwidths.of(bandwidth), ticker);
+    }
+    
     private long measureTotalTimeMillis(BandwidthLimiter limiter, int permits, Random random) {
         long startTime = ticker.instant;
         while (permits > 0) {

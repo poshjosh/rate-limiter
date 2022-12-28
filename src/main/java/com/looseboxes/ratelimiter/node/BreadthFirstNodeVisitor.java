@@ -26,7 +26,7 @@ import java.util.function.Predicate;
 /**
  * @author Chinomso Bassey Ikwuagwu on Oct 16, 2017 9:21:53 PM
  */
-public class BreadthFirstNodeVisitor<T> implements Consumer<Node<T>>{
+public final class BreadthFirstNodeVisitor<T> implements Consumer<Node<T>>{
 
     private static final Logger LOG = LoggerFactory.getLogger(BreadthFirstNodeVisitor.class.getName());
 

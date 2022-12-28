@@ -1,9 +1,7 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.annotations.Experimental;
-import com.looseboxes.ratelimiter.bandwidths.AllOrNothingBandwidth;
+import com.looseboxes.ratelimiter.annotations.Beta;
 import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
-import com.looseboxes.ratelimiter.bandwidths.SmoothBandwidth;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -24,12 +22,12 @@ public interface BandwidthFactory {
         private static final BandwidthFactory delegate = BandwidthFactories.createSystemBandwidthFactory();
         public Default() { }
         @Override
-        public Bandwidth createNew(double permitsPerSecond, long nowMicros) {
-            return delegate.createNew(permitsPerSecond, nowMicros);
+        public Bandwidth createNew(long permits, long duration, TimeUnit timeUnit, long nowMicros) {
+            return delegate.createNew(permits, duration, timeUnit, nowMicros);
         }
         @Override
         public String toString() {
-            return "BandwidthFactory.Default{delegate=" + delegate + "}";
+            return "BandwidthFactory$Default{delegate=" + delegate + "}";
         }
     }
 
@@ -42,11 +40,14 @@ public interface BandwidthFactory {
             this.maxBurstsSeconds = maxBurstsSeconds;
         }
         @Override
-        public Bandwidth createNew(double permitsPerSecond, long nowMicros) {
-            return SmoothBandwidth.bursty(permitsPerSecond, nowMicros, maxBurstsSeconds);
+        public Bandwidth createNew(long permits, long duration, TimeUnit timeUnit, long nowMicros) {
+            return createNew(Util.toPermitsPerSecond(permits, duration, timeUnit), nowMicros);
+        }
+        private Bandwidth createNew(double permitsPerSecond, long nowMicros) {
+            return Bandwidth.bursty(permitsPerSecond, nowMicros, maxBurstsSeconds);
         }
         @Override
-        public String toString() { return "BandwidthFactory.SmoothBursty{maxBurstsSeconds=" + maxBurstsSeconds + '}'; }
+        public String toString() { return "BandwidthFactory$SmoothBursty{maxBurstsSeconds=" + maxBurstsSeconds + '}'; }
     }
 
     final class SmoothWarmingUp implements BandwidthFactory {
@@ -62,48 +63,29 @@ public interface BandwidthFactory {
             this.coldFactor = coldFactor;
         }
         @Override
-        public Bandwidth createNew(double permitsPerSecond, long nowMicros) {
-            return SmoothBandwidth.warmingUp(permitsPerSecond, nowMicros, warmupPeriod, timeUnit, coldFactor);
+        public Bandwidth createNew(long permits, long duration, TimeUnit timeUnit, long nowMicros) {
+            return createNew(Util.toPermitsPerSecond(permits, duration, timeUnit), nowMicros);
+        }
+        private Bandwidth createNew(double permitsPerSecond, long nowMicros) {
+            return Bandwidth.warmingUp(permitsPerSecond, nowMicros, warmupPeriod, timeUnit, coldFactor);
         }
         @Override
         public String toString() {
-            return "BandwidthFactory.SmoothWarmingUp{warmupPeriod=" + warmupPeriod +
+            return "BandwidthFactory$SmoothWarmingUp{warmupPeriod=" + warmupPeriod +
                     ", timeUnit=" + timeUnit + ", coldFactor=" + coldFactor + '}';
         }
     }
 
-    /** @Experimental */
-    @Experimental
-    final class AllOrNothingBursty implements BandwidthFactory {
-        private final BandwidthFactory delegate;
-        public AllOrNothingBursty() { delegate = getOrCreateBandwidthFactory(BandwidthFactory.SmoothBursty.class); }
-        @Override
-        public Bandwidth createNew(double permitsPerSecond, long nowMicros) {
-            return new AllOrNothingBandwidth(delegate.createNew(permitsPerSecond, nowMicros));
-        }
-        @Override
-        public String toString() {
-            return "BandwidthFactory.AllOrNothingBursty{delegate=" + delegate + "}";
-        }
-    }
-
-    /** @Experimental */
-    @Experimental
+    /** Beta */
+    @Beta
     final class AllOrNothing implements BandwidthFactory {
-        private final BandwidthFactory delegate;
-        public AllOrNothing() {
-            this(getOrCreateBandwidthFactory(BandwidthFactory.Default.class));
-        }
-        public AllOrNothing(BandwidthFactory delegate) {
-            this.delegate = Objects.requireNonNull(delegate);
-        }
         @Override
-        public Bandwidth createNew(double permitsPerSecond, long nowMicros) {
-            return new AllOrNothingBandwidth(delegate.createNew(permitsPerSecond, nowMicros));
+        public Bandwidth createNew(long permits, long duration, TimeUnit timeUnit, long nowMicros) {
+            return Bandwidth.allOrNothing(permits, duration, timeUnit, nowMicros);
         }
         @Override
         public String toString() {
-            return "BandwidthFactory.AllOrNothing{delegate=" + delegate + "}";
+            return "BandwidthFactory$AllOrNothing{}";
         }
     }
 
@@ -125,35 +107,22 @@ public interface BandwidthFactory {
         return new SmoothWarmingUp(warmupPeriod, timeUnit, coldFactor);
     }
 
-    /** @Experimental */
-    @Experimental
-    static BandwidthFactory allOrNothingBursty() {
-        return getOrCreateBandwidthFactory(AllOrNothingBursty.class);
+    /** Beta */
+    @Beta
+    static BandwidthFactory allOrNothing() {
+        return getOrCreateBandwidthFactory(AllOrNothing.class);
     }
 
-    /** @Experimental */
-    @Experimental
-    static BandwidthFactory allOrNothing(BandwidthFactory bandwidthFactory) {
-        return new AllOrNothing(bandwidthFactory);
+    Bandwidth createNew(long permits, long duration, TimeUnit timeUnit, long nowMicros);
+
+    default Bandwidth createNew(long permits, Duration duration) {
+        return createNew(permits, duration.toNanos(), TimeUnit.NANOSECONDS);
+    }
+    default Bandwidth createNew(long permits, Duration duration, long nowMicros) {
+        return createNew(permits, duration.toNanos(), TimeUnit.NANOSECONDS, nowMicros);
     }
 
-    Bandwidth createNew(double permitsPerSecond, long nowMicros);
-
-    default Bandwidth createNew(double permitsPerSecond) {
-        return createNew(permitsPerSecond, 0);
-    }
-
-    default Bandwidth createNew(long amount, Duration duration) {
-        return createNew(amount, duration.toNanos(), TimeUnit.NANOSECONDS);
-    }
-    default Bandwidth createNew(long amount, Duration duration, long nowMicros) {
-        return createNew(amount, duration.toNanos(), TimeUnit.NANOSECONDS, nowMicros);
-    }
-
-    default Bandwidth createNew(long amount, long duration, TimeUnit timeUnit) {
-        return createNew(amount, duration, timeUnit, 0);
-    }
-    default Bandwidth createNew(long amount, long duration, TimeUnit timeUnit, long nowMicros) {
-        return createNew(Util.toPermitsPerSecond(amount, duration, timeUnit), nowMicros);
+    default Bandwidth createNew(long permits, long duration, TimeUnit timeUnit) {
+        return createNew(permits, duration, timeUnit, 0);
     }
 }

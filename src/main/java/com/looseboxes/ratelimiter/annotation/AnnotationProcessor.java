@@ -1,20 +1,33 @@
 package com.looseboxes.ratelimiter.annotation;
 
+import com.looseboxes.ratelimiter.annotations.Nullable;
 import com.looseboxes.ratelimiter.annotations.RateLimit;
 import com.looseboxes.ratelimiter.annotations.RateLimitGroup;
 import com.looseboxes.ratelimiter.node.Node;
-import com.looseboxes.ratelimiter.annotations.Nullable;
 import com.looseboxes.ratelimiter.util.Operator;
 import com.looseboxes.ratelimiter.util.Rates;
 
 import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.function.BiConsumer;
+import java.util.Objects;
 
 public interface AnnotationProcessor<S extends GenericDeclaration, T> {
 
     Operator DEFAULT_OPERATOR = Operator.OR;
+
+    interface NodeConsumer<T>{
+        void accept(Object o, @Nullable Node<NodeValue<T>> node);
+        default NodeConsumer<T> andThen(NodeConsumer<T> after) {
+            Objects.requireNonNull(after);
+            return (l, r) -> {
+                accept(l, r);
+                after.accept(l, r);
+            };
+        }
+    }
 
     interface Converter<T>{
         T convert(RateLimitGroup rateLimitGroup, RateLimit [] rateLimits);
@@ -30,6 +43,11 @@ public interface AnnotationProcessor<S extends GenericDeclaration, T> {
         return of(idProviderForClass, idProviderForMethod, new AnnotationToRatesConverter());
     }
 
+    static <T> AnnotationProcessor<Class<?>, T> of(Converter<T> converter) {
+        return new ClassAnnotationProcessor<>(IdProvider.ofClass(), converter,
+                new MethodAnnotationProcessor<>(IdProvider.ofMethod(), converter));
+    }
+
     static <T> AnnotationProcessor<Class<?>, T> of(
             IdProvider<Class<?>, String> idProviderForClass,
             IdProvider<Method, String> idProviderForMethod,
@@ -38,13 +56,31 @@ public interface AnnotationProcessor<S extends GenericDeclaration, T> {
                 new MethodAnnotationProcessor<>(idProviderForMethod, converter));
     }
 
-    default void process(Node<NodeData<T>> root, List<S> elements) {
-        process(root, elements, (element, node) -> {});
+    default void processAll(Node<NodeValue<T>> root, S... elements) {
+        processAll(root, elements == null ? Collections.emptyList() : Arrays.asList(elements));
     }
 
-    default void process(@Nullable Node<NodeData<T>> root, List<S> elements, BiConsumer<Object, Node<NodeData<T>>> consumer) {
-        elements.forEach(clazz -> process(root, clazz, consumer));
+    default void processAll(Node<NodeValue<T>> root, List<S> elements) {
+        processAll(root, (element, node) -> {}, elements);
     }
 
-    Node<NodeData<T>> process(@Nullable Node<NodeData<T>> root, S element, BiConsumer<Object, Node<NodeData<T>>> consumer);
+    default void processAll(Node<NodeValue<T>> root, NodeConsumer<T> consumer, S... elements) {
+        processAll(root, consumer, elements == null ? Collections.emptyList() : Arrays.asList(elements));
+    }
+
+    default void processAll(Node<NodeValue<T>> root, NodeConsumer<T> consumer, List<S> elements) {
+        elements.forEach(clazz -> process(root, consumer, clazz));
+    }
+
+    default Node<NodeValue<T>> process(S element) {
+        return process(Node.of("root"), (obj, node) -> { }, element);
+    }
+
+    /**
+     * @param root the root node
+     * @param consumer a consumer that will be applied to each node processed
+     * @param element the element for which rate limit annotations will be processed
+     * @return The root node
+     */
+    Node<NodeValue<T>> process(Node<NodeValue<T>> root, NodeConsumer<T> consumer, S element);
 }

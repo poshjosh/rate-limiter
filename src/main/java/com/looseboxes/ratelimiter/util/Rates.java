@@ -16,18 +16,32 @@ public final class Rates {
         return new Rates();
     }
 
-    public static Rates of(Rates config) {
-        return new Rates(config);
+    public static Rates of(Rates rates) {
+        return new Rates(rates);
     }
 
-    public static Rates of(Operator operator, Rate... limits) {
-        return new Rates(operator, limits == null ? Collections.emptyList() : Arrays.asList(limits));
+    public static Rates or(Rate... rates) {
+        return of(Operator.OR, rates);
+    }
+
+    public static Rates and(Rate... rates) {
+        return of(Operator.AND, rates);
+    }
+
+    public static Rates of(Operator operator, Rate... rates) {
+        return of(operator, rates == null ? Collections.emptyList() : Arrays.asList(rates));
+    }
+
+    public static Rates of(Operator operator, List<Rate> rates) {
+        return new Rates(operator, rates);
     }
 
     private Operator operator = Operator.OR;
 
+    // The naming of this variable is a contract, it should not be arbitrarily changed
     private List<Rate> limits = Collections.emptyList();
 
+    // A public no-argument constructor is required
     public Rates() { }
 
     Rates(Rates rates) {
@@ -38,6 +52,11 @@ public final class Rates {
         this.operator = operator;
         this.limits = limits == null ? Collections.emptyList() : limits.stream()
                 .map(Rate::new).collect(Collectors.toList());
+    }
+
+    public boolean isLimitExceeded(int failureCount) {
+        return (Operator.OR.equals(operator) && failureCount > 0)
+                || (Operator.AND.equals(operator) && failureCount >= limits.size());
     }
 
     public boolean hasLimits() {

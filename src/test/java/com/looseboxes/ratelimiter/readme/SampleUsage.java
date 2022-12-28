@@ -1,27 +1,25 @@
 package com.looseboxes.ratelimiter.readme;
 
 import com.looseboxes.ratelimiter.RateLimiter;
+import com.looseboxes.ratelimiter.annotation.RateLimiterFromAnnotationFactory;
 import com.looseboxes.ratelimiter.annotations.RateLimit;
-import com.looseboxes.ratelimiter.builder.RateLimitersBuilder;
 
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class SampleUsage {
 
+    static final int LIMIT = 3;
+
     static class RateLimitedResource {
 
-        static final int LIMIT = 3;
+        final RateLimiter rateLimiter;
 
-        final RateLimiter<Object> rateLimiter;
-
-        RateLimitedResource(RateLimiter<Object> rateLimiter) {
-            this.rateLimiter = Objects.requireNonNull(rateLimiter);
+        RateLimitedResource(RateLimiter rateLimiter) {
+            this.rateLimiter = rateLimiter;
         }
 
-        // Limited to 3 invocations every 2 seconds OR 100 invocations every 1 minute
-        @RateLimit(limit = LIMIT, duration = 2000)
-        @RateLimit(limit = 100, duration = 1, timeUnit = TimeUnit.MINUTES)
+        // Limited to 3 invocations every second
+        @RateLimit(limit = LIMIT, duration = 1, timeUnit = TimeUnit.SECONDS)
         void rateLimitedMethod() {
 
             if (!rateLimiter.tryConsume("rateLimitedMethodId")) {
@@ -32,21 +30,19 @@ public class SampleUsage {
 
     public static void main(String... args) {
 
-        RateLimiter<Object> rateLimiter = buildRateLimiter(RateLimitedResource.class);
+        RateLimiter rateLimiter = RateLimiterFromAnnotationFactory.of().create(RateLimitedResource.class);
 
         RateLimitedResource rateLimitedResource = new RateLimitedResource(rateLimiter);
 
-        // This will make the last invocation of the method from within the for loop fail
-        final int exceedsLimitByOne = RateLimitedResource.LIMIT + 1;
+        int i = 0;
+        for(; i < LIMIT; i++) {
 
-        for(int i = 0; i < exceedsLimitByOne; i++) {
-
+            System.out.println("Invocation " + i + " of " + LIMIT);
             rateLimitedResource.rateLimitedMethod();
         }
-    }
 
-    private static RateLimiter<Object> buildRateLimiter(Class<?> clazz) {
-        // Only one class/method is rate limited
-        return RateLimitersBuilder.list().build(clazz).get(0).getValue();
+        System.out.println("Invocation " + i + " of " + LIMIT + " should fail");
+        // Should fail
+        rateLimitedResource.rateLimitedMethod();
     }
 }

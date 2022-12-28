@@ -17,7 +17,7 @@ final class BandwidthFactories {
     private static Class<? extends BandwidthFactory> getSystemBandwidthFactoryClass() {
         final String factoryClassName = System.getProperty("bandwidth-factory-class");
         if (factoryClassName == null) {
-            return BandwidthFactory.SmoothBursty.class;
+            return BandwidthFactory.AllOrNothing.class;
         }
         try {
             return (Class<BandwidthFactory>)Class.forName(factoryClassName);

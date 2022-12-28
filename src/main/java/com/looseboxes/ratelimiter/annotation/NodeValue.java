@@ -3,16 +3,24 @@ package com.looseboxes.ratelimiter.annotation;
 import java.io.Serializable;
 import java.util.Objects;
 
-public final class NodeData<V> implements Serializable {
+public final class NodeValue<V> implements Serializable {
 
     private static final long serialVersionUID = 40L;
+
+    public static <T> NodeValue<T> of(Object source, T value) {
+        return new NodeValue<>(source, value);
+    }
 
     private final Object source;
     private final V value;
 
-    public NodeData(Object source, V value) {
+    private NodeValue(Object source, V value) {
         this.source = Objects.requireNonNull(source);
         this.value = Objects.requireNonNull(value);
+    }
+
+    public <T> NodeValue<T> withValue(T value) {
+        return new NodeValue<>(this.source, value);
     }
 
     public Object getSource() {
@@ -27,8 +35,8 @@ public final class NodeData<V> implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        NodeData nodeData = (NodeData) o;
-        return source.equals(nodeData.source) && value.equals(nodeData.value);
+        NodeValue nodeValue = (NodeValue) o;
+        return source.equals(nodeValue.source) && value.equals(nodeValue.value);
     }
 
     @Override
@@ -37,6 +45,6 @@ public final class NodeData<V> implements Serializable {
     }
 
     @Override public String toString() {
-        return "NodeData{" + "source=" + source.getClass().getSimpleName() + ", value=" + value + '}';
+        return "NodeValue{" + "source=" + source.getClass().getSimpleName() + ", value=" + value + '}';
     }
 }

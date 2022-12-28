@@ -1,5 +1,7 @@
 package com.looseboxes.ratelimiter.bandwidths;
 
+import com.looseboxes.ratelimiter.Checks;
+
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
@@ -88,6 +90,7 @@ final class SmoothWarmingUpBandwidth extends SmoothBandwidth implements Serializ
 
     SmoothWarmingUpBandwidth(double permitsPerSecond, long nowMicros,
             long warmupPeriod, TimeUnit timeUnit, double coldFactor) {
+        Checks.requireNotNegative(warmupPeriod, "warmupPeriod");
         this.nowMicros = nowMicros;
         this.warmupPeriodMicros = timeUnit.toMicros(warmupPeriod); // Before calling setPermitsPerSecond
         this.coldFactor = coldFactor; // Before calling setPermitsPerSecond

@@ -16,15 +16,15 @@ public abstract class AbstractAnnotationProcessorTest<S extends GenericDeclarati
         return ClassesInPackageFinder.of().findClasses(packageName, clazz -> true);
     }
 
-    void assertHasChildrenHavingNames(Node<NodeData<Rates>> parent, S... classes) {
+    void assertHasChildrenHavingNames(Node<NodeValue<Rates>> parent, S... classes) {
         assertHasChildrenHavingNames(parent, toNames(classes));
     }
 
-    void assertHasChildrenHavingNames(Node<NodeData<Rates>> parent, String... names) {
+    void assertHasChildrenHavingNames(Node<NodeValue<Rates>> parent, String... names) {
         parent.getChildren().stream().filter(node -> acceptNodeNames(node, names)).findFirst();
     }
 
-    boolean acceptNodeNames(Node<NodeData<Rates>> node, S... classes) {
+    boolean acceptNodeNames(Node<NodeValue<Rates>> node, S... classes) {
         return acceptNodeNames(node, toNames(classes));
     }
 
@@ -32,7 +32,7 @@ public abstract class AbstractAnnotationProcessorTest<S extends GenericDeclarati
         return Arrays.stream(classes).map(clazz -> getId(clazz)).collect(Collectors.toList()).toArray(new String[0]);
     }
 
-    boolean acceptNodeNames(Node<NodeData<Rates>> node, String... names) {
+    boolean acceptNodeNames(Node<NodeValue<Rates>> node, String... names) {
         for(String name : names) {
             if(name.equals(node.getName())) {
                 return true;

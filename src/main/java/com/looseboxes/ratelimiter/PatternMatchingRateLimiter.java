@@ -1,6 +1,6 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.annotation.NodeData;
+import com.looseboxes.ratelimiter.annotation.NodeValue;
 import com.looseboxes.ratelimiter.node.BreadthFirstNodeVisitor;
 import com.looseboxes.ratelimiter.node.Node;
 import com.looseboxes.ratelimiter.util.Matcher;
@@ -19,28 +19,28 @@ public class PatternMatchingRateLimiter<R> implements RateLimiter<R>{
     private static final Logger log = LoggerFactory.getLogger(PatternMatchingRateLimiter.class);
     
     public interface MatcherProvider<T>{
-        Matcher<T, ?> getMatcher(String nodeName, NodeData<RateLimiter<?>> nodeData);
+        Matcher<T, ?> getMatcher(String nodeName, NodeValue<RateLimiter<?>> nodeValue);
     }
 
     private final MatcherProvider<R> matcherProvider;
-    private final Node<NodeData<RateLimiter<?>>> rootNode;
-    private final List<Node<NodeData<RateLimiter<?>>>> leafNodes;
+    private final Node<NodeValue<RateLimiter<?>>> rootNode;
+    private final Set<Node<NodeValue<RateLimiter<?>>>> leafNodes;
     private final boolean firstMatchOnly;
 
     public PatternMatchingRateLimiter(
-            Node<NodeData<RateLimiter<?>>> rootNode,
+            Node<NodeValue<RateLimiter<?>>> rootNode,
             boolean firstMatchOnly) {
         this((nodeName, nodeData) -> Matcher.identity(), rootNode, firstMatchOnly);
     }
 
     public PatternMatchingRateLimiter(MatcherProvider<R> matcherProvider,
-                                      Node<NodeData<RateLimiter<?>>> rootNode,
+                                      Node<NodeValue<RateLimiter<?>>> rootNode,
                                       boolean firstMatchOnly) {
         this.matcherProvider = Objects.requireNonNull(matcherProvider);
         this.rootNode = Objects.requireNonNull(rootNode);
-        Set<Node<NodeData<RateLimiter<?>>>> set = new LinkedHashSet<>();
+        Set<Node<NodeValue<RateLimiter<?>>>> set = new LinkedHashSet<>();
         collectLeafNodes(this.rootNode, set::add);
-        this.leafNodes = new LinkedList<>(set);
+        this.leafNodes = Collections.unmodifiableSet(set);
         this.firstMatchOnly = firstMatchOnly;
     }
 
@@ -50,18 +50,16 @@ public class PatternMatchingRateLimiter<R> implements RateLimiter<R>{
 
     @Override
     public boolean tryConsume(Object context, R request, int permits, long timeout, TimeUnit unit) {
-
-        Function<Node<NodeData<RateLimiter<?>>>, RateLimitResult> consumePermits =
+        Function<Node<NodeValue<RateLimiter<?>>>, RateLimitResult> consumePermits =
                 node -> tryConsume(request, permits, timeout, unit, node);
-
         return visitNodes(consumePermits);
     }
 
-    public boolean visitNodes(Function<Node<NodeData<RateLimiter<?>>>, RateLimitResult> visitor) {
+    public boolean visitNodes(Function<Node<NodeValue<RateLimiter<?>>>, RateLimitResult> visitor) {
 
         int globalFailureCount = 0;
 
-        for(Node<NodeData<RateLimiter<?>>> node : leafNodes) {
+        for(Node<NodeValue<RateLimiter<?>>> node : leafNodes) {
 
             int nodeSuccessCount = 0;
 
@@ -92,7 +90,7 @@ public class PatternMatchingRateLimiter<R> implements RateLimiter<R>{
         return globalFailureCount == 0;
     }
 
-    private RateLimitResult tryConsume(R request, int permits, long timeout, TimeUnit unit, Node<NodeData<RateLimiter<?>>> node) {
+    private RateLimitResult tryConsume(R request, int permits, long timeout, TimeUnit unit, Node<NodeValue<RateLimiter<?>>> node) {
 
         final RateLimiter<?> rateLimiter = getRateLimiter(node);
 
@@ -109,18 +107,18 @@ public class PatternMatchingRateLimiter<R> implements RateLimiter<R>{
         return ((RateLimiter<Object>)rateLimiter).tryConsume(request, match, permits, timeout, unit) ? RateLimitResult.SUCCESS : RateLimitResult.FAILURE;
     }
 
-    private Object matchOrNull(R request, Node<NodeData<RateLimiter<?>>> node) {
+    private Object matchOrNull(R request, Node<NodeValue<RateLimiter<?>>> node) {
         final String nodeName = node.getName();
-        final NodeData<RateLimiter<?>> nodeData = node.getValueOptional().orElseThrow(NullPointerException::new);
-        final Matcher<R, ?> matcher = matcherProvider.getMatcher(nodeName, nodeData);
+        final NodeValue<RateLimiter<?>> nodeValue = node.getValueOptional().orElseThrow(NullPointerException::new);
+        final Matcher<R, ?> matcher = matcherProvider.getMatcher(nodeName, nodeValue);
         final Object match = matcher.matchOrNull(request);
         if(log.isTraceEnabled()) {
-            log.trace("Name: {}, matched: {}, match: {}, matcher: {}", nodeName, match != null, match, matcher);
+            log.trace("Matched: {}, match: {}, name: {}, matcher: {}",  match != null, match, nodeName, matcher);
         }
         return match;
     }
 
-    private RateLimiter<?> getRateLimiter(Node<NodeData<RateLimiter<?>>> node) {
+    private RateLimiter<?> getRateLimiter(Node<NodeValue<RateLimiter<?>>> node) {
         final RateLimiter<?> rateLimiter = node.getValueOrDefault(null).getValue();
         if(log.isTraceEnabled()) {
             log.trace("Name: {}, rate-limiter: {}", node.getName(), rateLimiter);

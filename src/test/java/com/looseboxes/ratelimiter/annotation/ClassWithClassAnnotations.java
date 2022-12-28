@@ -11,7 +11,7 @@ public class ClassWithClassAnnotations {
     public class ClassGroupOnlyAnon { }
 
 //    @RateLimitGroup("Fire")
-    @RateLimitGroup(name = "Fire", logic = Operator.AND)
+    @RateLimitGroup(name = "Fire", operator = Operator.AND)
     @RateLimit(limit = 2, duration = 20)
     @RateLimit(limit = 1, duration = 10)
     public class ClassGroupOnlyNamedFire { }
@@ -25,7 +25,7 @@ public class ClassWithClassAnnotations {
     @RateLimitGroup
     public class GroupAnnotationOnly { }
 
-    @RateLimitGroup(name = "Fire", logic = Operator.AND)
+    @RateLimitGroup(name = "Fire", operator = Operator.AND)
     @RateLimit(limit = 2, duration = 20)
     @RateLimit(limit = 1, duration = 10)
     public class SecondClassGroupOnlyNamedFire { }

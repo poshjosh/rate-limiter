@@ -25,9 +25,11 @@ pom.xml
 Code
 
 ```java
-public class Bucket4jJCacheRateLimiterProvider<K extends Serializable>{
+import com.looseboxes.ratelimiter.util.Rates;
 
-    private static class JCacheProxyManagerProvider implements ProxyManagerProvider{
+public class Bucket4jJCacheRateLimiterProvider<K extends Serializable> {
+
+    private static class JCacheProxyManagerProvider implements ProxyManagerProvider {
 
         @Override
         public <K extends Serializable> ProxyManager<K> getProxyManager(RateCache<K, ?> rateCache) {
@@ -38,19 +40,16 @@ public class Bucket4jJCacheRateLimiterProvider<K extends Serializable>{
         }
     }
 
-    public RateLimiter<K> newInstance(Cache<K, GridBucketState> cache) {
-
+    public RateLimiter<K> newInstance(Cache<K, GridBucketState> cache, Rate... rates) {
         ProxyManager<K> proxyManager = Bucket4j.extension(JCache.class).proxyManagerForCache(cache);
-
-        // Limited to one invocation every second
-        return new Bucket4jRateLimiter<>(proxyManager, Rate.of(1, Duration.ofSeconds(1)));
+        return new Bucket4jRateLimiter<>(proxyManager, Rates.of(rates));
     }
 
-    public List<NodeData<RateLimiter<K>>> newInstancesFromAnnotatedClass(Cache<K, GridBucketState> cache, Class<?> annotationSource) {
-        return RateLimitersBuilder.<K>list()
-                .rateLimiterFactory(new Bucket4jRateLimiterFactory<>(new JCacheProxyManagerProvider()))
-                .rateCache(RateCache.of(cache)) 
-                .build(annotationSource);
+    public RateLimiter<K> newInstanceFromAnnotatedClasses(Cache<K, GridBucketState> cache, Class<?>... classes) {
+        return RateLimiterFromAnnotationFactory.<K, GridBucketState>of()
+                .rateLimiterFactory(new Bucket4jRateLimiterFactory<>(new ProxyManagerProviderImpl()))
+                .rateLimiterConfig(RateLimiterConfig.<K, GridBucketState>builder().rateCache(RateCache.of(cache)).build())
+                .create(classes);
     }
 }
 ```
@@ -87,8 +86,7 @@ Code
 ```java
 public class Bucket4jHazelcastRateLimiterProvider<K extends Serializable>{
 
-    private static class HazelcastProxyManagerProvider implements ProxyManagerProvider{
-
+    private static class ProxyManagerProviderImpl implements ProxyManagerProvider{
         @Override
         public <K extends Serializable> ProxyManager<K> getProxyManager(RateCache<K, ?> rateCache) {
             // It is possible to get a com.hazelcast.map.IMap via RateCache#unwrap(Class),
@@ -98,19 +96,16 @@ public class Bucket4jHazelcastRateLimiterProvider<K extends Serializable>{
         }
     }
 
-    public RateLimiter<K> newInstance(IMap<K, GridBucketState> cache) {
-
+    public RateLimiter<K> newInstance(IMap<K, GridBucketState> cache, Rate... rates) {
         ProxyManager<K> proxyManager = Bucket4j.extension(Hazelcast.class).proxyManagerForMap(cache);
-
-        // Limited to one invocation every second
-        return new Bucket4jRateLimiter<>(proxyManager, Rate.of(1, Duration.ofSeconds(1)));
+        return new Bucket4jRateLimiter<>(proxyManager, Rates.of(rates));
     }
 
-    public List<NodeData<RateLimiter<K>>> newInstancesFromAnnotatedClass(IMap<K, GridBucketState> cache, Class<?> annotationSource) {
-        return RateLimitersBuilder.<K>list()
-                .rateLimiterFactory(new Bucket4jRateLimiterFactory<>(new HazelcastProxyManagerProvider()))
-                .rateCache(RateCache.of(cache))
-                .build(annotationSource);
+    public RateLimiter<K> newInstanceFromAnnotatedClasses(IMap<K, GridBucketState> cache, Class<?>... classes) {
+        return RateLimiterFromAnnotationFactory.<K, GridBucketState>of()
+                .rateLimiterFactory(new Bucket4jRateLimiterFactory<>(new ProxyManagerProviderImpl()))
+                .rateLimiterConfig(RateLimiterConfig.<K, GridBucketState>builder().rateCache(RateCache.of(cache)).build())
+                .create(classes);
     }
 }
 ```
@@ -150,8 +145,7 @@ Code
 ```java
 public class Bucket4jIgniteRateLimiterProvider<K extends Serializable>{
 
-    private static class IgniteProxyManagerProvider implements ProxyManagerProvider{
-
+    private static class ProxyManagerProviderImpl implements ProxyManagerProvider{
         @Override
         public <K extends Serializable> ProxyManager<K> getProxyManager(RateCache<K, ?> rateCache) {
             // It is possible to get a org.apache.ignite.IgniteCache via RateCache#unwrap(Class),
@@ -161,19 +155,16 @@ public class Bucket4jIgniteRateLimiterProvider<K extends Serializable>{
         }
     }
 
-    public RateLimiter<K> newInstance(IgniteCache<K, GridBucketState> cache) {
-
+    public RateLimiter<K> newInstance(IgniteCache<K, GridBucketState> cache, Rate... rates) {
         ProxyManager<K> proxyManager = Bucket4j.extension(Ignite.class).proxyManagerForCache(cache);
-
-        // Limited to one invocation every second
-        return new Bucket4jRateLimiter<>(proxyManager, Rate.of(1, Duration.ofSeconds(1)));
+        return new Bucket4jRateLimiter<>(proxyManager, Rates.of(rates));
     }
 
-    public List<NodeData<RateLimiter<K>>> newInstancesFromAnnotatedClass(IgniteCache<K, GridBucketState> cache, Class<?> annotationSource) {
-        return RateLimitersBuilder.<K>list()
-                .rateLimiterFactory(new Bucket4jRateLimiterFactory<>(new IgniteProxyManagerProvider()))
-                .rateCache(RateCache.of(cache))
-                .build(annotationSource);
+    public RateLimiter<K> newInstanceFromAnnotatedClasses(IgniteCache<K, GridBucketState> cache, Class<?>... classes) {
+        return RateLimiterFromAnnotationFactory.<K, GridBucketState>of()
+                .rateLimiterFactory(new Bucket4jRateLimiterFactory<>(new ProxyManagerProviderImpl()))
+                .rateLimiterConfig(RateLimiterConfig.<K, GridBucketState>builder().rateCache(RateCache.of(cache)).build())
+                .create(classes);
     }
 }
 ```

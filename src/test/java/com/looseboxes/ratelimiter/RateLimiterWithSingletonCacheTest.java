@@ -7,7 +7,7 @@ import com.looseboxes.ratelimiter.util.Rates;
 class RateLimiterWithSingletonCacheTest extends AbstractRateLimiterTest {
 
     public RateLimiterWithSingletonCacheTest() {
-        super(BandwidthFactory.bursty(),true);
+        super(BandwidthFactory.AllOrNothing.class, true);
     }
 
     @Override

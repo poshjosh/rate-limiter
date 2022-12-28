@@ -66,7 +66,7 @@ public class NodeImpl<V> implements Node<V>, Serializable {
     }
 
     public Node<V> copyTo(Node<V> parent) {
-        final Node<V> newNode = new NodeImpl<>(name, value, parent);
+        final Node<V> newNode = Node.of(name, value, parent);
         children.forEach(child -> child.copyTo(newNode));
         return newNode;
     }
@@ -75,7 +75,7 @@ public class NodeImpl<V> implements Node<V>, Serializable {
     public <T> Node<T> transform(Node<T> newParent, BiFunction<String, V, String> nameConverter, BiFunction<String, V, T> valueConverter) {
         final String newName = name == null ? null : nameConverter.apply(name, value);
         final T newValue = value == null ? null : valueConverter.apply(name, value);
-        final Node<T> newNode = new NodeImpl<>(newName, newValue, newParent);
+        final Node<T> newNode = Node.of(newName, newValue, newParent);
         children.forEach(child -> child.transform(newNode, nameConverter, valueConverter));
         return newNode;
     }

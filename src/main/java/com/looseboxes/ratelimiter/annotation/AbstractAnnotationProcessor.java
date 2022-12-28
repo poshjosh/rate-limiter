@@ -1,6 +1,5 @@
 package com.looseboxes.ratelimiter.annotation;
 
-import com.looseboxes.ratelimiter.annotations.Nullable;
 import com.looseboxes.ratelimiter.annotations.RateLimit;
 import com.looseboxes.ratelimiter.annotations.RateLimitGroup;
 import com.looseboxes.ratelimiter.node.Node;
@@ -11,12 +10,13 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.GenericDeclaration;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 
 public abstract class AbstractAnnotationProcessor<S extends GenericDeclaration, T>
         implements AnnotationProcessor<S, T>{
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractAnnotationProcessor.class);
+
+    private static final Object sourceForGroupNodes = new Object();
 
     private final IdProvider<S, String> idProvider;
 
@@ -27,22 +27,31 @@ public abstract class AbstractAnnotationProcessor<S extends GenericDeclaration, 
         this.converter = Objects.requireNonNull(converter);
     }
 
-    protected abstract Node<NodeData<T>> getOrCreateParent(
-            @Nullable Node<NodeData<T>> root, S element,
+    protected abstract Node<NodeValue<T>> getOrCreateParent(
+            Node<NodeValue<T>> root, S element,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits);
 
-    public Node<NodeData<T>> process(@Nullable Node<NodeData<T>> root, S element, BiConsumer<Object, Node<NodeData<T>>> consumer){
+    @Override
+    public Node<NodeValue<T>> process(Node<NodeValue<T>> root, NodeConsumer<T> consumer, S element){
+        doProcess(root, consumer, element);
+        return root;
+    }
+
+    /**
+     * @return The processed node
+     */
+    protected Node<NodeValue<T>> doProcess(Node<NodeValue<T>> root, NodeConsumer<T> consumer, S element){
 
         final RateLimit [] rateLimits = element.getAnnotationsByType(RateLimit.class);
 
-        final Node<NodeData<T>> node;
+        final Node<NodeValue<T>> node;
 
         if(rateLimits.length > 0 ) {
 
             RateLimitGroup rateLimitGroup = element.getAnnotation(RateLimitGroup.class);
-            Node<NodeData<T>> created = getOrCreateParent(root, element, rateLimitGroup, rateLimits);
+            Node<NodeValue<T>> created = getOrCreateParent(root, element, rateLimitGroup, rateLimits);
 
-            Node<NodeData<T>> parentNode = created == null ? root : created;
+            Node<NodeValue<T>> parentNode = created == null ? root : created;
             String name = idProvider.getId(element);
             node = createNodeForElementOrNull(parentNode, name, element, rateLimitGroup, rateLimits);
 
@@ -58,11 +67,11 @@ public abstract class AbstractAnnotationProcessor<S extends GenericDeclaration, 
         return node;
     }
 
-    protected Node<NodeData<T>> findOrCreateNodeForRateLimitGroupOrNull(
-            @Nullable Node<NodeData<T>> root, Node<NodeData<T>> parent,
+    protected Node<NodeValue<T>> findOrCreateNodeForRateLimitGroupOrNull(
+            Node<NodeValue<T>> root, Node<NodeValue<T>> parent,
             GenericDeclaration annotatedElement, RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         String name = getName(rateLimitGroup);
-        final Node<NodeData<T>> node;
+        final Node<NodeValue<T>> node;
         if(root == null || rateLimitGroup == null || name.isEmpty()) {
             node = null;
         }else{
@@ -87,35 +96,40 @@ public abstract class AbstractAnnotationProcessor<S extends GenericDeclaration, 
         return "";
     }
 
-    private Node<NodeData<T>> createNodeForGroupOrNull(
-            Node<NodeData<T>> parentNode, String name,
+    private Node<NodeValue<T>> createNodeForGroupOrNull(
+            Node<NodeValue<T>> parentNode, String name,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         if(rateLimits.length == 0) {
             return null;
         }else{
-            return NodeUtil.createGroupNode(parentNode, name, process(rateLimitGroup));
+            return createGroupNode(parentNode, name, process(rateLimitGroup));
         }
     }
 
-    protected Node<NodeData<T>> createNodeForElementOrNull(
-            @Nullable Node<NodeData<T>> parentNode, String name, Object element,
+    private Node<NodeValue<T>> createGroupNode(Node<NodeValue<T>> parent, String name, T value) {
+        return Node.of(name, NodeValue.of(sourceForGroupNodes, value), parent);
+    }
+
+    protected Node<NodeValue<T>> createNodeForElementOrNull(
+            Node<NodeValue<T>> parentNode, String name, Object element,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         if(rateLimits.length == 0) {
             return null;
         }else{
             T limit = converter.convert(rateLimitGroup, rateLimits);
-            return NodeUtil.createNode(parentNode, name, element, limit);
+            return Node.of(name, NodeValue.of(element, limit), parentNode);
         }
     }
 
-    private Node<NodeData<T>> requireConsistentData(
-            Node<NodeData<T>> rateLimitGroupNode, GenericDeclaration annotatedElement,
+    private Node<NodeValue<T>> requireConsistentData(
+            Node<NodeValue<T>> rateLimitGroupNode, GenericDeclaration annotatedElement,
             RateLimitGroup rateLimitGroup, RateLimit [] rateLimits) {
         if(rateLimitGroup != null && rateLimits.length != 0) {
             final Operator operator = operator(rateLimitGroup);
             rateLimitGroupNode.getChildren().stream()
-                    .map(childNode -> childNode.getValueOptional().orElseThrow(NodeUtil::newExceptionForRequiredValue))
-                    .map(NodeData::getValue)
+                    .map(childNode -> childNode.getValueOptional()
+                            .orElseThrow(() -> new AnnotationProcessingException("Only the root node may have no value")))
+                    .map(NodeValue::getValue)
                     .forEach(existing -> requireEqual(annotatedElement, rateLimitGroup, operator, existing));
         }
 
@@ -123,7 +137,7 @@ public abstract class AbstractAnnotationProcessor<S extends GenericDeclaration, 
     }
 
     private Operator operator(RateLimitGroup rateLimitGroup) {
-        return rateLimitGroup == null ? AnnotationProcessor.DEFAULT_OPERATOR : rateLimitGroup.logic();
+        return rateLimitGroup == null ? AnnotationProcessor.DEFAULT_OPERATOR : rateLimitGroup.operator();
     }
 
     private void requireEqual(GenericDeclaration annotatedElement, RateLimitGroup rateLimitGroup, Operator lhs, T existing) {

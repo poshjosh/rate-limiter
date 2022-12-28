@@ -16,13 +16,13 @@ abstract class AbstractRateLimiterTest {
 
     final String key = "0";
 
-    final int durationMillis = 1_500;
+    final int durationMillis = 2000;
 
-    private final BandwidthFactory bandwidthFactory;
+    private final Class<? extends BandwidthFactory> factoryClass;
     private final boolean supportsNullKeys;
 
-    AbstractRateLimiterTest(BandwidthFactory bandwidthFactory, boolean supportsNullKeys) {
-        this.bandwidthFactory = Objects.requireNonNull(bandwidthFactory);
+    AbstractRateLimiterTest(Class<? extends BandwidthFactory> factoryClass, boolean supportsNullKeys) {
+        this.factoryClass = Objects.requireNonNull(factoryClass);
         this.supportsNullKeys = supportsNullKeys;
     }
 
@@ -35,12 +35,11 @@ abstract class AbstractRateLimiterTest {
         assertTrue(rateLimiter.tryConsume(key), "Unable to acquire initial permit");
     }
 
-    // TODO - Find out why this fails for values <= 1000 (This may be the expected behaviour
     @ParameterizedTest
-    @ValueSource(longs = {2_000, /** 100 */})
+    @ValueSource(longs = {2_000, 100})
     void shouldExceedLimitAfterLongInitialDelay(long duration) throws InterruptedException {
         RateLimiter<String> rateLimiter = getRateLimiter(getRate(1, duration));
-        Thread.sleep(duration + 1);
+        Thread.sleep(duration + 10);
         assertTrue(rateLimiter.tryConsume(key), "Unable to acquire initial permit");
         assertFalse(rateLimiter.tryConsume(key), "Capable of acquiring additional permit");
     }
@@ -79,28 +78,32 @@ abstract class AbstractRateLimiterTest {
         assertThrowsRuntimeException(() -> getRateLimiter(getRate(1, -1)));
     }
 
-    @Test
-    void shouldResetWhenLimitNotExceededWithinDuration() throws InterruptedException{
-        final long limit = 1; // TODO - Fails for limits > 1
-        final long duration = 1000;
+    @ParameterizedTest
+    @ValueSource(longs = {1, 2, 4})
+    void shouldResetWhenLimitNotExceededWithinDuration(long limit) throws InterruptedException{
+        final long duration = 2000;
         RateLimiter<String> rateLimiter = getRateLimiter(getRate(limit, duration));
 
         for (int i = 0; i < limit; i++) {
+            //System.out.println(i);
             assertTrue(rateLimiter.tryConsume(key), "Unable to acquire permit " + i);
         }
+        //System.out.println();
         assertFalse(rateLimiter.tryConsume(key), "Capable of acquiring permit " + (limit + 1));
 
         Thread.sleep(duration); // Leads to reset
 
         for (int i = 0; i < limit; i++) {
+            //System.out.println(i);
             assertTrue(rateLimiter.tryConsume(key), "Unable to acquire permit " + i);
         }
+        //System.out.println();
         assertFalse(rateLimiter.tryConsume(key), "Capable of acquiring permit " + (limit + 1));
     }
 
     @Test
     void shouldResetWhenAtThreshold() throws Exception{
-        RateLimiter<String> rateLimiter = getRateLimiter(getLimitsThatWillLeadToReset());
+        RateLimiter<String> rateLimiter = getRateLimiter(getRate(1, 0));
         rateLimiter.tryConsume(key);
 
         // Simulate some time before the next recording
@@ -112,7 +115,8 @@ abstract class AbstractRateLimiterTest {
 
     @Test
     void shouldFailWhenLimitExceeded() {
-        RateLimiter<String> rateLimiter = getRateLimiter(getDefaultLimits());
+        RateLimiter<String> rateLimiter = getRateLimiter(getRate(2, 1000));
+        assertThat(rateLimiter.tryConsume(key)).isTrue();
         assertThat(rateLimiter.tryConsume(key)).isTrue();
         assertThat(rateLimiter.tryConsume(key)).isFalse();
     }
@@ -133,21 +137,7 @@ abstract class AbstractRateLimiterTest {
         return RateLimiter.of(rates);
     }
 
-    protected Rate[] getDefaultLimits() { return new Rate[]{getDefaultLimit()}; }
-
-    protected Rate getDefaultLimit() {
-        return getRate(1, durationMillis);
-    }
-
-    protected Rate[] getLimitsThatWillLeadToReset() {
-        return new Rate[] {getBaseRate()};
-    }
-
-    protected Rate getBaseRate() {
-        return getRate(1, 0);
-    }
-
     protected Rate getRate(long permits, long durationMillis) {
-        return Rate.of(permits, Duration.ofMillis(durationMillis));
+        return Rate.of(permits, Duration.ofMillis(durationMillis), factoryClass);
     }
 }

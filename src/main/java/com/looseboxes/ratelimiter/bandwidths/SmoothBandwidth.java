@@ -124,27 +124,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  */
 public abstract class SmoothBandwidth implements Bandwidth {
 
-    public static SmoothBandwidth bursty(double permitsPerSecond) {
-        return bursty(permitsPerSecond, 0);
-    }
-
-    public static SmoothBandwidth bursty(double permitsPerSecond, long nowMicros) {
-        /*
-         * The default SmoothBandwidth configuration can save the unused permits of up to one second. This
-         * is to avoid unnecessary stalls in situations like this: A Bandwidth of 1qps, and 4 threads,
-         * all calling acquire() at these moments:
-         *
-         * T0 at 0 seconds
-         * T1 at 1.05 seconds
-         * T2 at 2 seconds
-         * T3 at 3 seconds
-         *
-         * Due to the slight delay of T1, T2 would have to sleep till 2.05 seconds, and T3 would also
-         * have to sleep till 3.05 seconds.
-         */
-        return bursty(permitsPerSecond, nowMicros, 1.0);
-    }
-
     /**
      * Creates a {@code SmoothBandwidth} with the specified stable throughput, given as "permits per
      * second" (commonly referred to as <i>QPS</i>, queries per second).
@@ -162,20 +141,8 @@ public abstract class SmoothBandwidth implements Bandwidth {
      * @param maxBurstSeconds the work (permits) of how many seconds can be saved up if this Bandwidth is unused?
      * @throws IllegalArgumentException if {@code permitsPerSecond} is negative or zero
      */
-    public static SmoothBandwidth bursty(double permitsPerSecond, long nowMicros, double maxBurstSeconds) {
+    static SmoothBandwidth bursty(double permitsPerSecond, long nowMicros, double maxBurstSeconds) {
         return new SmoothBurstyBandwidth(permitsPerSecond, nowMicros, maxBurstSeconds);
-    }
-
-    public static SmoothBandwidth warmingUp(double permitsPerSecond) {
-        return warmingUp(permitsPerSecond, 1);
-    }
-
-    public static SmoothBandwidth warmingUp(double permitsPerSecond, long warmupPeriodSeconds) {
-        return warmingUp(permitsPerSecond, 0, warmupPeriodSeconds);
-    }
-
-    public static SmoothBandwidth warmingUp(double permitsPerSecond, long nowMicros, long warmupPeriodSeconds) {
-        return warmingUp(permitsPerSecond, nowMicros, warmupPeriodSeconds, SECONDS, 3.0);
     }
 
     /**
@@ -204,7 +171,7 @@ public abstract class SmoothBandwidth implements Bandwidth {
      * @throws IllegalArgumentException if {@code permitsPerSecond} is negative or zero or {@code
      *     warmupPeriod} is negative
      */
-    public static SmoothBandwidth warmingUp(double permitsPerSecond, long nowMicros,
+    static SmoothBandwidth warmingUp(double permitsPerSecond, long nowMicros,
             long warmupPeriod, TimeUnit timeUnit, double coldFactor) {
         return new SmoothWarmingUpBandwidth(permitsPerSecond, nowMicros, warmupPeriod, timeUnit, coldFactor);
     }
@@ -234,7 +201,7 @@ public abstract class SmoothBandwidth implements Bandwidth {
     @Override
     public void setRate(double permitsPerSecond, long nowMicros) {
         Checks.requireTrue(permitsPerSecond > 0.0
-                && !Double.isNaN(permitsPerSecond), "rate must be positive, rate: " + permitsPerSecond);
+                && !Double.isNaN(permitsPerSecond), "Must be positive, rate: " + permitsPerSecond);
         resync(nowMicros);
         this.stableIntervalMicros = convert(permitsPerSecond);
         doSetRate(permitsPerSecond, stableIntervalMicros);
@@ -277,8 +244,6 @@ public abstract class SmoothBandwidth implements Bandwidth {
     /**
      * Returns the sum of {@code a} and {@code b} unless it would overflow or underflow in which case
      * {@code Long.MAX_VALUE} or {@code Long.MIN_VALUE} is returned, respectively.
-     *
-     * @since 20.0
      */
     private static long addIgnoringSaturation(long a, long b) {
         long naiveSum = a + b;
@@ -309,13 +274,11 @@ public abstract class SmoothBandwidth implements Bandwidth {
     /** Updates {@code storedPermits} and {@code nextFreeTicketMicros} based on the current time. */
     void resync(long nowMicros) {
         // if nextFreeTicket is in the past, resync to now
-        //System.out.printf("%s SmoothBandwidth$resync %s\n", java.time.LocalTime.now(), this);
         if (nowMicros > nextFreeTicketMicros) {
             double newPermits = (nowMicros - nextFreeTicketMicros) / coolDownIntervalMicros();
             storedPermits = min(maxPermits, storedPermits + newPermits);
             nextFreeTicketMicros = nowMicros;
         }
-        //System.out.printf("%s SmoothBandwidth$resync %s\n", java.time.LocalTime.now(), this);
     }
 
     long getNextFreeTicketMicros() {

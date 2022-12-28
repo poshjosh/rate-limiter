@@ -1,10 +1,10 @@
 Remove all System.out.println and any print() methods
+Do TODOs
 
 # TODO
 
-Fix errors in rate-limiter-javaee and rate-limiter-spring
-Do all TODOs
-Remove all @since
+Record another performance test
+Update READ for BandwidthLimiter, e.g add Concept and SampleUsage for BandwidthLimiter
 Fix or record bug: com.looseboxes.ratelimiter.web.javaee.uri.MethodLevelPathPatternsTest - L37,40
    The bug results to failing tests which have been marked with TODO
 Publish rate-limiter and associated repositories (to github, maven central?)

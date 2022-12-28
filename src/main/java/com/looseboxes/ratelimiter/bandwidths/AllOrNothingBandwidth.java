@@ -1,130 +1,147 @@
 package com.looseboxes.ratelimiter.bandwidths;
 
-import com.looseboxes.ratelimiter.annotations.Experimental;
+import com.looseboxes.ratelimiter.Checks;
+import com.looseboxes.ratelimiter.annotations.Beta;
 
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Objects;
-
-import static java.lang.Math.max;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import java.util.concurrent.TimeUnit;
 
 /**
- * An all or nothing Bandwidth, wired to return zero wait time whenever {@code waitTime}
- * is less than {@code stableIntervalMicros}
- * @Experimental
+ * An all or nothing Bandwidth, wired to return either zero or maximum possible value from both
+ * {@link #queryEarliestAvailable(long)} and {@link #reserveEarliestAvailable(int, long)}
+ *
+ * Beta
  */
-@Experimental
-public class AllOrNothingBandwidth implements Bandwidth, Serializable {
+@Beta
+final class AllOrNothingBandwidth implements Bandwidth, Serializable {
 
     private static final long serialVersionUID = 90L;
 
-    private final Bandwidth delegate;
-    private long offsetTime;
-    private long attempts;
+    private static final class Rate implements Comparable<Rate>, Serializable {
 
-    public AllOrNothingBandwidth(Bandwidth delegate) {
-        this(delegate, 0, 0);
-    }
+        private static final long serialVersionUID = 10L;
 
-    private AllOrNothingBandwidth(Bandwidth delegate, long offsetTime, long attempts) {
-        this.delegate = Objects.requireNonNull(delegate);
-        this.offsetTime = offsetTime;
-        this.attempts = attempts;
-    }
+        private long limit;
+        private long durationMicros;
+        private long nowMicros;
 
-    @Override
-    public boolean canAcquire(long nowMicros, long timeoutMicros) {
-        nowMicros += offsetTime;
-        final long earliestAvailable = queryEarliestAvailable(nowMicros);
-        if ((earliestAvailable - offsetTime) <= getStableIntervalMicros()) {
-            ++attempts;
-            offsetTime = earliestAvailable;
-            if (attempts >= Math.rint(getRate())) {
-                offsetTime = 0;
-            }
-            //System.out.printf(
-            //        "%s AllOrNothingBandwidth can acquire: %b, (earliest available)%d - (timeoutMicros)%d <= (elapsedMicros)%d, permits/sec: %1.6f\n",
-            //        java.time.LocalTime.now(), true, earliestAvailable, timeoutMicros, nowMicros, delegate.getRate());
-            return true;
+        private Rate(long permits, long durationMicros, long nowMicros) {
+            Checks.requireNotNegative(permits, "permits");
+            Checks.requireNotNegative(durationMicros, "duration");
+            this.limit = permits;
+            this.durationMicros = durationMicros;
+            this.nowMicros = nowMicros;
         }
-        final boolean canAcquire = earliestAvailable - timeoutMicros <= nowMicros;
-        //System.out.printf(
-        //        "%s AllOrNothingBandwidth can acquire: %b, (earliest available)%d - (timeoutMicros)%d <= (elapsedMicros)%d, permits/sec: %1.6f\n",
-        //        java.time.LocalTime.now(), canAcquire, earliestAvailable, timeoutMicros, nowMicros, delegate.getRate());
-        return canAcquire;
+        public int compareTo(Rate rate) {
+            if(limit == rate.limit && durationMicros == rate.durationMicros) {
+                return 0;
+            }
+            if (limit >= rate.limit) {
+                return durationMicros > rate.durationMicros ? 0 : 1;
+            }
+            return -1;
+        }
+        private void reset(long nowMicros) {
+            this.limit = 0;
+            this.durationMicros = 0;
+            this.nowMicros = nowMicros;
+        }
+        private void increment(int amount, long nowMicros) {
+            Checks.requireNotNegative(amount, "amount");
+            this.limit += amount;
+            this.durationMicros = (nowMicros - this.nowMicros);
+        }
+        @Override
+        public String toString() {
+            return "Rate{limit=" + limit + ", duration=" + durationMicros/1000 + "milli, now=" + nowMicros/1000 + "milli}";
+        }
     }
 
-    @Override
-    public long queryEarliestAvailable(long nowMicros) {
-        return delegate.queryEarliestAvailable(nowMicros);
+    private final Rate limit;
+    private final Rate rate;
+
+    AllOrNothingBandwidth(long permits, long duration, TimeUnit timeUnit, long nowMicros) {
+        this(
+                new Rate(permits, TimeUnit.MICROSECONDS.convert(duration, timeUnit), nowMicros),
+                new Rate(0, 0, nowMicros)
+        );
     }
 
-    private long getStableIntervalMicros() {
-        final double permitsPerSecond = delegate.getRate();
-        return (long)(SECONDS.toMicros(1L) / permitsPerSecond);
-    }
-
-    @Override
-    public long reserveAndGetWaitLength(int permits, long nowMicros) {
-        nowMicros += offsetTime;
-        final long momentAvailable = reserveEarliestAvailable(permits, nowMicros);
-        return max(momentAvailable - nowMicros, 0);
-    }
-
-    @Override
-    public long reserveEarliestAvailable(int permits, long nowMicros) {
-        return delegate.reserveEarliestAvailable(permits, nowMicros);
+    private AllOrNothingBandwidth(Rate limit, Rate rate) {
+        this.limit = Objects.requireNonNull(limit);
+        this.rate = Objects.requireNonNull(rate);
     }
 
     @Override
     public void setRate(double permitsPerSecond, long nowMicros) {
-        delegate.setRate(permitsPerSecond, nowMicros);
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public double getRate() {
-        return delegate.getRate();
+        return (double)(limit.limit * TimeUnit.MICROSECONDS.toSeconds(1)) / limit.durationMicros;
+    }
+
+    @Override
+    public long queryEarliestAvailable(long nowMicros) {
+
+        rate.increment(0, nowMicros);
+
+        final int comparison = rate.compareTo(limit);
+        //System.out.printf("%s AllOrNothingBandwidth comparison: %d, lhs: %s, rhs: %s\n",
+        //        java.time.LocalTime.now(), comparison, rate, limit);
+        if (comparison == 0) {
+            rate.reset(nowMicros);
+        }
+
+        if (comparison <= 0) {
+            return 0;
+        }
+
+        return Long.MAX_VALUE;
+    }
+
+    @Override
+    public long reserveEarliestAvailable(int permits, long nowMicros) {
+        long earliestAvailable = queryEarliestAvailable(nowMicros);
+        rate.increment(permits, nowMicros);
+        return earliestAvailable;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AllOrNothingBandwidth that = (AllOrNothingBandwidth) o;
-        return offsetTime == that.offsetTime && attempts == that.attempts && delegate.equals(that.delegate);
+        SecureSerializationProxy that = (SecureSerializationProxy) o;
+        return limit.equals(that.limit) && rate.equals(that.rate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(delegate, offsetTime, attempts);
+        return Objects.hash(limit, rate);
     }
 
     @Override
     public String toString() {
-        return "AllOrNothingBandwidth{" +
-                "offsetTime=" + offsetTime +
-                ", attempts=" + attempts +
-                ", delegate=" + delegate +
-                '}';
+        return "AllOrNothingBandwidth{" + "limit=" + limit + ", rate=" + rate + '}';
     }
 
     private static class SecureSerializationProxy implements Serializable {
 
         private static final long serialVersionUID = 91L;
 
-        private final Bandwidth delegate;
-        private final long offsetTime;
-        private final long attempts;
+        private final Rate limit;
+        private final Rate rate;
 
         public SecureSerializationProxy(AllOrNothingBandwidth candidate){
-            this.delegate = candidate.delegate;
-            this.offsetTime = candidate.offsetTime;
-            this.attempts = candidate.attempts;
+            this.limit = candidate.limit;
+            this.rate = candidate.rate;
         }
         private Object readResolve() throws InvalidObjectException {
-            return new AllOrNothingBandwidth(delegate, offsetTime, attempts);
+            return new AllOrNothingBandwidth(limit, rate);
         }
     }
 

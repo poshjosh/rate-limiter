@@ -8,5 +8,9 @@ public interface RateLimiterFactory<K> {
         return new DefaultRateLimiterFactory<>();
     }
 
+    default RateLimiter<K> createNew(Rates rates) {
+        return createNew(RateLimiterConfig.of(), rates);
+    }
+
     RateLimiter<K> createNew(RateLimiterConfig<K, ?> rateLimiterConfig, Rates rates);
 }

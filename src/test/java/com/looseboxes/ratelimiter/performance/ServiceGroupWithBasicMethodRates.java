@@ -29,7 +29,7 @@ public class ServiceGroupWithBasicMethodRates {
             log.info("limit_2_or_5_per_minute");
         }
 
-        @RateLimitGroup(logic = Operator.AND)
+        @RateLimitGroup(operator = Operator.AND)
         @RateLimit(limit = 2, duration = 1, timeUnit = TimeUnit.MINUTES)
         @RateLimit(limit = 5, duration = 1, timeUnit = TimeUnit.MINUTES)
         void limit_2_and_5_per_minute() {
@@ -54,7 +54,7 @@ public class ServiceGroupWithBasicMethodRates {
             log.info("limit_2_or_5_per_minute");
         }
 
-        @RateLimitGroup(logic = Operator.AND)
+        @RateLimitGroup(operator = Operator.AND)
         @RateLimit(limit = 2, duration = 1, timeUnit = TimeUnit.MINUTES)
         @RateLimit(limit = 5, duration = 1, timeUnit = TimeUnit.MINUTES)
         void limit_2_and_5_per_minute() {
@@ -79,7 +79,7 @@ public class ServiceGroupWithBasicMethodRates {
             log.info("limit_2_or_5_per_minute");
         }
 
-        @RateLimitGroup(logic = Operator.AND)
+        @RateLimitGroup(operator = Operator.AND)
         @RateLimit(limit = 2, duration = 1, timeUnit = TimeUnit.MINUTES)
         @RateLimit(limit = 5, duration = 1, timeUnit = TimeUnit.MINUTES)
         void limit_2_and_5_per_minute() {

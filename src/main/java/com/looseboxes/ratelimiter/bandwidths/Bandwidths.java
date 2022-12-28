@@ -1,6 +1,6 @@
 package com.looseboxes.ratelimiter.bandwidths;
 
-import com.looseboxes.ratelimiter.annotations.Experimental;
+import com.looseboxes.ratelimiter.annotations.Beta;
 import com.looseboxes.ratelimiter.util.Operator;
 
 import java.io.InvalidObjectException;
@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public final class Bandwidths implements Serializable{
+public final class Bandwidths implements Bandwidth, Serializable{
 
     public static final Bandwidths EMPTY_OR = Bandwidths.of(Operator.OR);
     public static final Bandwidths EMPTY_AND = Bandwidths.of(Operator.AND);
@@ -31,6 +31,10 @@ public final class Bandwidths implements Serializable{
         return of(Operator.OR, bandwidths);
     }
 
+    public static Bandwidths of(Bandwidths bandwidths) {
+        return new Bandwidths(bandwidths);
+    }
+
     public static Bandwidths of(Operator operator, Bandwidth... bandwidths) {
         return new Bandwidths(operator, bandwidths);
     }
@@ -41,54 +45,60 @@ public final class Bandwidths implements Serializable{
 
     private final Bandwidth[] members;
 
+    private Bandwidths(Bandwidths bandwidths) {
+        this(bandwidths.operator, bandwidths.members);
+    }
+
     private Bandwidths(Operator operator, Bandwidth... members) {
         this.operator = Objects.requireNonNull(operator);
         this.members = Arrays.copyOf(members, members.length);
     }
 
-    public boolean canAcquire(long nowMicros, long timeoutMicros) {
-        int failureCount = 0;
-        for (Bandwidth bandwidth : members) {
-            if (!bandwidth.canAcquire(nowMicros, timeoutMicros)) {
-                ++failureCount;
-            }
-        }
-        return !isLimitExceeded(failureCount);
+    @Override
+    public void setRate(double permitsPerSecond, long nowMicros) {
+        throw new UnsupportedOperationException();
     }
 
-    private boolean isLimitExceeded(int failureCount) {
-        return (Operator.OR.equals(operator) && failureCount > 0)
-                || (Operator.AND.equals(operator) && failureCount >= memberCount());
-    }
-
-    /**
-     * Reserves next ticket and returns the wait time that the caller must wait for.
-     *
-     * @return the required wait time, never negative
-     */
-    public long reserveAndGetWaitLength(int permits, long nowMicros) {
+    @Override
+    public long queryEarliestAvailable(long nowMicros) {
         final boolean AND = Operator.AND.equals(operator);
-        long waitTime = -1;
+        long result = -1;
         for(Bandwidth bandwidth : members) {
-            final long currWaitTime = bandwidth.reserveAndGetWaitLength(permits, nowMicros);
-            if (waitTime == -1) {
-                waitTime = currWaitTime;
+            final long current = bandwidth.queryEarliestAvailable(nowMicros);
+            //System.out.printf("%s Bandwidths#query earliest available: %d, %s\n", java.time.LocalTime.now(), current, bandwidth);
+            if (result == -1) {
+                result = current;
             }
-            if (AND && currWaitTime < waitTime) {
-                waitTime = currWaitTime;
+            if (AND && current < result) {
+                result = current;
                 continue;
             }
-            if (!AND && currWaitTime > waitTime) {
-                waitTime = currWaitTime;
+            if (!AND && current > result) {
+                result = current;
             }
         }
-        return waitTime;
+        return result;
     }
 
-    public boolean hasMembers() { return memberCount() > 0; }
-
-    public int memberCount() {
-        return members.length;
+    @Override
+    public long reserveEarliestAvailable(int permits, long nowMicros) {
+        final boolean AND = Operator.AND.equals(operator);
+        long result = -1;
+        for(Bandwidth bandwidth : members) {
+            final long current = bandwidth.reserveEarliestAvailable(permits, nowMicros);
+            //System.out.printf("%s Bandwidths#reserve wait length: %d, %s\n", java.time.LocalTime.now(), current, bandwidth);
+            if (result == -1) {
+                result = current;
+            }
+            if (AND && current < result) {
+                result = current;
+                continue;
+            }
+            if (!AND && current > result) {
+                result = current;
+            }
+        }
+        return result;
     }
 
     public Stream<Bandwidth> stream() {
@@ -101,13 +111,14 @@ public final class Bandwidths implements Serializable{
      * argument passed in the factory method that produced the {@code Bandwidth}.
      * @see #getAllRates()
      */
-    @Experimental
+    @Beta
     public double getRate() {
-        final boolean isAnd = Operator.AND.equals(operator);
+        final boolean AND = Operator.AND.equals(operator);
         double [] arr = getAllRates();
         double result = -1;
         for(double e : arr) {
-            result = result == - 1 ? e : (isAnd ? Math.max(e, result) : Math.min(e, result));
+            // TODO Why are we returning the max here for AND, as oppose to min in other methods?
+            result = result == - 1 ? e : (AND ? Math.max(e, result) : Math.min(e, result));
         }
         return result;
     }

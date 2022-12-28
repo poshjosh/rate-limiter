@@ -3,7 +3,7 @@ package com.looseboxes.ratelimiter.bandwidths;
 import com.looseboxes.ratelimiter.SerializationTest;
 import org.junit.jupiter.api.Test;
 
-class SimpleBandwithsSerializationTest extends SerializationTest<Bandwidths> {
+class BandwithsSerializationTest extends SerializationTest<Bandwidths> {
 
     @Test
     void testSerialization() {
@@ -13,8 +13,8 @@ class SimpleBandwithsSerializationTest extends SerializationTest<Bandwidths> {
     }
 
     void testSerialization(double permitsPerSecond, long nowMicros, long warmUpPeriodSeconds) {
-        Bandwidth a = SmoothBandwidth.bursty(permitsPerSecond, nowMicros);
-        Bandwidth b = SmoothBandwidth.warmingUp(permitsPerSecond, nowMicros, warmUpPeriodSeconds);
+        Bandwidth a = Bandwidth.bursty(permitsPerSecond, nowMicros);
+        Bandwidth b = Bandwidth.warmingUp(permitsPerSecond, nowMicros, warmUpPeriodSeconds);
         super.testSerialization(Bandwidths.and(a, b));
         super.testSerialization(Bandwidths.or(a, b));
     }

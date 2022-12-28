@@ -96,7 +96,6 @@ public interface BandwidthLimiter {
      * @param permits the number of permits to acquire
      * @return time spent sleeping to enforce rate, in seconds; 0.0 if not rate-limited
      * @throws IllegalArgumentException if the requested number of permits is negative or zero
-     * @since 16.0 (present in 13.0 with {@code void} return type})
      */
     double acquire(int permits);
 
@@ -120,7 +119,6 @@ public interface BandwidthLimiter {
      * <p>This method is equivalent to {@code acquire(1)}.
      *
      * @return time spent sleeping to enforce rate, in seconds; 0.0 if not rate-limited
-     * @since 16.0 (present in 13.0 with {@code void} return type})
      */
     default double acquire() {
         return acquire(1);
@@ -136,7 +134,6 @@ public interface BandwidthLimiter {
      * @param timeout the maximum time to wait for the permit. Negative values are treated as zero.
      * @return {@code true} if the permit was acquired, {@code false} otherwise
      * @throws IllegalArgumentException if the requested number of permits is negative or zero
-     * @since 28.0
      */
     default boolean tryAcquire(Duration timeout) {
         return tryAcquire(1, Util.toNanosSaturated(timeout), TimeUnit.NANOSECONDS);
@@ -167,7 +164,6 @@ public interface BandwidthLimiter {
      * @param permits the number of permits to acquire
      * @return {@code true} if the permits were acquired, {@code false} otherwise
      * @throws IllegalArgumentException if the requested number of permits is negative or zero
-     * @since 14.0
      */
     default boolean tryAcquire(int permits) {
         return tryAcquire(permits, 0, MICROSECONDS);
@@ -180,7 +176,6 @@ public interface BandwidthLimiter {
      * <p>This method is equivalent to {@code tryAcquire(1)}.
      *
      * @return {@code true} if the permit was acquired, {@code false} otherwise
-     * @since 14.0
      */
     default boolean tryAcquire() {
         return tryAcquire(1, 0, MICROSECONDS);
@@ -195,7 +190,6 @@ public interface BandwidthLimiter {
      * @param timeout the maximum time to wait for the permits. Negative values are treated as zero.
      * @return {@code true} if the permits were acquired, {@code false} otherwise
      * @throws IllegalArgumentException if the requested number of permits is negative or zero
-     * @since 28.0
      */
     default boolean tryAcquire(int permits, Duration timeout) {
         return tryAcquire(permits, Util.toNanosSaturated(timeout), TimeUnit.NANOSECONDS);

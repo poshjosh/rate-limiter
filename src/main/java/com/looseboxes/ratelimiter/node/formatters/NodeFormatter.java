@@ -17,12 +17,12 @@
 package com.looseboxes.ratelimiter.node.formatters;
 
 import com.looseboxes.ratelimiter.node.Node;
-import com.looseboxes.ratelimiter.annotations.Experimental;
+import com.looseboxes.ratelimiter.annotations.Beta;
 
 /**
  * @author Chinomso Bassey Ikwuagwu on Oct 19, 2017 5:04:09 PM
  */
-@Experimental
+@Beta
 public interface NodeFormatter {
 
     default <V> String format(Node<V> node) {

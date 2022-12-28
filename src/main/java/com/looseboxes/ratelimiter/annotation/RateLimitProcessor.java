@@ -37,11 +37,11 @@ public class RateLimitProcessor extends AbstractProcessor {
                 RateLimit rateLimit = annotatedElement.getAnnotation(RateLimit.class);
                 final long limit = rateLimit.limit();
                 if (limit < 0) {
-                    messager.printMessage(Diagnostic.Kind.ERROR, "Limit must be positive. Limit: " + limit);
+                    messager.printMessage(Diagnostic.Kind.ERROR, "Must not be negative, limit: " + limit);
                 }
                 final long duration = rateLimit.duration();
                 if (duration < 0) {
-                    messager.printMessage(Diagnostic.Kind.ERROR, "Duration must be positive. Duration: " + duration);
+                    messager.printMessage(Diagnostic.Kind.ERROR, "Must not be negative, duration: " + duration);
                 }
             });
         });
