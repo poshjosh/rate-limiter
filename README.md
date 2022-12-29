@@ -2,10 +2,6 @@
 
 __Light-weight rate limiter library.__
 
-Limit how much a resource (class/method/key) is used within a given duration.
-
-The aim is to be simple but flexible, for example to limit a method to 3 invocations every 2 seconds:
-
 ### Concept
 
 We have a list of tasks to execute, but we don't want to submit more than 2 per second.
@@ -84,7 +80,7 @@ Enjoy! :wink:
 
 The following depend on this library:
 
-- [rate-limiter](https://github.com/poshjosh/rate-limiter).
+- [rate-limiter-annotation](https://github.com/poshjosh/rate-limiter-annotation).
 
 - [rate-limiter-web-core](https://github.com/poshjosh/rate-limiter-web-core).
 
