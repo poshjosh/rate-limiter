@@ -27,6 +27,11 @@ final class SmoothBurstyBandwidth extends SmoothBandwidth implements Serializabl
     }
 
     @Override
+    public SmoothBurstyBandwidth with(long nowMicros) {
+        return new SmoothBurstyBandwidth(getPermitsPerSecond(), nowMicros, this.maxBurstSeconds);
+    }
+
+    @Override
     protected void doSetRate(double permitsPerSecond, double stableIntervalMicros) {
         double oldMaxPermits = this.maxPermits;
         maxPermits = maxBurstSeconds * permitsPerSecond;
@@ -68,7 +73,7 @@ final class SmoothBurstyBandwidth extends SmoothBandwidth implements Serializabl
 
     @Override
     public String toString() {
-        return "SmoothBurstyBandwidth{permitsPerSecond=" + getRate()
+        return "SmoothBurstyBandwidth{permitsPerSecond=" + getPermitsPerSecond()
                 + ", storedPermits=" + storedPermits + ", maxPermits=" + maxPermits
                 + ", stableIntervalMicros=" + stableIntervalMicros + ", maxBurstSeconds="
                 + maxBurstSeconds + ", nextFreeTicketMicros=" + getNextFreeTicketMicros() + '}';
@@ -83,7 +88,7 @@ final class SmoothBurstyBandwidth extends SmoothBandwidth implements Serializabl
         private final double maxBurstSeconds;
 
         public SecureSerializationProxy(SmoothBurstyBandwidth candidate){
-            this.permitsPerSecond = candidate.getRate();
+            this.permitsPerSecond = candidate.getPermitsPerSecond();
             this.nowMicros = candidate.nowMicros;
             this.maxBurstSeconds = candidate.maxBurstSeconds;
         }

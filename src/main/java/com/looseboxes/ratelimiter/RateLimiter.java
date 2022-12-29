@@ -1,60 +1,127 @@
 package com.looseboxes.ratelimiter;
 
-import com.looseboxes.ratelimiter.util.Rate;
-import com.looseboxes.ratelimiter.util.Rates;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
+import com.looseboxes.ratelimiter.util.Operator;
+import com.looseboxes.ratelimiter.util.SleepingTicker;
 
 import java.time.Duration;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
-public interface RateLimiter<K> {
+/**
+ * A bandwith limiter. Conceptually, a bandwidth limiter distributes permits at a configurable rate. Each
+ * {@link #acquire()} blocks if necessary until a permit is available, and then takes it. Once
+ * acquired, permits need not be released.
+ *
+ * <p>{@code RateLimiter} is safe for concurrent use: It will restrict the total rate of calls from
+ * all threads. Note, however, that it does not guarantee fairness.
+ *
+ * <p>Rate limiters are often used to restrict the rate at which some physical or logical resource
+ * is accessed. This is in contrast to {@link java.util.concurrent.Semaphore} which restricts the
+ * number of concurrent accesses instead of the rate (note though that concurrency and rate are
+ * closely related, e.g. see <a href="http://en.wikipedia.org/wiki/Little%27s_law">Little's
+ * Law</a>).
+ *
+ * <p>A {@code RateLimiter} is defined primarily by the rate at which permits are issued. Absent
+ * additional configuration, permits will be distributed at a fixed rate, defined in terms of
+ * permits per second. Permits will be distributed smoothly, with the delay between individual
+ * permits being adjusted to ensure that the configured rate is maintained.
+ *
+ * <p>It is possible to configure a {@code RateLimiter} to have a warmup period during which time
+ * the permits issued each second steadily increases until it hits the stable rate.
+ *
+ * <p>As an example, imagine that we have a list of tasks to execute, but we don't want to submit
+ * more than 2 per second:
+ *
+ * <pre>{@code
+ * final RateLimiter rateLimiter = RateLimiter.of(Bandwidth.bursty(2.0)); // 2 permits per second
+ * void submitTasks(List<Runnable> tasks, Executor executor) {
+ *   for (Runnable task : tasks) {
+ *     rateLimiter.acquire(); // may wait
+ *     executor.execute(task);
+ *   }
+ * }
+ * }</pre>
+ *
+ * <p>As another example, imagine that we produce a stream of data, and we want to cap it at 5kb per
+ * second. This could be accomplished by requiring a permit per byte, and specifying a rate of 5000
+ * permits per second:
+ *
+ * <pre>{@code
+ * final RateLimiter rateLimiter = RateLimiter.of(Bandwidth.bursty(5000.0); // 5000 permits per second
+ * void submitPacket(byte[] packet) {
+ *   rateLimiter.acquire(packet.length);
+ *   networkService.send(packet);
+ * }
+ * }</pre>
+ *
+ * <p>It is important to note that the number of permits requested <i>never</i> affects the
+ * throttling of the request itself (an invocation to {@code acquire(1)} and an invocation to {@code
+ * acquire(1000)} will result in exactly the same throttling, if any), but it affects the throttling
+ * of the <i>next</i> request. I.e., if an expensive task arrives at an idle RateLimiter, it will be
+ * granted immediately, but it is the <i>next</i> request that will experience extra throttling,
+ * thus paying for the cost of the expensive task.
+ */
+public interface RateLimiter {
 
-    RateLimiter<Object> NO_OP = (context, resourceId, permits, timeout, unit) -> true;
-
-    @SuppressWarnings("unchecked")
-    static <T> RateLimiter<T> noop() {
-        return (RateLimiter<T>)NO_OP;
+    static RateLimiter of(Bandwidth... bandwidths) {
+        return of(Bandwidths.of(bandwidths));
     }
 
-    static <K> RateLimiter<K> of(Rate... limits) {
-        return of(Rates.of(limits));
+    static RateLimiter of(Operator operator, Bandwidth... bandwidths) {
+        return of(Bandwidths.of(operator, bandwidths));
     }
 
-    static <K> RateLimiter<K> of(Rates limits) {
-        return of(RateLimiterConfig.of(), limits);
+    static RateLimiter of(Bandwidths bandwidths) {
+        return of(bandwidths, SleepingTicker.zeroOffset());
     }
 
-    static <K> RateLimiter<K> of(RateLimiterConfig<K, ?> rateLimiterConfig, Rate limit) {
-        return of(rateLimiterConfig, Rates.of(limit));
-    }
-
-    static <K> RateLimiter<K> of(RateLimiterConfig<K, ?> rateLimiterConfig, Rates limits) {
-        return new DefaultRateLimiter<>(rateLimiterConfig, limits);
+    static RateLimiter of(Bandwidths bandwidths, SleepingTicker ticker) {
+        return new DefaultRateLimiter(bandwidths, ticker);
     }
 
     /**
-     * Consume the identified resource by one. Same as calling {@code #tryConsume(k, 1)}
-     *
-     * @param resourceId The id of the resource whose rate is to be incremented
-     * @return {code false} if the tryConsume caused one or more limit(s) to be exceeded, otherwise return {@code true}
-     * @see #tryConsume(Object, int)
+     * Returns the stable rate (as {@code permits per seconds}) with which the currently eligible {@code Bandwidth}
+     * in this {@code RateLimiter} is configured with. The initial value is same as the {@code permitsPerSecond}
+     * argument passed in the factory method that produced the {@code Bandwidth}
      */
-    default boolean tryConsume(K resourceId) {
-        return tryConsume(resourceId, 1);
-    }
+    double getPermitsPerSecond();
 
     /**
-     * Consume the identified resource by the specified amount.
+     * Acquires the given number of permits from this {@code RateLimiter}, blocking until the request
+     * can be granted. Tells the amount of time slept, if any.
      *
-     * @param resourceId The id of the resource whose rate is to be incremented
-     * @param amount The amount by which to tryConsume the rate
-     * @return {code false} if the tryConsume caused one or more limit(s) to be exceeded, otherwise return {@code true}
-     * @see #tryConsume(Object)
+     * @param permits the number of permits to acquire
+     * @return time spent sleeping to enforce rate, in seconds; 0.0 if not rate-limited
+     * @throws IllegalArgumentException if the requested number of permits is negative or zero
      */
-    default boolean tryConsume(K resourceId, int amount) {
-        return tryConsume(resourceId, resourceId, amount);
+    double acquire(int permits);
+
+    /**
+     * Acquires the given number of permits from this {@code RateLimiter} if it can be obtained
+     * without exceeding the specified {@code timeout}, or returns {@code false} immediately (without
+     * waiting) if the permits would not have been granted before the timeout expired.
+     *
+     * @param permits the number of permits to acquire
+     * @param timeout the maximum time to wait for the permits. Negative values are treated as zero.
+     * @param unit the time unit of the timeout argument
+     * @return {@code true} if the permits were acquired, {@code false} otherwise
+     * @throws IllegalArgumentException if the requested number of permits is negative or zero
+     */
+    boolean tryAcquire(int permits, long timeout, TimeUnit unit);
+
+    /**
+     * Acquires a single permit from this {@code RateLimiter}, blocking until the request can be
+     * granted. Tells the amount of time slept, if any.
+     *
+     * <p>This method is equivalent to {@code acquire(1)}.
+     *
+     * @return time spent sleeping to enforce rate, in seconds; 0.0 if not rate-limited
+     */
+    default double acquire() {
+        return acquire(1);
     }
 
     /**
@@ -68,8 +135,8 @@ public interface RateLimiter<K> {
      * @return {@code true} if the permit was acquired, {@code false} otherwise
      * @throws IllegalArgumentException if the requested number of permits is negative or zero
      */
-    default boolean tryConsume(Object context, K resourceId, Duration timeout) {
-        return tryConsume(context, resourceId, 1, Util.toNanosSaturated(timeout), TimeUnit.NANOSECONDS);
+    default boolean tryAcquire(Duration timeout) {
+        return tryAcquire(1, Util.toNanosSaturated(timeout), TimeUnit.NANOSECONDS);
     }
 
     /**
@@ -85,8 +152,8 @@ public interface RateLimiter<K> {
      * @throws IllegalArgumentException if the requested number of permits is negative or zero
      */
     @SuppressWarnings("GoodTime") // should accept a java.time.Duration
-    default boolean tryConsume(Object context, K resourceId, long timeout, TimeUnit unit) {
-        return tryConsume(context, resourceId, 1, timeout, unit);
+    default boolean tryAcquire(long timeout, TimeUnit unit) {
+        return tryAcquire(1, timeout, unit);
     }
 
     /**
@@ -98,8 +165,8 @@ public interface RateLimiter<K> {
      * @return {@code true} if the permits were acquired, {@code false} otherwise
      * @throws IllegalArgumentException if the requested number of permits is negative or zero
      */
-    default boolean tryConsume(Object context, K resourceId, int permits) {
-        return tryConsume(context, resourceId, permits, 0, MICROSECONDS);
+    default boolean tryAcquire(int permits) {
+        return tryAcquire(permits, 0, MICROSECONDS);
     }
 
     /**
@@ -110,8 +177,8 @@ public interface RateLimiter<K> {
      *
      * @return {@code true} if the permit was acquired, {@code false} otherwise
      */
-    default boolean tryConsume(Object context, K resourceId) {
-        return tryConsume(context, resourceId, 1, 0, MICROSECONDS);
+    default boolean tryAcquire() {
+        return tryAcquire(1, 0, MICROSECONDS);
     }
 
     /**
@@ -124,63 +191,7 @@ public interface RateLimiter<K> {
      * @return {@code true} if the permits were acquired, {@code false} otherwise
      * @throws IllegalArgumentException if the requested number of permits is negative or zero
      */
-    default boolean tryConsume(Object context, K resourceId, int permits, Duration timeout) {
-        return tryConsume(context, resourceId, permits, Util.toNanosSaturated(timeout), TimeUnit.NANOSECONDS);
-    }
-
-    /**
-     * Consumes the given number of permits from this {@code RateLimiter} if it can be obtained
-     * without exceeding the specified {@code timeout}, or returns {@code false} immediately (without
-     * waiting) if the permits would not have been granted before the timeout expired.
-     *
-     * @param permits the number of permits to acquire
-     * @param timeout the maximum time to wait for the permits. Negative values are treated as zero.
-     * @param unit the time unit of the timeout argument
-     * @return {@code true} if the permits were acquired, {@code false} otherwise
-     * @throws IllegalArgumentException if the requested number of permits is negative or zero
-     */
-    boolean tryConsume(Object context, K resourceId, int permits, long timeout, TimeUnit unit);
-
-
-    /**
-     * Returns a composed RateLimiter that first calls this RateLimiter's tryConsume function,
-     * OR (||) then calls the tryConsume function of the {@code after} RateLimiter.
-     * If evaluation of either tryConsume function throws an exception, it is relayed to
-     * the caller of the composed function.
-     *
-     * @param after The RateLimiter to tryConsume after this RateLimiter
-     * @return a composed RateLimiter that first calls this OR (||) then the {@code after} RateLimiter
-     * @throws NullPointerException if after is null
-     */
-    default RateLimiter<K> orThen(RateLimiter<K> after) {
-        Objects.requireNonNull(after);
-        return new RateLimiter<K>() {
-            @Override
-            public boolean tryConsume(Object context, K resourceId, int permits, long timeout, TimeUnit unit) {
-                return RateLimiter.this.tryConsume(context, resourceId, permits, timeout, unit)
-                        || after.tryConsume(context, resourceId, permits, timeout, unit);
-            }
-        };
-    }
-
-    /**
-     * Returns a composed RateLimiter that first calls this RateLimiter's tryConsume function,
-     * AND (&&) then calls the tryConsume function of the {@code after} RateLimiter.
-     * If evaluation of either tryConsume function throws an exception, it is relayed to
-     * the caller of the composed function.
-     *
-     * @param after The RateLimiter to tryConsume after this RateLimiter
-     * @return a composed RateLimiter that firsts calls this AND (&&) then the {@code after} RateLimiter
-     * @throws NullPointerException if after is null
-     */
-    default RateLimiter<K> andThen(RateLimiter<K> after) {
-        Objects.requireNonNull(after);
-        return new RateLimiter<K>() {
-            @Override
-            public boolean tryConsume(Object context, K resourceId, int permits, long timeout, TimeUnit unit) {
-                return RateLimiter.this.tryConsume(context, resourceId, permits, timeout, unit)
-                        && after.tryConsume(context, resourceId, permits, timeout, unit);
-            }
-        };
+    default boolean tryAcquire(int permits, Duration timeout) {
+        return tryAcquire(permits, Util.toNanosSaturated(timeout), TimeUnit.NANOSECONDS);
     }
 }

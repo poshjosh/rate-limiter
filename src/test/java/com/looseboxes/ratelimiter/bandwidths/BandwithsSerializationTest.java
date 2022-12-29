@@ -1,6 +1,5 @@
 package com.looseboxes.ratelimiter.bandwidths;
 
-import com.looseboxes.ratelimiter.SerializationTest;
 import org.junit.jupiter.api.Test;
 
 class BandwithsSerializationTest extends SerializationTest<Bandwidths> {

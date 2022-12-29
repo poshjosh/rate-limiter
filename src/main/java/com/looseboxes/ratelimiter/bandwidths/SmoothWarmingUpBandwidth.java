@@ -98,6 +98,11 @@ final class SmoothWarmingUpBandwidth extends SmoothBandwidth implements Serializ
     }
 
     @Override
+    public SmoothWarmingUpBandwidth with(long nowMicros) {
+        return new SmoothWarmingUpBandwidth(getPermitsPerSecond(), nowMicros, warmupPeriodMicros, TimeUnit.MICROSECONDS, coldFactor);
+    }
+
+    @Override
     protected void doSetRate(double permitsPerSecond, double stableIntervalMicros) {
         double oldMaxPermits = maxPermits;
         double coldIntervalMicros = stableIntervalMicros * coldFactor;
@@ -165,7 +170,7 @@ final class SmoothWarmingUpBandwidth extends SmoothBandwidth implements Serializ
 
     @Override
     public String toString() {
-        return "SmoothWarmingUpBandwidth{permitsPerSecond=" + getRate()
+        return "SmoothWarmingUpBandwidth{permitsPerSecond=" + getPermitsPerSecond()
                 + ", storedPermits=" + storedPermits + ", maxPermits="
                 + maxPermits + ", stableIntervalMicros=" + stableIntervalMicros
                 + ", warmupPeriodMicros=" + warmupPeriodMicros + ", slope=" + slope
@@ -183,7 +188,7 @@ final class SmoothWarmingUpBandwidth extends SmoothBandwidth implements Serializ
         private final double coldFactor;
 
         public SerializationProxy(SmoothWarmingUpBandwidth candidate){
-            this.permitsPerSecond = candidate.getRate();
+            this.permitsPerSecond = candidate.getPermitsPerSecond();
             this.nowMicros = candidate.nowMicros;
             this.warmupPeriodMicros = candidate.warmupPeriodMicros;
             this.coldFactor = candidate.coldFactor;

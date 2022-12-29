@@ -198,7 +198,25 @@ public abstract class SmoothBandwidth implements Bandwidth {
 
     protected abstract void doSetRate(double permitsPerSecond, double stableIntervalMicros);
 
-    @Override
+    /**
+     * Updates the stable rate of this {@code SmoothBandwidth}, that is, the {@code permitsPerSecond}
+     * argument provided in the factory method that constructed the {@code SmoothBandwidth}. Currently
+     * throttled threads will <b>not</b> be awakened as a result of this invocation, thus they do not
+     * observe the new rate; only subsequent requests will.
+     *
+     * <p>Note though that, since each request repays (by waiting, if necessary) the cost of the
+     * <i>previous</i> request, this means that the very next request after an invocation to {@code setRate}
+     * will not be affected by the new rate; it will pay the cost of the previous request,
+     * which is in terms of the previous rate.
+     *
+     * <p>The behavior of the {@code SmoothBandwidth} is not modified in any other way, e.g. if the {@code
+     * SmoothBandwidth} was configured with a warmup period of 20 seconds, it still has a warmup period of
+     * 20 seconds after this method invocation.
+     *
+     * @param permitsPerSecond the new stable rate of this {@code SmoothBandwidth}
+     * @param nowMicros
+     * @throws IllegalArgumentException if {@code permitsPerSecond} is negative or zero
+     */
     public void setRate(double permitsPerSecond, long nowMicros) {
         Checks.requireTrue(permitsPerSecond > 0.0
                 && !Double.isNaN(permitsPerSecond), "Must be positive, rate: " + permitsPerSecond);
@@ -213,7 +231,7 @@ public abstract class SmoothBandwidth implements Bandwidth {
      * passed in the factory method that produced this {@code Rate}.
      */
     @Override
-    public final double getRate() {
+    public final double getPermitsPerSecond() {
         return convert(stableIntervalMicros);
     }
 

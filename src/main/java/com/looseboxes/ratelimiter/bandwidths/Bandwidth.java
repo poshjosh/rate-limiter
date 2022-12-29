@@ -12,6 +12,12 @@ public interface Bandwidth {
 
     /** Beta */
     @Beta
+    static Bandwidth allOrNothing(long permitsPerSecond) {
+        return allOrNothing(permitsPerSecond, Duration.ofSeconds(1));
+    }
+
+    /** Beta */
+    @Beta
     static Bandwidth allOrNothing(long permits, Duration duration) {
         return allOrNothing(permits, duration, 0);
     }
@@ -23,7 +29,7 @@ public interface Bandwidth {
     }
 
     /**
-     * Creates an {@code AllOrNothingBandwidth}, wired to return either zero or maximum possible value from both
+     * Creates an {@code AllOrNothingBandwidth}, wired to return a value between zero and the stable interval for
      * {@link #queryEarliestAvailable(long)} and {@link #reserveEarliestAvailable(int, long)}
      *
      * Beta
@@ -81,14 +87,14 @@ public interface Bandwidth {
         return SmoothBandwidth.warmingUp(permitsPerSecond, nowMicros, warmupPeriod, timeUnit, coldFactor);
     }
 
-    void setRate(double permitsPerSecond, long nowMicros);
+    Bandwidth with(long nowMicros);
 
     /**
      * Returns the stable rate (as {@code permits per seconds}) with which this {@code Rate} is
      * configured with. The initial value of this is the same as the {@code permitsPerSecond} argument
      * passed in the factory method that produced this {@code Rate}.
      */
-    double getRate();
+    double getPermitsPerSecond();
 
     default boolean canAcquire(long nowMicros, long timeoutMicros) {
         final long nextFreeTicketAvailableAt = queryEarliestAvailable(nowMicros);
@@ -101,6 +107,8 @@ public interface Bandwidth {
 
     /**
      * Returns the earliest time that permits are available (with one caveat).
+     *
+     * This operation must not lead to the modification of the Bandwidth.
      *
      * @return the time that permits are available, or, if permits are available immediately, an
      *     arbitrary past or present time

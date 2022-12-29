@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
- * An all or nothing Bandwidth, wired to return either zero or maximum possible value from both
+ * An all or nothing Bandwidth, wired to return a value between zero and stable interval for both methods
  * {@link #queryEarliestAvailable(long)} and {@link #reserveEarliestAvailable(int, long)}
  *
  * Beta
@@ -76,46 +76,49 @@ final class AllOrNothingBandwidth implements Bandwidth, Serializable {
     }
 
     @Override
-    public void setRate(double permitsPerSecond, long nowMicros) {
-        throw new UnsupportedOperationException();
+    public AllOrNothingBandwidth with(long nowMicros) {
+        return new AllOrNothingBandwidth(
+                new Rate(limit.limit, limit.durationMicros, nowMicros),
+                new Rate(rate.limit, rate.durationMicros, nowMicros)
+        );
     }
 
     @Override
-    public double getRate() {
+    public double getPermitsPerSecond() {
         return (double)(limit.limit * TimeUnit.MICROSECONDS.toSeconds(1)) / limit.durationMicros;
     }
 
     @Override
     public long queryEarliestAvailable(long nowMicros) {
-
-        rate.increment(0, nowMicros);
-
-        final int comparison = rate.compareTo(limit);
-        //System.out.printf("%s AllOrNothingBandwidth comparison: %d, lhs: %s, rhs: %s\n",
-        //        java.time.LocalTime.now(), comparison, rate, limit);
-        if (comparison == 0) {
-            rate.reset(nowMicros);
-        }
-
-        if (comparison <= 0) {
-            return 0;
-        }
-
-        return Long.MAX_VALUE;
+        final int comparison = compare(nowMicros);
+        return toWaitTime(nowMicros, comparison);
     }
 
     @Override
     public long reserveEarliestAvailable(int permits, long nowMicros) {
-        long earliestAvailable = queryEarliestAvailable(nowMicros);
+        final int comparison = compare(nowMicros);
+        if (comparison == 0) {
+            rate.reset(nowMicros);
+        }
+        long earliestAvailable = toWaitTime(nowMicros, comparison);
         rate.increment(permits, nowMicros);
         return earliestAvailable;
+    }
+
+    private int compare(long nowMicros) {
+        rate.increment(0, nowMicros);
+        return rate.compareTo(limit);
+    }
+
+    private long toWaitTime(long nowMicros, int comparison) {
+        return comparison <= 0 ? nowMicros : nowMicros + (limit.durationMicros - rate.durationMicros);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        SecureSerializationProxy that = (SecureSerializationProxy) o;
+        AllOrNothingBandwidth that = (AllOrNothingBandwidth) o;
         return limit.equals(that.limit) && rate.equals(that.rate);
     }
 

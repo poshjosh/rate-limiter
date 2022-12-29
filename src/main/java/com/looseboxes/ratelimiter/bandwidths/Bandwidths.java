@@ -54,9 +54,18 @@ public final class Bandwidths implements Bandwidth, Serializable{
         this.members = Arrays.copyOf(members, members.length);
     }
 
+    public boolean isLimitExceeded(int failureCount) {
+        return (Operator.OR.equals(operator) && failureCount > 0)
+                || (Operator.AND.equals(operator) && failureCount >= members.length);
+    }
+
     @Override
-    public void setRate(double permitsPerSecond, long nowMicros) {
-        throw new UnsupportedOperationException();
+    public Bandwidths with(long nowMicros) {
+        final Bandwidth [] copies = new Bandwidth[members.length];
+        for (int i = 0; i < copies.length; i++) {
+            copies[i] = members[i].with(nowMicros);
+        }
+        return Bandwidths.of(operator, copies);
     }
 
     @Override
@@ -112,7 +121,7 @@ public final class Bandwidths implements Bandwidth, Serializable{
      * @see #getAllRates()
      */
     @Beta
-    public double getRate() {
+    public double getPermitsPerSecond() {
         final boolean AND = Operator.AND.equals(operator);
         double [] arr = getAllRates();
         double result = -1;
@@ -131,7 +140,7 @@ public final class Bandwidths implements Bandwidth, Serializable{
     private double [] getAllRates() {
         final double [] permitsPerSecond = new double[members.length];
         for(int i = 0; i < members.length; i++) {
-            permitsPerSecond[i] = members[i].getRate();
+            permitsPerSecond[i] = members[i].getPermitsPerSecond();
         }
         return permitsPerSecond;
     }

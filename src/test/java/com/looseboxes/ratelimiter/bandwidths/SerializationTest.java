@@ -1,4 +1,4 @@
-package com.looseboxes.ratelimiter;
+package com.looseboxes.ratelimiter.bandwidths;
 
 import java.io.*;
 import java.nio.file.Path;

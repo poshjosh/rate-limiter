@@ -1,102 +1,132 @@
 package com.looseboxes.ratelimiter;
 
+import com.looseboxes.ratelimiter.annotations.VisibleForTesting;
+import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
 import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
-import com.looseboxes.ratelimiter.cache.RateCache;
-import com.looseboxes.ratelimiter.util.Rates;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.looseboxes.ratelimiter.util.SleepingTicker;
 
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-final class DefaultRateLimiter<K> implements RateLimiter<K> {
+import static java.lang.Math.max;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
-    private static final Logger LOG = LoggerFactory.getLogger(DefaultRateLimiter.class);
+final class DefaultRateLimiter implements RateLimiter {
 
-    private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
+    private final Bandwidths bandwidths;
 
-    private final RateCache<K, Object> rateCache;
+    /**
+     * The underlying timer; used both to measure elapsed time and sleep as necessary. A separate
+     * object to facilitate testing.
+     */
+    private final SleepingTicker ticker;
 
-    private final RateRecordedListener rateRecordedListener;
+    // Can't be initialized in the constructor because mocks don't call the constructor.
+    private volatile Object mutexDoNotUseDirectly;
 
-    private final BandwidthLimiterProvider<K> bandwidthLimiterProvider;
-
-    private final Rates rates;
-
-    DefaultRateLimiter(RateLimiterConfig<K, ?> rateLimiterConfig, Rates rates) {
-        this.rateCache = (RateCache<K, Object>)Objects.requireNonNull(rateLimiterConfig.getRateCache());
-        this.rateRecordedListener = Objects.requireNonNull(rateLimiterConfig.getRateRecordedListener());
-        this.bandwidthLimiterProvider = Objects.requireNonNull(rateLimiterConfig.getBandwidthLimiterProvider());
-        this.rates = Rates.of(rates);
+    Object mutex() {
+        Object mutex = mutexDoNotUseDirectly;
+        if (mutex == null) {
+            synchronized (this) {
+                mutex = mutexDoNotUseDirectly;
+                if (mutex == null) {
+                    mutexDoNotUseDirectly = mutex = new Object();
+                }
+            }
+        }
+        return mutex;
     }
 
+    DefaultRateLimiter(Bandwidths bandwidths, SleepingTicker ticker) {
+        this.bandwidths = Bandwidths.of(bandwidths);
+        this.ticker = Objects.requireNonNull(ticker);
+    }
+
+    /**
+     * Returns the stable rate (as {@code permits per seconds}) with which the currently eligible {@code Bandwidth}
+     * in this {@code RateLimiter} is configured with. The initial value is same as the {@code permitsPerSecond}
+     * argument passed in the factory method that produced the {@code Bandwidth}.
+     */
     @Override
-    public boolean tryConsume(Object context, K resourceId, int permits, long timeout, TimeUnit unit) {
-        //System.out.printf("%s DefaultRateLimiter %s\n", java.time.LocalTime.now(), resourceId);
-        final Bandwidths existingBandwidths = getBandwidthsFromCache(resourceId);
-
-        final Bandwidths targetBandwidths = existingBandwidths == null ? createBandwidths(resourceId) : existingBandwidths;
-
-        BandwidthLimiter limiter = bandwidthLimiterProvider.getOrCreateBandwidthLimiter(resourceId, targetBandwidths);
-
-        final boolean acquired = limiter.tryAcquire(permits, timeout, unit);
-
-        if(acquired || existingBandwidths == null) {
-            // Initial foray to Cache for this resourceId
-            // This should mitigate different threads attempting to put a new rate, at the same time
-            final boolean putOnlyIfAbsent = existingBandwidths == null;
-            addBandwidthsToCache(resourceId, targetBandwidths, putOnlyIfAbsent);
+    public final double getPermitsPerSecond() {
+        synchronized (mutex()) {
+            return bandwidths.getPermitsPerSecond();
         }
+    }
 
-        //System.out.printf("%s DefaultRateLimiter limit exceeded: %b, for: %s, limit: %s\n",
-        //        java.time.LocalTime.now(), !acquired, resourceId, targetBandwidths);
+    /**
+     * Acquires the given number of permits from this {@code ResourceLimiter}, blocking until the request
+     * can be granted. Tells the amount of time slept, if any.
+     *
+     * @param permits the number of permits to acquire
+     * @return time spent sleeping to enforce rate, in seconds; 0.0 if not rate-limited
+     * @throws IllegalArgumentException if the requested number of permits is negative or zero
+     */
+    @Override
+    public double acquire(int permits) {
+        long microsToWait = reserve(permits);
+        ticker.sleepMicrosUninterruptibly(microsToWait);
+        return 1.0 * microsToWait / SECONDS.toMicros(1L);
+    }
 
-        if(LOG.isTraceEnabled()) {
-            LOG.trace("Limit exceeded: {}, for: {}, limit: {}", !acquired, resourceId, targetBandwidths);
+    /**
+     * Reserves the given number of permits from this {@code ResourceLimiter} for future use, returning
+     * the number of microseconds until the reservation can be consumed.
+     *
+     * @return time in microseconds to wait until the resource can be acquired, never negative
+     */
+    final long reserve(int permits) {
+        Checks.requirePositive(permits, "permits");
+        synchronized (mutex()) {
+            return bandwidths.reserveAndGetWaitLength(permits, ticker.elapsedMicros());
         }
+    }
 
-        rateRecordedListener.onRateRecorded(context, resourceId, permits, targetBandwidths);
-
-        if (acquired) {
+    /**
+     * Acquires the given number of permits from this {@code ResourceLimiter} if it can be obtained
+     * without exceeding the specified {@code timeout}, or returns {@code false} immediately (without
+     * waiting) if the permits would not have been granted before the timeout expired.
+     *
+     * @param permits the number of permits to acquire
+     * @param timeout the maximum time to wait for the permits. Negative values are treated as zero.
+     * @param unit the time unit of the timeout argument
+     * @return {@code true} if the permits were acquired, {@code false} otherwise
+     * @throws IllegalArgumentException if the requested number of permits is negative or zero
+     */
+    @SuppressWarnings("GoodTime") // should accept a java.time.Duration
+    @Override
+    public boolean tryAcquire(int permits, long timeout, TimeUnit unit) {
+        //System.out.printf("%s DefaultRateLimiter permits: %s\n", java.time.LocalTime.now(), permits);
+        Checks.requirePositive(permits, "permits");
+        long timeoutMicros = max(unit.toMicros(timeout), 0);
+        synchronized (mutex()) {
+            long nowMicros = ticker.elapsedMicros();
+            if (!bandwidths.canAcquire(nowMicros, timeoutMicros)) {
+                return false;
+            }
+            long microsToWait = bandwidths.reserveAndGetWaitLength(permits, nowMicros);
+            ticker.sleepMicrosUninterruptibly(microsToWait);
             return true;
         }
-
-        rateRecordedListener.onRateExceeded(context, resourceId, permits, targetBandwidths);
-
-        return false;
     }
 
-    private Bandwidths getBandwidthsFromCache(K key) {
-        try{
-            cacheLock.readLock().lock();
-            return (Bandwidths) rateCache.get(key);
-        }finally {
-            cacheLock.readLock().unlock();
-        }
-    }
-
-    private void addBandwidthsToCache(K key, Bandwidths bandwidths, boolean onlyIfAbsent) {
-        try {
-            cacheLock.writeLock().lock();
-            if (onlyIfAbsent) {
-                // This should mitigate different threads attempting to put a new rate, at the same time
-                rateCache.putIfAbsent(key, bandwidths);
-            } else {
-                rateCache.put(key, bandwidths);
-            }
-        }finally {
-            cacheLock.writeLock().unlock();
-        }
-    }
-
-    private Bandwidths createBandwidths(K key) {
-        return bandwidthLimiterProvider.createBandwidths(key, rates);
+    @VisibleForTesting
+    Bandwidths getBandwidths() {
+        return bandwidths;
     }
 
     @Override
     public String toString() {
-        return "DefaultRateLimiter@" + Integer.toHexString(hashCode()) + "{" + rates + "}";
+        final Bandwidth [] members = bandwidths.getMembers();
+        final StringBuilder builder = new StringBuilder(77 + (members.length * 7));
+        builder.append("DefaultRateLimiter{stableRates/second=");
+        for(int i=0; i<members.length; i++) {
+            builder.append(String.format(Locale.ROOT, "%3.1f", members[i].getPermitsPerSecond()));
+            if (i < members.length - 1) {
+                builder.append(", ");
+            }
+        }
+        return builder.append("}]").toString();
     }
 }

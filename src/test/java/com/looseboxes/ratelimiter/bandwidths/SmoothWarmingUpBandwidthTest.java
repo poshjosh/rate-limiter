@@ -1,8 +1,8 @@
 package com.looseboxes.ratelimiter.bandwidths;
 
-public class SmoothWarmingUpBandwidthTest extends BandwidthTest{
+public class SmoothWarmingUpBandwidthTest extends SmoothBandwidthTest {
 
-    public Bandwidth getBandwidth(double permitsPerSeconds) {
-        return Bandwidth.warmingUp(permitsPerSeconds, readMicros(), 5);
+    public SmoothBandwidth getBandwidth(double permitsPerSeconds) {
+        return (SmoothBandwidth)Bandwidth.warmingUp(permitsPerSeconds, readMicros(), 5);
     }
 }

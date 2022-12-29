@@ -1,8 +1,8 @@
 package com.looseboxes.ratelimiter.bandwidths;
 
-public class SmoothBurstyBandwidthTest extends BandwidthTest{
+public class SmoothBurstyBandwidthTest extends SmoothBandwidthTest {
 
-    public Bandwidth getBandwidth(double permitsPerSeconds) {
-        return Bandwidth.bursty(permitsPerSeconds, readMicros());
+    public SmoothBandwidth getBandwidth(double permitsPerSeconds) {
+        return (SmoothBandwidth)Bandwidth.bursty(permitsPerSeconds, readMicros());
     }
 }
