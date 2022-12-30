@@ -98,11 +98,7 @@ public interface Bandwidth {
 
     default boolean canAcquire(long nowMicros, long timeoutMicros) {
         final long nextFreeTicketAvailableAt = queryEarliestAvailable(nowMicros);
-        final boolean canAcquire = nextFreeTicketAvailableAt - timeoutMicros <= nowMicros;
-        //System.out.printf(
-        //        "%s Bandwidth can acquire: %b, (earliest available)%d - (timeoutMicros)%d <= (elapsedMicros)%d, %s\n",
-        //        java.time.LocalTime.now(), canAcquire, nextFreeTicketAvailableAt, timeoutMicros, nowMicros, this);
-        return canAcquire;
+        return nextFreeTicketAvailableAt - timeoutMicros <= nowMicros;
     }
 
     /**

@@ -74,7 +74,6 @@ public final class Bandwidths implements Bandwidth, Serializable{
         long result = -1;
         for(Bandwidth bandwidth : members) {
             final long current = bandwidth.queryEarliestAvailable(nowMicros);
-            //System.out.printf("%s Bandwidths#query earliest available: %d, %s\n", java.time.LocalTime.now(), current, bandwidth);
             if (result == -1) {
                 result = current;
             }
@@ -95,7 +94,6 @@ public final class Bandwidths implements Bandwidth, Serializable{
         long result = -1;
         for(Bandwidth bandwidth : members) {
             final long current = bandwidth.reserveEarliestAvailable(permits, nowMicros);
-            //System.out.printf("%s Bandwidths#reserve wait length: %d, %s\n", java.time.LocalTime.now(), current, bandwidth);
             if (result == -1) {
                 result = current;
             }

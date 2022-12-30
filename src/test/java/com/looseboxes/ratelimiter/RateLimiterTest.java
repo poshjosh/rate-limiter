@@ -438,7 +438,7 @@ class RateLimiterTest {
         if (members.length != 1) {
             throw new UnsupportedOperationException();
         }
-        ((SmoothBandwidth)members[0]).setRate(permitsPerSecond, ticker.elapsedMicros());
+        ((SmoothBandwidth)members[0]).setPermitsPerSecond(permitsPerSecond, ticker.elapsedMicros());
         return limiter;
     }
 

@@ -55,6 +55,17 @@ final class AllOrNothingBandwidth implements Bandwidth, Serializable {
             this.durationMicros = (nowMicros - this.nowMicros);
         }
         @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Rate rate = (Rate) o;
+            return limit == rate.limit && durationMicros == rate.durationMicros && nowMicros == rate.nowMicros;
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(limit, durationMicros, nowMicros);
+        }
+        @Override
         public String toString() {
             return "Rate{limit=" + limit + ", duration=" + durationMicros/1000 + "milli, now=" + nowMicros/1000 + "milli}";
         }

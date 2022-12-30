@@ -97,7 +97,6 @@ final class DefaultRateLimiter implements RateLimiter {
     @SuppressWarnings("GoodTime") // should accept a java.time.Duration
     @Override
     public boolean tryAcquire(int permits, long timeout, TimeUnit unit) {
-        //System.out.printf("%s DefaultRateLimiter permits: %s\n", java.time.LocalTime.now(), permits);
         Checks.requirePositive(permits, "permits");
         long timeoutMicros = max(unit.toMicros(timeout), 0);
         synchronized (mutex()) {

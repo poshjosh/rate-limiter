@@ -49,9 +49,6 @@ final class DefaultResourceLimiter<K> implements ResourceLimiter<K> {
             addBandwidthsToCache(resourceId, targetBandwidths, putOnlyIfAbsent);
         }
 
-        //System.out.printf("%s DefaultResourceLimiter limit exceeded: %b, for: %s, limit: %s\n",
-        //        java.time.LocalTime.now(), !acquired, resourceId, targetBandwidths);
-
         if(LOG.isTraceEnabled()) {
             LOG.trace("Limit exceeded: {}, for: {}, limit: {}", !acquired, resourceId, targetBandwidths);
         }

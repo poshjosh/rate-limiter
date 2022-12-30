@@ -94,7 +94,7 @@ final class SmoothWarmingUpBandwidth extends SmoothBandwidth implements Serializ
         this.nowMicros = nowMicros;
         this.warmupPeriodMicros = timeUnit.toMicros(warmupPeriod); // Before calling setPermitsPerSecond
         this.coldFactor = coldFactor; // Before calling setPermitsPerSecond
-        setRate(permitsPerSecond, nowMicros);
+        setPermitsPerSecond(permitsPerSecond, nowMicros);
     }
 
     @Override

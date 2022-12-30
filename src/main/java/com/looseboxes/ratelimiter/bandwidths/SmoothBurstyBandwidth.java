@@ -23,7 +23,7 @@ final class SmoothBurstyBandwidth extends SmoothBandwidth implements Serializabl
     SmoothBurstyBandwidth(double permitsPerSecond, long nowMicros, double maxBurstSeconds) {
         this.nowMicros = nowMicros;
         this.maxBurstSeconds = maxBurstSeconds; // Before calling setPermitsPerSecond
-        setRate(permitsPerSecond, nowMicros);
+        setPermitsPerSecond(permitsPerSecond, nowMicros);
     }
 
     @Override

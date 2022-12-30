@@ -205,7 +205,7 @@ public abstract class SmoothBandwidth implements Bandwidth {
      * observe the new rate; only subsequent requests will.
      *
      * <p>Note though that, since each request repays (by waiting, if necessary) the cost of the
-     * <i>previous</i> request, this means that the very next request after an invocation to {@code setRate}
+     * <i>previous</i> request, this means that the very next request after an invocation to {@code setPermitsPerSecond}
      * will not be affected by the new rate; it will pay the cost of the previous request,
      * which is in terms of the previous rate.
      *
@@ -217,7 +217,7 @@ public abstract class SmoothBandwidth implements Bandwidth {
      * @param nowMicros
      * @throws IllegalArgumentException if {@code permitsPerSecond} is negative or zero
      */
-    public void setRate(double permitsPerSecond, long nowMicros) {
+    public void setPermitsPerSecond(double permitsPerSecond, long nowMicros) {
         Checks.requireTrue(permitsPerSecond > 0.0
                 && !Double.isNaN(permitsPerSecond), "Must be positive, rate: " + permitsPerSecond);
         resync(nowMicros);

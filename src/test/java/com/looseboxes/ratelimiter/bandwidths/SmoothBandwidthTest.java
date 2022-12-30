@@ -22,7 +22,7 @@ abstract class SmoothBandwidthTest {
     @ValueSource(doubles = {0.1, 1.0, 100.001, 100_000, Long.MAX_VALUE})
     void getRateShouldReturnArgumentOfSetRate(double expected) {
         SmoothBandwidth bandwidth = getBandwidth();
-        bandwidth.setRate(expected, readMicros());
+        bandwidth.setPermitsPerSecond(expected, readMicros());
         assertEquals(expected, bandwidth.getPermitsPerSecond());
     }
 
