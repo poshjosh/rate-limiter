@@ -46,15 +46,15 @@ public interface ResourceLimiter<K> {
     }
 
     /**
-     * Consume the identified resource by the specified amount.
+     * Consume the identified resource by the specified permits.
      *
      * @param resourceId The id of the resource whose rate is to be incremented
-     * @param amount The amount by which to tryConsume the rate
+     * @param permits The permits by which to tryConsume the rate
      * @return {code false} if the tryConsume caused one or more limit(s) to be exceeded, otherwise return {@code true}
      * @see #tryConsume(Object)
      */
-    default boolean tryConsume(K resourceId, int amount) {
-        return tryConsume(resourceId, resourceId, amount);
+    default boolean tryConsume(K resourceId, int permits) {
+        return tryConsume(resourceId, resourceId, permits);
     }
 
     /**

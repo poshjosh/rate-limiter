@@ -56,7 +56,7 @@ public class UsageLimiting {
 
 ### Performance
 
-[Performance statistics](PERFORMANCE.md)
+[Performance statistics](docs/PERFORMANCE.md)
 
 ### Build
 

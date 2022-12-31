@@ -24,34 +24,34 @@ final class AllOrNothingBandwidth implements Bandwidth, Serializable {
 
         private static final long serialVersionUID = 10L;
 
-        private long limit;
+        private long permits;
         private long durationMicros;
         private long nowMicros;
 
         private Rate(long permits, long durationMicros, long nowMicros) {
             Checks.requireNotNegative(permits, "permits");
             Checks.requireNotNegative(durationMicros, "duration");
-            this.limit = permits;
+            this.permits = permits;
             this.durationMicros = durationMicros;
             this.nowMicros = nowMicros;
         }
         public int compareTo(Rate rate) {
-            if(limit == rate.limit && durationMicros == rate.durationMicros) {
+            if(permits == rate.permits && durationMicros == rate.durationMicros) {
                 return 0;
             }
-            if (limit >= rate.limit) {
+            if (permits >= rate.permits) {
                 return durationMicros > rate.durationMicros ? 0 : 1;
             }
             return -1;
         }
         private void reset(long nowMicros) {
-            this.limit = 0;
+            this.permits = 0;
             this.durationMicros = 0;
             this.nowMicros = nowMicros;
         }
         private void increment(int amount, long nowMicros) {
             Checks.requireNotNegative(amount, "amount");
-            this.limit += amount;
+            this.permits += amount;
             this.durationMicros = (nowMicros - this.nowMicros);
         }
         @Override
@@ -59,15 +59,16 @@ final class AllOrNothingBandwidth implements Bandwidth, Serializable {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Rate rate = (Rate) o;
-            return limit == rate.limit && durationMicros == rate.durationMicros && nowMicros == rate.nowMicros;
+            return permits == rate.permits && durationMicros == rate.durationMicros && nowMicros == rate.nowMicros;
         }
         @Override
         public int hashCode() {
-            return Objects.hash(limit, durationMicros, nowMicros);
+            return Objects.hash(permits, durationMicros, nowMicros);
         }
         @Override
         public String toString() {
-            return "Rate{limit=" + limit + ", duration=" + durationMicros/1000 + "milli, now=" + nowMicros/1000 + "milli}";
+            return "{permits=" + permits + ", duration=" + (durationMicros/1000) +
+                    "millis, now=" + (nowMicros/1000) + "millis}";
         }
     }
 
@@ -89,14 +90,14 @@ final class AllOrNothingBandwidth implements Bandwidth, Serializable {
     @Override
     public AllOrNothingBandwidth with(long nowMicros) {
         return new AllOrNothingBandwidth(
-                new Rate(limit.limit, limit.durationMicros, nowMicros),
-                new Rate(rate.limit, rate.durationMicros, nowMicros)
+                new Rate(limit.permits, limit.durationMicros, nowMicros),
+                new Rate(rate.permits, rate.durationMicros, nowMicros)
         );
     }
 
     @Override
     public double getPermitsPerSecond() {
-        return (double)(limit.limit * TimeUnit.MICROSECONDS.toSeconds(1)) / limit.durationMicros;
+        return (double)(limit.permits * TimeUnit.MICROSECONDS.toSeconds(1)) / limit.durationMicros;
     }
 
     @Override
