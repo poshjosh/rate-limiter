@@ -23,7 +23,7 @@ public interface ResourceLimiter<K> {
     }
 
     static <K> ResourceLimiter<K> of(Bandwidths limits) {
-        return of(ResourceLimiterConfig.of(), limits);
+        return of(ResourceLimiterConfig.ofDefaults(), limits);
     }
 
     static <K> ResourceLimiter<K> of(ResourceLimiterConfig<K, ?> resourceLimiterConfig, Bandwidth limit) {

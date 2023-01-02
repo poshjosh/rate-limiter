@@ -23,7 +23,7 @@ public interface ResourceLimiterConfig<K, V> {
         return new DefaultResourceLimiterConfig<>(resourceLimiterConfig);
     }
 
-    static <K, V> ResourceLimiterConfig<K, V> of() {
+    static <K, V> ResourceLimiterConfig<K, V> ofDefaults() {
         return new DefaultResourceLimiterConfig<>();
     }
 
