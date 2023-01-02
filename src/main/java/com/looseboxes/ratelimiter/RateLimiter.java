@@ -151,7 +151,6 @@ public interface RateLimiter {
      * @return {@code true} if the permit was acquired, {@code false} otherwise
      * @throws IllegalArgumentException if the requested number of permits is negative or zero
      */
-    @SuppressWarnings("GoodTime") // should accept a java.time.Duration
     default boolean tryAcquire(long timeout, TimeUnit unit) {
         return tryAcquire(1, timeout, unit);
     }

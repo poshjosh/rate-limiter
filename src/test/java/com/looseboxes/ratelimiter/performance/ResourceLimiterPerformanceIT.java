@@ -2,7 +2,6 @@ package com.looseboxes.ratelimiter.performance;
 
 import com.looseboxes.ratelimiter.*;
 import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
-import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.cache.RateCache;
 import org.junit.jupiter.api.Test;
 
@@ -33,8 +32,7 @@ class ResourceLimiterPerformanceIT {
     }
 
     public ResourceLimiter<Integer> getResourceLimiter(long permitsPerSecond) {
-        ResourceLimiterConfig<Integer, ?> config =
-            ResourceLimiterConfig.<Integer, Object>builder().cache(RateCache.singleton()).build();
-        return ResourceLimiter.<Integer>of(config, Bandwidths.of(Bandwidth.bursty(permitsPerSecond)));
+        return ResourceLimiter.<Integer>of(Bandwidth.bursty(permitsPerSecond))
+                .cache(RateCache.ofMap());
     }
 }

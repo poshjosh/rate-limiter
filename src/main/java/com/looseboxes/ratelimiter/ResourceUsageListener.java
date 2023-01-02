@@ -6,9 +6,9 @@ public interface ResourceUsageListener {
 
     ResourceUsageListener NO_OP = new ResourceUsageListener() { };
 
-    default void onConsumed(Object context, Object resourceId, int hits, Object limit) { }
+    default void onConsumed(Object resource, Object resourceId, int hits, Object limit) { }
 
-    default void onRejected(Object context, Object resourceId, int hits, Object limit) { }
+    default void onRejected(Object resource, Object resourceId, int hits, Object limit) { }
 
     /**
      * Returns a composed {@code ResourceUsageListener} that performs, in sequence, this
@@ -26,14 +26,14 @@ public interface ResourceUsageListener {
         Objects.requireNonNull(after);
         return new ResourceUsageListener() {
             @Override
-            public void onConsumed(Object context, Object resourceId, int hits, Object limit) {
-                ResourceUsageListener.this.onConsumed(context, resourceId, hits, limit);
-                after.onConsumed(context, resourceId, hits, limit);
+            public void onConsumed(Object resource, Object resourceId, int hits, Object limit) {
+                ResourceUsageListener.this.onConsumed(resource, resourceId, hits, limit);
+                after.onConsumed(resource, resourceId, hits, limit);
             }
             @Override
-            public void onRejected(Object context, Object resourceId, int hits, Object limit) {
-                ResourceUsageListener.this.onRejected(context, resourceId, hits, limit);
-                after.onRejected(context, resourceId, hits, limit);
+            public void onRejected(Object resource, Object resourceId, int hits, Object limit) {
+                ResourceUsageListener.this.onRejected(resource, resourceId, hits, limit);
+                after.onRejected(resource, resourceId, hits, limit);
             }
         };
     }

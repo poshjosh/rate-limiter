@@ -5,6 +5,23 @@ import java.util.Map;
 
 public interface RateCache<K, V> {
 
+    RateCache<Object, Object> NO_OP = new RateCache<Object, Object>() {
+        @Override public void clear() { }
+        @Override public boolean containsKey(Object key) { return false; }
+        @Override public Object get(Object key) { return null; }
+        @Override public boolean putIfAbsent(Object key, Object value) { return false; }
+        @Override public void put(Object key, Object value) { }
+        @Override public boolean remove(Object key) { return false; }
+        @Override public <T> T unwrap(Class<T> clazz) {
+            throw new IllegalArgumentException("Unwrapping to " + clazz + " is not supported");
+        }
+    };
+
+    @SuppressWarnings("unchecked")
+    static <K, V> RateCache<K, V> noop() {
+        return (RateCache<K, V>)NO_OP;
+    }
+
     static <K, V> RateCache<K, V> of(Cache cache) {
         return new JavaRateCache<K, V>(cache);
     }
