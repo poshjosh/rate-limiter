@@ -26,9 +26,7 @@ final class DefaultResourceLimiter<R> implements ResourceLimiter<R> {
     }
 
     @Override
-    public boolean tryConsume(R resource, int permits, long timeout, TimeUnit unit) {
-
-        final Object resourceId = config.getKeyProvider().get(resource);
+    public boolean tryConsume(R resourceId, int permits, long timeout, TimeUnit unit) {
 
         final Bandwidths existingBandwidths = getBandwidthsFromCache(resourceId);
 
@@ -52,13 +50,13 @@ final class DefaultResourceLimiter<R> implements ResourceLimiter<R> {
             LOG.trace("Limit exceeded: {}, for: {}, limit: {}", !acquired, resourceId, targetBandwidths);
         }
 
-        config.getUsageListener().onConsumed(resource, resourceId, permits, targetBandwidths);
+        config.getListener().onConsumed(resourceId, permits, targetBandwidths);
 
         if (acquired) {
             return true;
         }
 
-        config.getUsageListener().onRejected(resource, resourceId, permits, targetBandwidths);
+        config.getListener().onRejected(resourceId, permits, targetBandwidths);
 
         return false;
     }
@@ -86,21 +84,14 @@ final class DefaultResourceLimiter<R> implements ResourceLimiter<R> {
         }
     }
 
-    @Override
-    public <K> ResourceLimiter<R> keyProvider(KeyProvider<R, K> keyProvider) {
-        return new DefaultResourceLimiter<>(
-                ResourceLimiterConfig.of(config).keyProvider((KeyProvider) keyProvider), limits);
-    }
-
-    @Override public <K> ResourceLimiter<R> cache(RateCache<K, Bandwidths> cache) {
+    @Override public ResourceLimiter<R> cache(RateCache<?, Bandwidths> cache) {
         return new DefaultResourceLimiter<>(
                 ResourceLimiterConfig.of(config).cache((RateCache)cache), limits);
     }
 
-    @Override public ResourceLimiter<R> listener(ResourceUsageListener listener) {
-        return new DefaultResourceLimiter<>(ResourceLimiterConfig.of(config).usageListener(listener), limits);
+    @Override public ResourceLimiter<R> listener(UsageListener listener) {
+        return new DefaultResourceLimiter<>(ResourceLimiterConfig.of(config).listener(listener), limits);
     }
-
 
     @Override
     public String toString() {

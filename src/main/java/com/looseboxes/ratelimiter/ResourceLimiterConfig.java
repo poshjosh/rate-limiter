@@ -21,32 +21,27 @@ final class ResourceLimiterConfig<R, K> {
     }
 
     private RateCache<K, Bandwidths> cache;
-    private KeyProvider<R, K> keyProvider;
-    private ResourceUsageListener usageListener;
+    private UsageListener listener;
     private RateLimiterProvider<K> rateLimiterProvider;
 
     ResourceLimiterConfig() {
         this(RateCache.noop(),
-                KeyProvider.identity(),
-                ResourceUsageListener.NO_OP,
+                UsageListener.NO_OP,
                 new RateLimiterProvider<>(SleepingTicker.zeroOffset()));
     }
 
     ResourceLimiterConfig(ResourceLimiterConfig<R, K> resourceLimiterConfig) {
         this(resourceLimiterConfig.getCache(),
-                resourceLimiterConfig.getKeyProvider(),
-                resourceLimiterConfig.getUsageListener(),
+                resourceLimiterConfig.getListener(),
                 resourceLimiterConfig.getRateLimiterProvider());
     }
 
     ResourceLimiterConfig(
             RateCache<K, Bandwidths> cache,
-            KeyProvider<R, K> keyProvider,
-            ResourceUsageListener usageListener,
+            UsageListener listener,
             RateLimiterProvider<K> rateLimiterProvider) {
         this.cache = Objects.requireNonNull(cache);
-        this.keyProvider = Objects.requireNonNull(keyProvider);
-        this.usageListener = Objects.requireNonNull(usageListener);
+        this.listener = Objects.requireNonNull(listener);
         this.rateLimiterProvider = Objects.requireNonNull(rateLimiterProvider);
     }
 
@@ -67,30 +62,17 @@ final class ResourceLimiterConfig<R, K> {
         this.cache = cache;
     }
 
-    public ResourceLimiterConfig<R, K> keyProvider(KeyProvider<R, K> keyProvider) {
-        this.setKeyProvider(keyProvider);
+    public ResourceLimiterConfig<R, K> listener(UsageListener usageListener) {
+        this.setListener(usageListener);
         return this;
     }
 
-    public KeyProvider<R, K> getKeyProvider() {
-        return keyProvider;
+    public UsageListener getListener() {
+        return listener;
     }
 
-    public void setKeyProvider(KeyProvider<R, K> keyProvider) {
-        this.keyProvider = keyProvider;
-    }
-
-    public ResourceLimiterConfig<R, K> usageListener(ResourceUsageListener resourceUsageListener) {
-        this.setUsageListener(resourceUsageListener);
-        return this;
-    }
-
-    public ResourceUsageListener getUsageListener() {
-        return usageListener;
-    }
-
-    public void setUsageListener(ResourceUsageListener resourceUsageListener) {
-        this.usageListener = resourceUsageListener;
+    public void setListener(UsageListener listener) {
+        this.listener = listener;
     }
 
     public ResourceLimiterConfig<R, K> rateLimiterProvider(

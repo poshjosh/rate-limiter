@@ -16,13 +16,10 @@ public interface ResourceLimiter<R> {
         @Override public boolean tryConsume(Object res, int permits, long timeout, TimeUnit unit) {
             return true;
         }
-        @Override public <K> ResourceLimiter<Object> keyProvider(KeyProvider<Object, K> keyProv) {
+        @Override public ResourceLimiter<Object> cache(RateCache<?, Bandwidths> cache) {
             return this;
         }
-        @Override public <K> ResourceLimiter<Object> cache(RateCache<K, Bandwidths> cache) {
-            return this;
-        }
-        @Override public ResourceLimiter<Object> listener(ResourceUsageListener listener) {
+        @Override public ResourceLimiter<Object> listener(UsageListener listener) {
             return this;
         }
     };
@@ -58,11 +55,9 @@ public interface ResourceLimiter<R> {
      */
     boolean tryConsume(R resource, int permits, long timeout, TimeUnit unit);
 
-    <K> ResourceLimiter<R> keyProvider(KeyProvider<R, K> keyProvider);
-    
-    <K> ResourceLimiter<R> cache(RateCache<K, Bandwidths> cache);
-    
-    ResourceLimiter<R> listener(ResourceUsageListener resourceUsageListener);
+    ResourceLimiter<R> cache(RateCache<?, Bandwidths> cache);
+
+    ResourceLimiter<R> listener(UsageListener usageListener);
 
     /**
      * Acquires a permit from this {@link ResourceLimiter} if it can be acquired immediately without
@@ -157,14 +152,10 @@ public interface ResourceLimiter<R> {
                 return ResourceLimiter.this.tryConsume(resource, permits, timeout, unit)
                         && after.tryConsume(resource, permits, timeout, unit);
             }
-            @Override public <K> ResourceLimiter<R> keyProvider(KeyProvider<R, K> keyProvider) {
-                return ResourceLimiter.this.keyProvider(keyProvider).andThen(after.keyProvider(
-                        keyProvider));
-            }
-            @Override public <K> ResourceLimiter<R> cache(RateCache<K, Bandwidths> cache) {
+            @Override public ResourceLimiter<R> cache(RateCache<?, Bandwidths> cache) {
                 return ResourceLimiter.this.cache(cache).andThen(after.cache(cache));
             }
-            @Override public ResourceLimiter<R> listener(ResourceUsageListener listener) {
+            @Override public ResourceLimiter<R> listener(UsageListener listener) {
                 return ResourceLimiter.this.listener(listener).andThen(after.listener(listener));
             }
         };
