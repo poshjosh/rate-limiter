@@ -1,4 +1,7 @@
-package com.looseboxes.ratelimiter.cache;
+package wip;
+
+import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
+import com.looseboxes.ratelimiter.cache.RateCache;
 
 /**
  * A cache to hold a single entry
@@ -6,11 +9,11 @@ package com.looseboxes.ratelimiter.cache;
  * A {code null} key will match any/all keys.
  * @param <K> The type of the key which this Cache holds
  */
-class SingletonRateCache<K, V> implements RateCache<K, V>{
+class SingletonRateCache<K> implements RateCache<K> {
 
     private final K key;
 
-    private V rate;
+    private Bandwidths rate;
 
     SingletonRateCache(K key) {
         this.key = key;
@@ -27,7 +30,7 @@ class SingletonRateCache<K, V> implements RateCache<K, V>{
     }
 
     @Override
-    public V get(K key) {
+    public Bandwidths get(K key) {
         if(isMatchingKey(key)) {
             return rate;
         }else{
@@ -36,7 +39,7 @@ class SingletonRateCache<K, V> implements RateCache<K, V>{
     }
 
     @Override
-    public boolean putIfAbsent(K key, V value) {
+    public boolean putIfAbsent(K key, Bandwidths value) {
         if(isMatchingKey(key)) {
             if(this.rate == null) {
                 this.rate = value;
@@ -49,7 +52,7 @@ class SingletonRateCache<K, V> implements RateCache<K, V>{
     }
 
     @Override
-    public void put(K key, V value) {
+    public void put(K key, Bandwidths value) {
         if(isMatchingKey(key)) {
             this.rate = value;
         }else{
@@ -60,7 +63,7 @@ class SingletonRateCache<K, V> implements RateCache<K, V>{
     @Override
     public boolean remove(K key) {
         if(isMatchingKey(key)) {
-            final V previous = this.rate;
+            final Bandwidths previous = this.rate;
             this.rate = null;
             return previous != null;
         }else{

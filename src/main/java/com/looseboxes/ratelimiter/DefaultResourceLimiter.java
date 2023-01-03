@@ -2,10 +2,13 @@ package com.looseboxes.ratelimiter;
 
 import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.cache.RateCache;
+import com.looseboxes.ratelimiter.util.SleepingTicker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -14,15 +17,26 @@ final class DefaultResourceLimiter<R> implements ResourceLimiter<R> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultResourceLimiter.class);
 
-    private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
-
-    private final ResourceLimiterConfig<R, Object> config;
-
     private final Bandwidths limits;
 
-    DefaultResourceLimiter(ResourceLimiterConfig<R, Object> resourceLimiterConfig, Bandwidths limits) {
-        this.config = Objects.requireNonNull(resourceLimiterConfig);
+    private final SleepingTicker ticker;
+
+    private final UsageListener listener;
+
+    private final RateCache<R> cache;
+
+    private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
+
+    private final Map<Object, RateLimiter> resourceIdToRateLimiters;
+
+    DefaultResourceLimiter(
+            Bandwidths limits, SleepingTicker ticker,
+            UsageListener listener, RateCache<R> cache) {
         this.limits = Bandwidths.of(limits);
+        this.ticker = Objects.requireNonNull(ticker);
+        this.listener = Objects.requireNonNull(listener);
+        this.cache = Objects.requireNonNull(cache);
+        this.resourceIdToRateLimiters = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -31,11 +45,10 @@ final class DefaultResourceLimiter<R> implements ResourceLimiter<R> {
         final Bandwidths existingBandwidths = getBandwidthsFromCache(resourceId);
 
         final Bandwidths targetBandwidths = existingBandwidths == null 
-                ? config.getRateLimiterProvider().provideBandwidths(resourceId, limits) 
+                ? provideBandwidths(resourceId, limits)
                 : existingBandwidths;
 
-        RateLimiter rateLimiter = config.getRateLimiterProvider()
-                .provideRateLimiter(resourceId, targetBandwidths);
+        final RateLimiter rateLimiter = provideRateLimiter(resourceId, targetBandwidths);
 
         final boolean acquired = rateLimiter.tryAcquire(permits, timeout, unit);
 
@@ -50,47 +63,67 @@ final class DefaultResourceLimiter<R> implements ResourceLimiter<R> {
             LOG.trace("Limit exceeded: {}, for: {}, limit: {}", !acquired, resourceId, targetBandwidths);
         }
 
-        config.getListener().onConsumed(resourceId, permits, targetBandwidths);
+        listener.onConsumed(resourceId, permits, targetBandwidths);
 
         if (acquired) {
             return true;
         }
 
-        config.getListener().onRejected(resourceId, permits, targetBandwidths);
+        listener.onRejected(resourceId, permits, targetBandwidths);
 
         return false;
     }
 
-    private Bandwidths getBandwidthsFromCache(Object key) {
+    private Bandwidths getBandwidthsFromCache(R key) {
         try{
             cacheLock.readLock().lock();
-            return (Bandwidths) config.getCache().get(key);
+            return cache.get(key);
         }finally {
             cacheLock.readLock().unlock();
         }
     }
 
-    private void addBandwidthsToCache(Object key, Bandwidths bandwidths, boolean onlyIfAbsent) {
+    private void addBandwidthsToCache(R key, Bandwidths bandwidths, boolean onlyIfAbsent) {
         try {
             cacheLock.writeLock().lock();
             if (onlyIfAbsent) {
                 // This should mitigate different threads attempting to put a new rate, at the same time
-                config.getCache().putIfAbsent(key, bandwidths);
+                cache.putIfAbsent(key, bandwidths);
             } else {
-                config.getCache().put(key, bandwidths);
+                cache.put(key, bandwidths);
             }
         }finally {
             cacheLock.writeLock().unlock();
         }
     }
 
-    @Override public ResourceLimiter<R> cache(RateCache<?, Bandwidths> cache) {
-        return new DefaultResourceLimiter<>(
-                ResourceLimiterConfig.of(config).cache((RateCache)cache), limits);
+    @Override public ResourceLimiter<R> cache(RateCache<?> cache) {
+        return new DefaultResourceLimiter<>(limits, ticker, listener, (RateCache)cache);
     }
 
     @Override public ResourceLimiter<R> listener(UsageListener listener) {
-        return new DefaultResourceLimiter<>(ResourceLimiterConfig.of(config).listener(listener), limits);
+        return new DefaultResourceLimiter<>(limits, ticker, listener, cache);
+    }
+
+
+    private Bandwidths provideBandwidths(R key, Bandwidths bandwidths) {
+        return bandwidths.with(ticker.elapsedMicros());
+    }
+
+    private RateLimiter provideRateLimiter(R key, Bandwidths bandwidths) {
+        RateLimiter value;
+        if ((value = this.resourceIdToRateLimiters.get(key)) == null) {
+            RateLimiter newValue;
+            if ((newValue = createNew(bandwidths)) != null) {
+                this.resourceIdToRateLimiters.put(key, newValue);
+                return newValue;
+            }
+        }
+        return value;
+    }
+
+    private RateLimiter createNew(Bandwidths bandwidths) {
+        return RateLimiter.of(bandwidths, ticker);
     }
 
     @Override

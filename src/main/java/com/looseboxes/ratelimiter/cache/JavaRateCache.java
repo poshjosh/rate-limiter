@@ -1,13 +1,15 @@
 package com.looseboxes.ratelimiter.cache;
 
+import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
+
 import javax.cache.Cache;
 import java.util.Objects;
 
-class JavaRateCache<K, V> implements RateCache<K, V>{
+class JavaRateCache<K> implements RateCache<K>{
 
-    private final Cache<K, V> delegate;
+    private final Cache<K, Bandwidths> delegate;
 
-    JavaRateCache(Cache<K, V> delegate) {
+    JavaRateCache(Cache<K, Bandwidths> delegate) {
         this.delegate = Objects.requireNonNull(delegate);
     }
 
@@ -22,21 +24,21 @@ class JavaRateCache<K, V> implements RateCache<K, V>{
     }
 
     @Override
-    public V get(K key) {
+    public Bandwidths get(K key) {
         synchronized (delegate) {
             return delegate.get(key);
         }
     }
 
     @Override
-    public boolean putIfAbsent(K key, V value) {
+    public boolean putIfAbsent(K key, Bandwidths value) {
         synchronized (delegate) {
             return delegate.putIfAbsent(key, value);
         }
     }
 
     @Override
-    public void put(K key, V value) {
+    public void put(K key, Bandwidths value) {
         synchronized (delegate) {
             delegate.put(key, value);
         }

@@ -3,6 +3,7 @@ package com.looseboxes.ratelimiter;
 import com.looseboxes.ratelimiter.bandwidths.Bandwidth;
 import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
 import com.looseboxes.ratelimiter.cache.RateCache;
+import com.looseboxes.ratelimiter.util.SleepingTicker;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -16,7 +17,7 @@ public interface ResourceLimiter<R> {
         @Override public boolean tryConsume(Object res, int permits, long timeout, TimeUnit unit) {
             return true;
         }
-        @Override public ResourceLimiter<Object> cache(RateCache<?, Bandwidths> cache) {
+        @Override public ResourceLimiter<Object> cache(RateCache<?> cache) {
             return this;
         }
         @Override public ResourceLimiter<Object> listener(UsageListener listener) {
@@ -38,7 +39,8 @@ public interface ResourceLimiter<R> {
     }
 
     static <R> ResourceLimiter<R> of(Bandwidths limits) {
-        return new DefaultResourceLimiter<>(ResourceLimiterConfig.ofDefaults(), limits);
+        return new DefaultResourceLimiter<>(
+                limits, SleepingTicker.zeroOffset(), UsageListener.NO_OP, RateCache.ofMap());
     }
 
     /**
@@ -55,7 +57,7 @@ public interface ResourceLimiter<R> {
      */
     boolean tryConsume(R resource, int permits, long timeout, TimeUnit unit);
 
-    ResourceLimiter<R> cache(RateCache<?, Bandwidths> cache);
+    ResourceLimiter<R> cache(RateCache<?> cache);
 
     ResourceLimiter<R> listener(UsageListener usageListener);
 
@@ -152,7 +154,7 @@ public interface ResourceLimiter<R> {
                 return ResourceLimiter.this.tryConsume(resource, permits, timeout, unit)
                         && after.tryConsume(resource, permits, timeout, unit);
             }
-            @Override public ResourceLimiter<R> cache(RateCache<?, Bandwidths> cache) {
+            @Override public ResourceLimiter<R> cache(RateCache<?> cache) {
                 return ResourceLimiter.this.cache(cache).andThen(after.cache(cache));
             }
             @Override public ResourceLimiter<R> listener(UsageListener listener) {

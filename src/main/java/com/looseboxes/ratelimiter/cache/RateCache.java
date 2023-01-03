@@ -1,56 +1,34 @@
 package com.looseboxes.ratelimiter.cache;
 
+import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
+
 import javax.cache.Cache;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-public interface RateCache<K, V> {
+public interface RateCache<K> {
 
-    RateCache<Object, Object> NO_OP = new RateCache<Object, Object>() {
-        @Override public void clear() { }
-        @Override public boolean containsKey(Object key) { return false; }
-        @Override public Object get(Object key) { return null; }
-        @Override public boolean putIfAbsent(Object key, Object value) { return false; }
-        @Override public void put(Object key, Object value) { }
-        @Override public boolean remove(Object key) { return false; }
-        @Override public <T> T unwrap(Class<T> clazz) {
-            throw new IllegalArgumentException("Unwrapping to " + clazz + " is not supported");
-        }
-    };
-
-    @SuppressWarnings("unchecked")
-    static <K, V> RateCache<K, V> noop() {
-        return (RateCache<K, V>)NO_OP;
+    static <K> RateCache<K> of(Cache<K, Bandwidths> cache) {
+        return new JavaRateCache<>(cache);
     }
 
-    static <K, V> RateCache<K, V> of(Cache cache) {
-        return new JavaRateCache<K, V>(cache);
-    }
-
-    static <K, V> RateCache<K, V> of(Map<K, V> map) {
+    static <K> RateCache<K> of(Map<K, Bandwidths> map) {
         return new MapRateCache<>(map);
     }
 
-    static <K, V> RateCache<K, V> ofMap() {
-        return new MapRateCache<>();
-    }
-
-    static <K, V> RateCache<K, V> singleton() {
-        return singleton(null);
-    }
-
-    static <K, V> RateCache<K, V> singleton(K key) {
-        return new SingletonRateCache<>(key);
+    static <K> RateCache<K> ofMap() {
+        return of(new ConcurrentHashMap<>());
     }
 
     void clear();
 
     boolean containsKey(K key);
 
-    V get(K key);
+    Bandwidths get(K key);
 
-    boolean putIfAbsent(K key, V value);
+    boolean putIfAbsent(K key, Bandwidths value);
 
-    void put(K key, V value);
+    void put(K key, Bandwidths value);
 
     boolean remove(K key);
 

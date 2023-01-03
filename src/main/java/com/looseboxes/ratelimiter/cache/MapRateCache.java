@@ -1,17 +1,15 @@
 package com.looseboxes.ratelimiter.cache;
 
+import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-class MapRateCache<K, V> implements RateCache<K, V>{
+class MapRateCache<K> implements RateCache<K>{
 
-    private final Map<K, V> delegate;
+    private final Map<K, Bandwidths> delegate;
 
-    MapRateCache() {
-        this(new ConcurrentHashMap<>());
-    }
-
-    MapRateCache(Map<K, V> delegate) {
+    MapRateCache(Map<K, Bandwidths> delegate) {
         this.delegate = new ConcurrentHashMap<>(delegate);
     }
 
@@ -26,23 +24,23 @@ class MapRateCache<K, V> implements RateCache<K, V>{
     }
 
     @Override
-    public V get(K key) {
+    public Bandwidths get(K key) {
         return delegate.get(key);
     }
 
     @Override
-    public boolean putIfAbsent(K key, V value) {
+    public boolean putIfAbsent(K key, Bandwidths value) {
         return delegate.putIfAbsent(key, value) == null;
     }
 
     @Override
-    public void put(K key, V value) {
+    public void put(K key, Bandwidths value) {
         delegate.put(key, value);
     }
 
     @Override
     public boolean remove(K key) {
-        V result = delegate.remove(key);
+        Bandwidths result = delegate.remove(key);
         return result != null;
     }
 
@@ -50,6 +48,7 @@ class MapRateCache<K, V> implements RateCache<K, V>{
         if (clazz.isAssignableFrom(delegate.getClass())) {
             return clazz.cast(delegate);
         }
-        throw new IllegalArgumentException("Unwrapping to " + clazz + " is not supported by this implementation");
+        throw new IllegalArgumentException("Unwrapping to " + clazz +
+                " is not supported by this implementation");
     }
 }
