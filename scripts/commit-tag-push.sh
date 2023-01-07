@@ -71,15 +71,17 @@ function commitTagPush(){
     promptOkExit "Proceed with version update to $NEW_VERSION?"
 
     # FOR LINUX USE  sed -i -e 's/abc/XYZ/g' "pom.xml"
-    sed -i '' "s/rate-limiter.version>.\{1,\}</rate-limiter.version>$NEW_VERSION</" "pom.xml"
+    sed -i "s/rate-limiter.version>.\{1,\}</rate-limiter.version>$NEW_VERSION</" "pom.xml"
 
     printf "\nPrinting updated version from pom.xml\n"
     cat pom.xml | grep "rate-limiter.version>$NEW_VERSION<"
 
-    updateChangelog "$project_name"
+    if [ "$UPDATE_CHANGE_LOG" = true ]; then
+      updateChangelog "$project_name"
 
-    printf "\nPrinting updated version from CHANGELOG.md\n"
-    cat CHANGELOG.md | grep "$NEW_VERSION"
+      printf "\nPrinting updated version from CHANGELOG.md\n"
+      cat CHANGELOG.md | grep "$NEW_VERSION"
+    fi
   fi
 
   local git_branch=$(getGitCurrentBranchName)
@@ -105,7 +107,16 @@ function commitTagPush(){
   if [ -z "$NEW_VERSION" ]; then
     printf "\nNo new version was set - skipping tag\n";
   else
-    git tag "v$NEW_VERSION"
+    local new_tag="v$NEW_VERSION"
+
+    found=$(git tag | grep "$new_tag")
+
+    if [ "$found" = "$new_tag" ]; then
+      git push origin :refs/tags/"$new_tag"
+      git tag --delete "$new_tag"
+    fi
+
+    git tag "$new_tag"
     git push --tags
     if [ "$changed_branch" = true ]; then
       git checkout "$git_branch"
