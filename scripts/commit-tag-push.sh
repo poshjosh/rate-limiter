@@ -1,6 +1,7 @@
 #!/bin/bash
 
-PARENT_DIR="$HOME/Documents/dev/java"
+PARENT_DIR="$HOME/dev_looseboxes"
+MVN_SETTINGS_FILE="/$HOME/dev_looseboxes/.m2/settings.xml"
 UPDATE_CHANGE_LOG=false
 
 function promptOkExit() {
@@ -52,7 +53,7 @@ function commitTagPush(){
   git branch
 
   printf "\nRunning command: mvn clean install\n"
-  local BUILD_SUCCESS=$(mvn clean install && echo "YES" || echo "NO")
+  local BUILD_SUCCESS=$(mvn clean install -s "$MVN_SETTINGS_FILE" && echo "YES" || echo "NO")
 
   if [ "$BUILD_SUCCESS" = "NO" ]; then
     printf "\nExiting\n"
@@ -116,7 +117,7 @@ printf "\nEnter commit message  - If you enter nothing, no commit will be made.\
 
 read COMMIT_MESSAGE
 
-printf "\nEnter new version e.g 0.0.8  - If you enter nothing, no tag will be applied.\n"
+printf "\nEnter new version e.g 0.1 (will lead to tag v0.1) - If you enter nothing, no tag will be applied.\n"
 
 read NEW_VERSION
 

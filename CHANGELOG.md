@@ -9,13 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -
 
-## [ [0.0.9](https://github.com/poshjosh/rate-limiter/tree/0.0.9) ] - 2022-12-30
+## [ [0.1.0](https://github.com/poshjosh/rate-limiter/tree/v0.1.0) ] - 2023-01-07
+
+### Added
+
+- Add builder like methods to `ResourceLimiter` for setting `RateCache` and `UsageListener`
+
+### Changed
+
+- Update README.md
+- Rename all `of()` to `ofDefaults()`
+
+### Removed
+
+- Remove annotation `@Nullable`
+- Remove the value-related generic from `RateCache`. The value now has a fixed type of `Bandwidths`
+
+## [ [0.0.9](https://github.com/poshjosh/rate-limiter/tree/v0.0.9) ] - 2022-12-30
 
 ### Added
 
 - Add more Bandwidth tests
 
-## [ [0.0.8](https://github.com/poshjosh/rate-limiter/tree/0.0.8) ] - 2022-12-29
+## [ [0.0.8](https://github.com/poshjosh/rate-limiter/tree/v0.0.8) ] - 2022-12-29
 
 ### Added
 
