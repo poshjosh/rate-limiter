@@ -1,7 +1,7 @@
 package wip;
 
-import com.looseboxes.ratelimiter.bandwidths.Bandwidths;
-import com.looseboxes.ratelimiter.cache.RateCache;
+import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
+import io.github.poshjosh.ratelimiter.cache.RateCache;
 
 /**
  * A cache to hold a single entry
