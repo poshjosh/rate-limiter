@@ -2,6 +2,26 @@
 
 __Light-weight rate limiter library.__
 
+Some implementations:
+
+- [rate-limiter-annotation](https://github.com/poshjosh/rate-limiter-annotation).
+
+- [rate-limiter-web-core](https://github.com/poshjosh/rate-limiter-web-core).
+
+- [rate-limiter-spring](https://github.com/poshjosh/rate-limiter-spring).
+
+- [rate-limiter-javaee](https://github.com/poshjosh/rate-limiter-javaee).
+
+To add a dependency on `rate-limiter` using Maven, use the following:
+
+```xml
+        <dependency>
+            <groupId>io.github.poshjosh</groupId>
+            <artifactId>rate-limiter</artifactId>
+            <version>0.2.0</version>
+        </dependency>
+```
+
 ### Concept
 
 We have a list of tasks to execute, but we don't want to submit more than 2 per second.
