@@ -17,7 +17,7 @@ public interface ResourceLimiter<R> {
 
     @SuppressWarnings("unchecked")
     static <R> ResourceLimiter<R> noop() {
-        return (ResourceLimiter<R>)NO_OP;
+        return (ResourceLimiter<R>) NO_OP;
     }
 
     static <R> ResourceLimiter<R> of(Bandwidth... limits) {

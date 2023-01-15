@@ -117,7 +117,7 @@ final class DefaultRateLimiter implements RateLimiter {
 
     @Override
     public String toString() {
-        final Bandwidth[] members = bandwidths.getMembers();
+        final Bandwidth[] members = bandwidths.getBandwidths();
         final StringBuilder builder = new StringBuilder(77 + (members.length * 7));
         builder.append("DefaultRateLimiter{stableRates/second=");
         for(int i=0; i<members.length; i++) {

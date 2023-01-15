@@ -436,7 +436,7 @@ class RateLimiterTest {
     }
     
     private RateLimiter setRate(RateLimiter limiter, double permitsPerSecond) {
-        final Bandwidth[] members = ((DefaultRateLimiter)limiter).getBandwidths().getMembers();
+        final Bandwidth[] members = ((DefaultRateLimiter)limiter).getBandwidths().getBandwidths();
         if (members.length != 1) {
             throw new UnsupportedOperationException();
         }

@@ -8,15 +8,20 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 public final class Bandwidths implements Bandwidth, Serializable{
 
+    private static final Operator DEFAULT_OPERATOR = Operator.OR;
     public static final Bandwidths EMPTY_OR = Bandwidths.of(Operator.OR);
     public static final Bandwidths EMPTY_AND = Bandwidths.of(Operator.AND);
 
     public static Bandwidths empty(Operator operator) {
-        return Operator.AND.equals(operator) ? EMPTY_AND : EMPTY_OR;
+        switch(operator) {
+            case AND: return EMPTY_AND;
+            case OR:
+            case DEFAULT: return EMPTY_OR;
+            default: throw new IllegalArgumentException("Unexpected operator: " + operator);
+        }
     }
 
     public static Bandwidths and(Bandwidth... bandwidths) {
@@ -28,7 +33,7 @@ public final class Bandwidths implements Bandwidth, Serializable{
     }
 
     public static Bandwidths of(Bandwidth... bandwidths) {
-        return of(Operator.OR, bandwidths);
+        return of(Operator.DEFAULT, bandwidths);
     }
 
     public static Bandwidths of(Bandwidths bandwidths) {
@@ -50,13 +55,12 @@ public final class Bandwidths implements Bandwidth, Serializable{
     }
 
     private Bandwidths(Operator operator, Bandwidth... members) {
-        this.operator = Objects.requireNonNull(operator);
+        this.operator = Operator.DEFAULT.equals(operator) ? DEFAULT_OPERATOR : operator;
         this.members = Arrays.copyOf(members, members.length);
     }
 
-    public boolean isLimitExceeded(int failureCount) {
-        return (Operator.OR.equals(operator) && failureCount > 0)
-                || (Operator.AND.equals(operator) && failureCount >= members.length);
+    public boolean hasBandwidths() {
+        return this.members.length > 0;
     }
 
     @Override
@@ -108,23 +112,20 @@ public final class Bandwidths implements Bandwidth, Serializable{
         return result;
     }
 
-    public Stream<Bandwidth> stream() {
-        return Arrays.stream(getMembers());
-    }
-
     /**
      * Returns the stable rate (as {@code permits per seconds}) with which an eligible {@code Bandwidth} in this
      * {@code Bandwidths} is configured with. The initial value is the same as the {@code permitsPerSecond}
      * argument passed in the factory method that produced the {@code Bandwidth}.
-     * @see #getAllRates()
+     * @see #getAllPermitsPerSecond()
      */
     @Beta
     public double getPermitsPerSecond() {
         final boolean AND = Operator.AND.equals(operator);
-        double [] arr = getAllRates();
+        double [] arr = getAllPermitsPerSecond();
         double result = -1;
         for(double e : arr) {
-            // TODO Why are we returning the max here for AND, as oppose to min in other methods?
+            // TODO Why are we returning the max here for AND, as oppose to min
+            //  returned for AND in other methods?
             result = result == - 1 ? e : (AND ? Math.max(e, result) : Math.min(e, result));
         }
         return result;
@@ -135,7 +136,7 @@ public final class Bandwidths implements Bandwidth, Serializable{
      * {@code Bandwidths} is configured with. The initial value of each, is the same as the {@code permitsPerSecond}
      * argument passed in the factory method that produced each {@code Bandwidth}.
      */
-    private double [] getAllRates() {
+    private double [] getAllPermitsPerSecond() {
         final double [] permitsPerSecond = new double[members.length];
         for(int i = 0; i < members.length; i++) {
             permitsPerSecond[i] = members[i].getPermitsPerSecond();
@@ -147,7 +148,7 @@ public final class Bandwidths implements Bandwidth, Serializable{
         return this.operator;
     }
 
-    public Bandwidth[] getMembers() {
+    public Bandwidth[] getBandwidths() {
         return this.members;
     }
 
