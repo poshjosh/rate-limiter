@@ -2,7 +2,14 @@ package io.github.poshjosh.ratelimiter;
 
 public final class Checks {
     private Checks() { }
-
+    public static RuntimeException notSupported(Object complainer, Object unsupported) {
+        return notSupported(complainer.getClass(), unsupported);
+    }
+    public static RuntimeException notSupported(Class<?> complainer, Object unsupported) {
+        return new UnsupportedOperationException(
+                complainer.getSimpleName() + " does not support: " + unsupported
+        );
+    }
     public static void requirePositive(double amount, String what) {
         requireTrue(amount > 0, "Must be positive, %s: %d", what, amount);
     }
