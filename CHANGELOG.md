@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -
 
+## [ [0.3.0](https://github.com/poshjosh/rate-limiter/tree/v0.3.0) ] - 2023-01-22
+
+### Added
+
+- Add a default operator i.e `Operator.DEFAULT`
+- Add more tests
+- Improve performance
+
+### Changed
+
+- Rename `Bandwidths.getMembers` to `Bandwidths.getBandwidths`
+
 ## [ [0.2.0](https://github.com/poshjosh/rate-limiter/tree/v0.2.0) ] - 2023-01-08
 
 ### Changed

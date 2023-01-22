@@ -23,7 +23,8 @@ public enum Operator {
     DEFAULT("");
 
     private final String symbol;
-    private Operator(String symbol) {
+
+    Operator(String symbol) {
         this.symbol = Objects.requireNonNull(symbol);
     }
 
