@@ -1,7 +1,5 @@
 package io.github.poshjosh.ratelimiter.bandwidths;
 
-import io.github.poshjosh.ratelimiter.Checks;
-
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 

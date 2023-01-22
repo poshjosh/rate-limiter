@@ -1,6 +1,4 @@
-package io.github.poshjosh.ratelimiter.util;
-
-import io.github.poshjosh.ratelimiter.Checks;
+package io.github.poshjosh.ratelimiter;
 
 import java.time.Duration;
 import java.util.Locale;
@@ -64,7 +62,7 @@ import static java.util.concurrent.TimeUnit.*;
  *
  */
 @SuppressWarnings("GoodTime")
-public final class Stopwatch {
+final class Stopwatch {
     private final Ticker ticker;
     private boolean isRunning;
     private long elapsedNanos;

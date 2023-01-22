@@ -1,8 +1,8 @@
 package io.github.poshjosh.ratelimiter.bandwidths;
 
 import io.github.poshjosh.ratelimiter.RateLimiter;
-import io.github.poshjosh.ratelimiter.util.Operator;
-import io.github.poshjosh.ratelimiter.util.SleepingTicker;
+import io.github.poshjosh.ratelimiter.Operator;
+import io.github.poshjosh.ratelimiter.SleepingTicker;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;

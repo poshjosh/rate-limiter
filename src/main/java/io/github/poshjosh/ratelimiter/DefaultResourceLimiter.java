@@ -2,7 +2,6 @@ package io.github.poshjosh.ratelimiter;
 
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 import io.github.poshjosh.ratelimiter.cache.RateCache;
-import io.github.poshjosh.ratelimiter.util.SleepingTicker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,4 +1,4 @@
-package io.github.poshjosh.ratelimiter.util;
+package io.github.poshjosh.ratelimiter;
 
 import java.util.concurrent.TimeUnit;
 

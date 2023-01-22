@@ -3,7 +3,6 @@ package io.github.poshjosh.ratelimiter;
 import io.github.poshjosh.ratelimiter.annotations.VisibleForTesting;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
-import io.github.poshjosh.ratelimiter.util.SleepingTicker;
 
 import java.util.Locale;
 import java.util.Objects;

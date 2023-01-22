@@ -1,6 +1,5 @@
-package io.github.poshjosh.ratelimiter.util;
+package io.github.poshjosh.ratelimiter;
 
-import io.github.poshjosh.ratelimiter.Checks;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 
 import java.util.Objects;
