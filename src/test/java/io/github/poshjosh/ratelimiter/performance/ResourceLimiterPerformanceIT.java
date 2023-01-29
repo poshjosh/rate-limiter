@@ -1,6 +1,6 @@
 package io.github.poshjosh.ratelimiter.performance;
 
-import io.github.poshjosh.ratelimiter.ResourceLimiter;
+import io.github.poshjosh.ratelimiter.RateLimiter;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
 import org.junit.jupiter.api.Test;
 
@@ -11,26 +11,25 @@ class ResourceLimiterPerformanceIT {
 
         // @TODO introduce maven profiles so performance tests could be INFO, while other tests DEBUG
 
-        // These stats were achieved under log level INFO
+        // Log level will affect the stats, so switch off logging
 
         recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(1_000, 20_000, Usage.of(250, 50_000_000));
     }
 
     void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(int count, int permitsPerSecond, Usage limit) {
 
-        ResourceLimiter<Integer> resourceLimiter = getResourceLimiter(permitsPerSecond);
+        RateLimiter rateLimiter = getRateLimiter(permitsPerSecond);
 
         Usage bookmark = Usage.bookmark();
 
-        final Integer key = Integer.valueOf(count);
         for(int i = 0; i < count; i++) {
-            resourceLimiter.tryConsume(key);
+            rateLimiter.tryAcquire();
         }
 
         bookmark.assertUsageLessThan(limit);
     }
 
-    public ResourceLimiter<Integer> getResourceLimiter(long permitsPerSecond) {
-        return ResourceLimiter.<Integer>of(Bandwidth.bursty(permitsPerSecond));
+    public RateLimiter getRateLimiter(long permitsPerSecond) {
+        return RateLimiter.of(Bandwidth.bursty(permitsPerSecond));
     }
 }

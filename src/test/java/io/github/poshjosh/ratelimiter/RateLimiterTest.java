@@ -51,17 +51,19 @@ class RateLimiterTest {
 
     @Test
     public void testSimpleRateUpdate() {
-        RateLimiter limiter = create(5.0, 5, SECONDS);
+        Bandwidth bandwidth = warmingUpBandwidth(5.0, 5);
+        RateLimiter limiter = RateLimiter.of(bandwidth);
         assertEquals(5.0, limiter.getPermitsPerSecond());
-        limiter = setRate(limiter, 10.0);
+        setRate(bandwidth, 10.0);
         assertEquals(10.0, limiter.getPermitsPerSecond());
     }
 
     @Test
     public void testWithParameterValidation() {
-        RateLimiter limiter = create(5.0, 5, SECONDS);
-        assertThrowsIllegalArgumentException(() -> setRate(limiter, 0.0));
-        assertThrowsIllegalArgumentException(() -> setRate(limiter, -10.0));
+        Bandwidth bandwidth = warmingUpBandwidth(5.0, 5, SECONDS);
+        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
+        assertThrowsIllegalArgumentException(() -> setRate(bandwidth, 0.0));
+        assertThrowsIllegalArgumentException(() -> setRate(bandwidth, -10.0));
     }
 
     @Test
@@ -209,7 +211,10 @@ class RateLimiterTest {
     //@AndroidIncompatible // difference in String.format rounding?
     @Test
     public void testWarmUpAndUpdate() {
-        RateLimiter limiter = create(2.0, 4000, MILLISECONDS, 3.0, ticker);
+        Bandwidth bandwidth = warmingUpBandwidth(
+                2.0, 4000, MILLISECONDS, 3.0, ticker);
+
+        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
         for (int i = 0; i < 8; i++) {
             limiter.acquire(); // // #1
         }
@@ -218,7 +223,7 @@ class RateLimiterTest {
             limiter.acquire(); // #3
         }
 
-        limiter = setRate(limiter, 4.0);
+        setRate(bandwidth, 4.0);
         limiter.acquire(); // #4, we repay the debt of the last acquire (imposed by the old rate)
         for (int i = 0; i < 4; i++) {
             limiter.acquire(); // #5
@@ -242,7 +247,9 @@ class RateLimiterTest {
 
     @Test
     public void testWarmUpAndUpdateWithColdFactor() {
-        RateLimiter limiter = create(5.0, 4000, MILLISECONDS, 10.0, ticker);
+        Bandwidth bandwidth = warmingUpBandwidth(
+                5.0, 4000, MILLISECONDS, 10.0, ticker);
+        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
         for (int i = 0; i < 8; i++) {
             limiter.acquire(); // #1
         }
@@ -250,8 +257,7 @@ class RateLimiterTest {
         for (int i = 0; i < 3; i++) { // only three steps, we're somewhere in the warmup period
             limiter.acquire(); // #3
         }
-
-        limiter = setRate(limiter, 10.0); // double the rate!
+        setRate(bandwidth, 10.0); // double the rate!
         limiter.acquire(); // #4, we repay the debt of the last acquire (imposed by the old rate)
         for (int i = 0; i < 4; i++) {
             limiter.acquire(); // #5
@@ -275,11 +281,12 @@ class RateLimiterTest {
 
     @Test
     public void testBurstyAndUpdate() {
-        RateLimiter limiter = create(1.0, ticker);
+        Bandwidth bandwidth = burstyBandwidth(1.0, ticker);
+        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
         limiter.acquire(1); // no wait
         limiter.acquire(1); // R1.00, to repay previous
 
-        limiter = setRate(limiter, 2.0); // setPermitsPerSecond the rate!
+        setRate(bandwidth, 2.0); // setPermitsPerSecond the rate!
 
         limiter.acquire(1); // R1.00, to repay previous (the previous was under the old rate!)
         limiter.acquire(2); // R0.50, to repay previous (now the rate takes effect)
@@ -340,13 +347,14 @@ class RateLimiterTest {
 
     @Test
     public void testInfinity_Bursty() {
-        RateLimiter limiter = create(Double.POSITIVE_INFINITY, ticker);
+        Bandwidth bandwidth = burstyBandwidth(Double.POSITIVE_INFINITY, ticker);
+        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
         limiter.acquire(Integer.MAX_VALUE / 4);
         limiter.acquire(Integer.MAX_VALUE / 2);
         limiter.acquire(Integer.MAX_VALUE);
         assertEvents("R0.00", "R0.00", "R0.00"); // no wait, infinite rate!
 
-        limiter = setRate(limiter, 2.0);
+        setRate(bandwidth, 2.0);
         limiter.acquire();
         limiter.acquire();
         limiter.acquire();
@@ -358,7 +366,7 @@ class RateLimiterTest {
                 "R0.50", // Now it's 0.5 seconds per request.
                 "R0.50");
 
-        limiter = setRate(limiter, Double.POSITIVE_INFINITY);
+        setRate(bandwidth, Double.POSITIVE_INFINITY);
         limiter.acquire();
         limiter.acquire();
         limiter.acquire();
@@ -368,9 +376,10 @@ class RateLimiterTest {
     /** https://code.google.com/p/guava-libraries/issues/detail?id=1791 */
     @Test
     public void testInfinity_BustyTimeElapsed() {
-        RateLimiter limiter = create(Double.POSITIVE_INFINITY, ticker);
+        Bandwidth bandwidth = burstyBandwidth(Double.POSITIVE_INFINITY, ticker);
+        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
         ticker.instant += 1000000;
-        limiter = setRate(limiter, 2.0);
+        setRate(bandwidth, 2.0);
         for (int i = 0; i < 5; i++) {
             limiter.acquire();
         }
@@ -383,19 +392,22 @@ class RateLimiterTest {
 
     @Test
     public void testInfinity_WarmUp() {
-        RateLimiter limiter = create(Double.POSITIVE_INFINITY, 10, SECONDS, 3.0, ticker);
+        Bandwidth bandwidth = warmingUpBandwidth(
+                Double.POSITIVE_INFINITY, 10, SECONDS, 3.0, ticker);
+
+        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
         limiter.acquire(Integer.MAX_VALUE / 4);
         limiter.acquire(Integer.MAX_VALUE / 2);
         limiter.acquire(Integer.MAX_VALUE);
         assertEvents("R0.00", "R0.00", "R0.00");
 
-        limiter = setRate(limiter, 1.0);
+        setRate(bandwidth, 1.0);
         limiter.acquire();
         limiter.acquire();
         limiter.acquire();
         assertEvents("R0.00", "R1.00", "R1.00");
 
-        limiter = setRate(limiter, Double.POSITIVE_INFINITY);
+        setRate(bandwidth,  Double.POSITIVE_INFINITY);
         limiter.acquire();
         limiter.acquire();
         limiter.acquire();
@@ -404,9 +416,12 @@ class RateLimiterTest {
 
     @Test
     public void testInfinity_WarmUpTimeElapsed() {
-        RateLimiter limiter = create(Double.POSITIVE_INFINITY, 10, SECONDS, 3.0, ticker);
+        Bandwidth bandwidth = warmingUpBandwidth(
+                Double.POSITIVE_INFINITY, 10, SECONDS, 3.0, ticker);
+
+        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
         ticker.instant += 1000000;
-        limiter = setRate(limiter, 1.0);
+        setRate(bandwidth, 1.0);
         for (int i = 0; i < 5; i++) {
             limiter.acquire();
         }
@@ -419,12 +434,13 @@ class RateLimiterTest {
      */
     @Test
     public void testWeNeverGetABurstMoreThanOneSec() {
-        RateLimiter limiter = create(1.0, ticker);
+        Bandwidth bandwidth = burstyBandwidth(1.0, ticker);
+        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
         int[] rates = {1000, 1, 10, 1000000, 10, 1};
         for (int rate : rates) {
             int oneSecWorthOfWork = rate;
             ticker.sleepMillis(rate * 1000);
-            limiter = setRate(limiter, rate);
+            setRate(bandwidth, rate);
             long burst = measureTotalTimeMillis(limiter, oneSecWorthOfWork, new Random());
             // we allow one second worth of work to go in a burst (i.e. take less than a second)
             assertTrue("Expected value <= 1000, found: " + burst, burst <= 1000);
@@ -433,14 +449,9 @@ class RateLimiterTest {
             assertTrue("Expected value >= 1000, found: " + afterBurst, afterBurst >= 1000);
         }
     }
-    
-    private RateLimiter setRate(RateLimiter limiter, double permitsPerSecond) {
-        final Bandwidth[] members = ((DefaultRateLimiter)limiter).getBandwidths().getBandwidths();
-        if (members.length != 1) {
-            throw new UnsupportedOperationException();
-        }
-        ((SmoothBandwidth)members[0]).setPermitsPerSecond(permitsPerSecond, ticker.elapsedMicros());
-        return limiter;
+
+    private void setRate(Bandwidth bandwidth, double permitsPerSecond) {
+        ((SmoothBandwidth)bandwidth).setPermitsPerSecond(permitsPerSecond, ticker.elapsedMicros());
     }
 
     /**
@@ -488,7 +499,7 @@ class RateLimiterTest {
     }
 
     private static RateLimiter create(double permitsPerSecond, SleepingTicker ticker) {
-        Bandwidth bandwidth = Bandwidth.bursty(permitsPerSecond, ticker.elapsedMicros());
+        Bandwidth bandwidth = burstyBandwidth(permitsPerSecond, ticker);
         return RateLimiter.of(Bandwidths.of(bandwidth), ticker);
     }
 
@@ -499,11 +510,28 @@ class RateLimiterTest {
 
     private static RateLimiter create(double permitsPerSecond, long warmupPeriod, TimeUnit unit,
                                       double coldFactor, SleepingTicker ticker) {
-        Bandwidth bandwidth = Bandwidth
-                .warmingUp(permitsPerSecond, ticker.elapsedMicros(), warmupPeriod, unit, coldFactor);
+        Bandwidth bandwidth = warmingUpBandwidth(
+                permitsPerSecond, warmupPeriod, unit, coldFactor, ticker);
         return RateLimiter.of(Bandwidths.of(bandwidth), ticker);
     }
-    
+    private static Bandwidth burstyBandwidth(double permitsPerSecond, SleepingTicker ticker) {
+        return Bandwidth.bursty(permitsPerSecond, ticker.elapsedMicros());
+    }
+    private static Bandwidth warmingUpBandwidth(double permitsPerSecond, long warmupPeriod) {
+        SleepingTicker ticker = SleepingTicker.zeroOffset();
+        return warmingUpBandwidth(permitsPerSecond, warmupPeriod, SECONDS, 3.0, ticker);
+    }
+    private static Bandwidth warmingUpBandwidth(double permitsPerSecond, long warmupPeriod, TimeUnit unit) {
+        SleepingTicker ticker = SleepingTicker.zeroOffset();
+        return warmingUpBandwidth(permitsPerSecond, warmupPeriod, unit, 3.0, ticker);
+    }
+    private static Bandwidth warmingUpBandwidth(
+            double permitsPerSecond, long warmupPeriod, TimeUnit unit,
+            double coldFactor, SleepingTicker ticker) {
+        return Bandwidth
+                .warmingUp(permitsPerSecond, ticker.elapsedMicros(), warmupPeriod, unit, coldFactor);
+    }
+
     private long measureTotalTimeMillis(RateLimiter limiter, int permits, Random random) {
         long startTime = ticker.instant;
         while (permits > 0) {

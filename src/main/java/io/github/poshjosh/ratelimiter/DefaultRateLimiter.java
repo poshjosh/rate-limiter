@@ -1,6 +1,5 @@
 package io.github.poshjosh.ratelimiter;
 
-import io.github.poshjosh.ratelimiter.annotations.VisibleForTesting;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 
@@ -38,7 +37,7 @@ final class DefaultRateLimiter implements RateLimiter {
     }
 
     DefaultRateLimiter(Bandwidths bandwidths, SleepingTicker ticker) {
-        this.bandwidths = Bandwidths.of(bandwidths);
+        this.bandwidths = Objects.requireNonNull(bandwidths); // We do not use a copy
         this.ticker = Objects.requireNonNull(ticker);
     }
 
@@ -107,11 +106,6 @@ final class DefaultRateLimiter implements RateLimiter {
             ticker.sleepMicrosUninterruptibly(microsToWait);
             return true;
         }
-    }
-
-    @VisibleForTesting
-    Bandwidths getBandwidths() {
-        return bandwidths;
     }
 
     @Override

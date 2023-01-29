@@ -52,8 +52,8 @@ function commitTagPush(){
   git status
   git branch
 
-  printf "\nRunning command: mvn clean install\n"
-  local BUILD_SUCCESS=$(mvn clean install -s "$MVN_SETTINGS_FILE" && echo "YES" || echo "NO")
+  printf "\nRunning command: mvn clean verify\n"
+  local BUILD_SUCCESS=$(mvn clean verify -s "$MVN_SETTINGS_FILE" && echo "YES" || echo "NO")
 
   if [ "$BUILD_SUCCESS" = "NO" ]; then
     printf "\nExiting\n"

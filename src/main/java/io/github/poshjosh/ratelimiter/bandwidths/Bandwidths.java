@@ -48,26 +48,26 @@ public final class Bandwidths implements Bandwidth, Serializable{
 
     private final Operator operator;
 
-    private final Bandwidth[] members;
+    private final Bandwidth[] bandwidths;
 
     private Bandwidths(Bandwidths bandwidths) {
-        this(bandwidths.operator, bandwidths.members);
+        this(bandwidths.operator, bandwidths.bandwidths);
     }
 
-    private Bandwidths(Operator operator, Bandwidth... members) {
+    private Bandwidths(Operator operator, Bandwidth... bandwidths) {
         this.operator = Operator.DEFAULT.equals(operator) ? DEFAULT_OPERATOR : operator;
-        this.members = Arrays.copyOf(members, members.length);
+        this.bandwidths = Arrays.copyOf(bandwidths, bandwidths.length);
     }
 
     public boolean hasBandwidths() {
-        return this.members.length > 0;
+        return this.bandwidths.length > 0;
     }
 
     @Override
     public Bandwidths with(long nowMicros) {
-        final Bandwidth [] copies = new Bandwidth[members.length];
+        final Bandwidth [] copies = new Bandwidth[bandwidths.length];
         for (int i = 0; i < copies.length; i++) {
-            copies[i] = members[i].with(nowMicros);
+            copies[i] = bandwidths[i].with(nowMicros);
         }
         return Bandwidths.of(operator, copies);
     }
@@ -76,7 +76,7 @@ public final class Bandwidths implements Bandwidth, Serializable{
     public long queryEarliestAvailable(long nowMicros) {
         final boolean AND = Operator.AND.equals(operator);
         long result = -1;
-        for(Bandwidth bandwidth : members) {
+        for(Bandwidth bandwidth : bandwidths) {
             final long current = bandwidth.queryEarliestAvailable(nowMicros);
             if (result == -1) {
                 result = current;
@@ -96,7 +96,7 @@ public final class Bandwidths implements Bandwidth, Serializable{
     public long reserveEarliestAvailable(int permits, long nowMicros) {
         final boolean AND = Operator.AND.equals(operator);
         long result = -1;
-        for(Bandwidth bandwidth : members) {
+        for(Bandwidth bandwidth : bandwidths) {
             final long current = bandwidth.reserveEarliestAvailable(permits, nowMicros);
             if (result == -1) {
                 result = current;
@@ -137,9 +137,9 @@ public final class Bandwidths implements Bandwidth, Serializable{
      * argument passed in the factory method that produced each {@code Bandwidth}.
      */
     private double [] getAllPermitsPerSecond() {
-        final double [] permitsPerSecond = new double[members.length];
-        for(int i = 0; i < members.length; i++) {
-            permitsPerSecond[i] = members[i].getPermitsPerSecond();
+        final double [] permitsPerSecond = new double[bandwidths.length];
+        for(int i = 0; i < bandwidths.length; i++) {
+            permitsPerSecond[i] = bandwidths[i].getPermitsPerSecond();
         }
         return permitsPerSecond;
     }
@@ -148,8 +148,11 @@ public final class Bandwidths implements Bandwidth, Serializable{
         return this.operator;
     }
 
+    /**
+     * @return A copy of the member bandwidths
+     */
     public Bandwidth[] getBandwidths() {
-        return this.members;
+        return Arrays.copyOf(bandwidths, bandwidths.length);
     }
 
     @Override
@@ -159,19 +162,19 @@ public final class Bandwidths implements Bandwidth, Serializable{
         if (o == null || getClass() != o.getClass())
             return false;
         Bandwidths that = (Bandwidths) o;
-        return operator == that.operator && Arrays.equals(members, that.members);
+        return operator == that.operator && Arrays.equals(bandwidths, that.bandwidths);
     }
 
     @Override
     public int hashCode() {
         int result = Objects.hash(operator);
-        result = 31 * result + Arrays.hashCode(members);
+        result = 31 * result + Arrays.hashCode(bandwidths);
         return result;
     }
 
     @Override
     public String toString() {
-        return "Bandwidths{" + "operator=" + operator + " " + Arrays.toString(members) + "}";
+        return "Bandwidths{" + "operator=" + operator + " " + Arrays.toString(bandwidths) + "}";
     }
 
     private static class SecureSerializationProxy implements Serializable {
@@ -184,7 +187,7 @@ public final class Bandwidths implements Bandwidth, Serializable{
 
         public SecureSerializationProxy(Bandwidths candidate){
             this.operator = candidate.operator;
-            this.members = candidate.members;
+            this.members = candidate.bandwidths;
         }
         private Object readResolve() throws InvalidObjectException {
             return new Bandwidths(operator, members);

@@ -51,29 +51,6 @@ class DataCap {
 }
 ```
 
-We limit the usage of a resource, within a specified duration
-
-```java
-import ResourceLimiter;
-import Bandwidth;
-
-public class UsageLimiting {
-
-    public static void main(String... args) {
-
-        // 1 permit is allowed every second (for each unique resourceId)
-        ResourceLimiter<String> resourceLimiter = ResourceLimiter.of(Bandwidth.allOrNothing(1));
-
-        // These will return true
-        resourceLimiter.tryConsume("resource_1");
-        resourceLimiter.tryConsume("resource_2");
-
-        // This will return false, it is the second consumption of resource_1
-        resourceLimiter.tryConsume("resource_1");
-    }
-}
-```
-
 ### Performance
 
 [Performance statistics](docs/PERFORMANCE.md)
