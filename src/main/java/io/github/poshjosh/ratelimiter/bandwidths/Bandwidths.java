@@ -6,16 +6,16 @@ import io.github.poshjosh.ratelimiter.Operator;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Objects;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 public final class Bandwidths implements Bandwidth, Serializable{
 
     private static final Operator DEFAULT_OPERATOR = Operator.OR;
-    public static final Bandwidths EMPTY_OR = Bandwidths.of(Operator.OR);
-    public static final Bandwidths EMPTY_AND = Bandwidths.of(Operator.AND);
+    public static final Bandwidth EMPTY_OR = Bandwidths.of(Operator.OR);
+    public static final Bandwidth EMPTY_AND = Bandwidths.of(Operator.AND);
 
-    public static Bandwidths empty(Operator operator) {
+    public static Bandwidth empty(Operator operator) {
         switch(operator) {
             case AND: return EMPTY_AND;
             case OR:
@@ -24,47 +24,65 @@ public final class Bandwidths implements Bandwidth, Serializable{
         }
     }
 
-    public static Bandwidths and(Bandwidth... bandwidths) {
+    public static Bandwidth and(Bandwidth... bandwidths) {
         return of(Operator.AND, bandwidths);
     }
 
-    public static Bandwidths or(Bandwidth... bandwidths) {
+    public static Bandwidth or(Bandwidth... bandwidths) {
         return of(Operator.OR, bandwidths);
     }
 
-    public static Bandwidths of(Bandwidth... bandwidths) {
+    public static Bandwidth of(Bandwidth... bandwidths) {
         return of(Operator.DEFAULT, bandwidths);
     }
 
-    public static Bandwidths of(Bandwidths bandwidths) {
+    public static Bandwidth of(Bandwidths bandwidths) {
         return new Bandwidths(bandwidths);
     }
 
-    public static Bandwidths of(Operator operator, Bandwidth... bandwidths) {
-        return new Bandwidths(operator, bandwidths);
+    public static Bandwidth of(Operator operator, Bandwidth... bandwidths) {
+        return of(buildId(operator, bandwidths), operator, bandwidths);
+    }
+
+    public static Bandwidth of(String id, Operator operator, Bandwidth... bandwidths) {
+        return new Bandwidths(id, operator, bandwidths);
+    }
+
+    private static String buildId(Operator operator, Bandwidth...bandwidths) {
+        Objects.requireNonNull(operator);
+        StringBuilder b = new StringBuilder(64 * bandwidths.length);
+        b.append(operator);
+        if (bandwidths != null) {
+            for(Bandwidth bandwidth : bandwidths) {
+                b.append('{').append(Double.toHexString(bandwidth.getPermitsPerSecond())).append('-')
+                        .append(Long.toHexString(bandwidth.queryEarliestAvailable(0)))
+                        .append('}');
+            }
+        }
+        // Best effort only
+        return UUID.nameUUIDFromBytes(b.toString().getBytes(StandardCharsets.UTF_8)).toString();
     }
 
     private static final long serialVersionUID = 20L;
+
+    private final String id;
 
     private final Operator operator;
 
     private final Bandwidth[] bandwidths;
 
     private Bandwidths(Bandwidths bandwidths) {
-        this(bandwidths.operator, bandwidths.bandwidths);
+        this(bandwidths.id, bandwidths.operator, bandwidths.bandwidths);
     }
 
-    private Bandwidths(Operator operator, Bandwidth... bandwidths) {
+    private Bandwidths(String id, Operator operator, Bandwidth... bandwidths) {
+        this.id = Objects.requireNonNull(id);
         this.operator = Operator.DEFAULT.equals(operator) ? DEFAULT_OPERATOR : operator;
         this.bandwidths = Arrays.copyOf(bandwidths, bandwidths.length);
     }
 
-    public boolean hasBandwidths() {
-        return this.bandwidths.length > 0;
-    }
-
     @Override
-    public Bandwidths with(long nowMicros) {
+    public Bandwidth with(long nowMicros) {
         final Bandwidth [] copies = new Bandwidth[bandwidths.length];
         for (int i = 0; i < copies.length; i++) {
             copies[i] = bandwidths[i].with(nowMicros);
@@ -144,6 +162,10 @@ public final class Bandwidths implements Bandwidth, Serializable{
         return permitsPerSecond;
     }
 
+    public String getId() {
+        return id;
+    }
+
     public Operator getOperator() {
         return this.operator;
     }
@@ -155,42 +177,39 @@ public final class Bandwidths implements Bandwidth, Serializable{
         return Arrays.copyOf(bandwidths, bandwidths.length);
     }
 
-    @Override
-    public boolean equals(Object o) {
+    @Override public boolean equals(Object o) {
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
         Bandwidths that = (Bandwidths) o;
-        return operator == that.operator && Arrays.equals(bandwidths, that.bandwidths);
+        return id.equals(that.id);
     }
 
-    @Override
-    public int hashCode() {
-        int result = Objects.hash(operator);
-        result = 31 * result + Arrays.hashCode(bandwidths);
-        return result;
+    @Override public int hashCode() {
+        return Objects.hash(id);
     }
 
     @Override
     public String toString() {
-        return "Bandwidths{" + "operator=" + operator + " " + Arrays.toString(bandwidths) + "}";
+        return "Bandwidths{id=" + id + ", " + operator + Arrays.toString(bandwidths) + "}";
     }
 
     private static class SecureSerializationProxy implements Serializable {
 
         private static final long serialVersionUID = 21L;
 
+        private final String id;
         private final Operator operator;
         private final Bandwidth[] members;
 
-
         public SecureSerializationProxy(Bandwidths candidate){
+            this.id = candidate.id;
             this.operator = candidate.operator;
             this.members = candidate.bandwidths;
         }
         private Object readResolve() throws InvalidObjectException {
-            return new Bandwidths(operator, members);
+            return new Bandwidths(id, operator, members);
         }
     }
 

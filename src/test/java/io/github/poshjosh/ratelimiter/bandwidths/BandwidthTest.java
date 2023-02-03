@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.*;
 
-public class BandwidthTest {
+class BandwidthTest {
 
     @FunctionalInterface
     interface BandwidthFactory{
@@ -142,16 +142,16 @@ public class BandwidthTest {
         Bandwidth a = bandwidthFactory.createNew(min, 1, SECONDS, nowMicros);
         Bandwidth b = bandwidthFactory.createNew(max, 1, SECONDS, nowMicros);
 
-        Bandwidths bandwidths = Bandwidths.of(operator, a, b);
+        Bandwidth bandwidth = Bandwidths.of(operator, a, b);
 
-        RateLimiter limiter = createRateLimiter(bandwidths, ticker);
+        RateLimiter limiter = createRateLimiter(bandwidth, ticker);
 
         int i = 0;
         final int limit = Operator.AND.equals(operator) ? max : min;
         for(; i < limit; i++) {
             //System.out.println(i);
             if (useInterval && i > 0) {
-                ticker.sleepMicros(getStableIntervalMicros(bandwidths));
+                ticker.sleepMicros(getStableIntervalMicros(bandwidth));
             }
             assertTrue("Unable to acquire permit: " + i, limiter.tryAcquire());
         }
@@ -159,8 +159,8 @@ public class BandwidthTest {
         assertFalse("Capable of acquiring permit: " + i, limiter.tryAcquire());
     }
 
-    private RateLimiter createRateLimiter(Bandwidths bandwidths, SleepingTicker ticker) {
-        return RateLimiter.of(bandwidths, ticker);
+    private RateLimiter createRateLimiter(Bandwidth bandwidth, SleepingTicker ticker) {
+        return RateLimiter.of(bandwidth, ticker);
     }
 
     private long getStableIntervalMicros(Bandwidth bandwidth) {

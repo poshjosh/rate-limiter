@@ -1,7 +1,6 @@
 package io.github.poshjosh.ratelimiter;
 
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
-import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 
 import java.util.Locale;
 import java.util.Objects;
@@ -12,7 +11,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 final class DefaultRateLimiter implements RateLimiter {
 
-    private final Bandwidths bandwidths;
+    private final Bandwidth bandwidth;
 
     /**
      * The underlying timer; used both to measure elapsed time and sleep as necessary. A separate
@@ -36,8 +35,8 @@ final class DefaultRateLimiter implements RateLimiter {
         return mutex;
     }
 
-    DefaultRateLimiter(Bandwidths bandwidths, SleepingTicker ticker) {
-        this.bandwidths = Objects.requireNonNull(bandwidths); // We do not use a copy
+    DefaultRateLimiter(Bandwidth bandwidth, SleepingTicker ticker) {
+        this.bandwidth = Objects.requireNonNull(bandwidth);
         this.ticker = Objects.requireNonNull(ticker);
     }
 
@@ -49,7 +48,7 @@ final class DefaultRateLimiter implements RateLimiter {
     @Override
     public final double getPermitsPerSecond() {
         synchronized (mutex()) {
-            return bandwidths.getPermitsPerSecond();
+            return bandwidth.getPermitsPerSecond();
         }
     }
 
@@ -77,7 +76,7 @@ final class DefaultRateLimiter implements RateLimiter {
     final long reserve(int permits) {
         Checks.requirePositive(permits, "permits");
         synchronized (mutex()) {
-            return bandwidths.reserveAndGetWaitLength(permits, ticker.elapsedMicros());
+            return bandwidth.reserveAndGetWaitLength(permits, ticker.elapsedMicros());
         }
     }
 
@@ -99,10 +98,10 @@ final class DefaultRateLimiter implements RateLimiter {
         long timeoutMicros = max(unit.toMicros(timeout), 0);
         synchronized (mutex()) {
             long nowMicros = ticker.elapsedMicros();
-            if (!bandwidths.canAcquire(nowMicros, timeoutMicros)) {
+            if (!bandwidth.canAcquire(nowMicros, timeoutMicros)) {
                 return false;
             }
-            long microsToWait = bandwidths.reserveAndGetWaitLength(permits, nowMicros);
+            long microsToWait = bandwidth.reserveAndGetWaitLength(permits, nowMicros);
             ticker.sleepMicrosUninterruptibly(microsToWait);
             return true;
         }
@@ -110,15 +109,9 @@ final class DefaultRateLimiter implements RateLimiter {
 
     @Override
     public String toString() {
-        final Bandwidth[] members = bandwidths.getBandwidths();
-        final StringBuilder builder = new StringBuilder(77 + (members.length * 7));
+        final StringBuilder builder = new StringBuilder(64);
         builder.append("DefaultRateLimiter{stableRates/second=");
-        for(int i=0; i<members.length; i++) {
-            builder.append(String.format(Locale.ROOT, "%3.1f", members[i].getPermitsPerSecond()));
-            if (i < members.length - 1) {
-                builder.append(", ");
-            }
-        }
+        builder.append(String.format(Locale.ROOT, "%3.1f", getPermitsPerSecond()));
         return builder.append("}]").toString();
     }
 }

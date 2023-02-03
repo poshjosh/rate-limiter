@@ -72,12 +72,12 @@ public interface RateLimiter {
         return of(Bandwidths.of(operator, bandwidths));
     }
 
-    static RateLimiter of(Bandwidths bandwidths) {
-        return of(bandwidths, SleepingTicker.zeroOffset());
+    static RateLimiter of(Bandwidth bandwidth) {
+        return of(bandwidth, SleepingTicker.zeroOffset());
     }
 
-    static RateLimiter of(Bandwidths bandwidths, SleepingTicker ticker) {
-        return new DefaultRateLimiter(bandwidths, ticker);
+    static RateLimiter of(Bandwidth bandwidth, SleepingTicker ticker) {
+        return new DefaultRateLimiter(bandwidth, ticker);
     }
 
     /**

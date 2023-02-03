@@ -17,6 +17,8 @@ mvn clean deploy -Prelease -Dgpg.passphrase=[YOUR GPG PASSPHRASE]
 After releasing browse to `https://s01.oss.sonatype.org/#stagingRepositories` and manually 
 confirm the release. 
 
+### Q & A
+
 __Why do we currently use a tree structure for our rate limiters?__
 
 Rate limiters could be created per method (for javaee within a DynamicFeature) or
