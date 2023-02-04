@@ -19,7 +19,7 @@ public final class Bandwidths implements Bandwidth, Serializable{
         switch(operator) {
             case AND: return EMPTY_AND;
             case OR:
-            case DEFAULT: return EMPTY_OR;
+            case NONE: return EMPTY_OR;
             default: throw new IllegalArgumentException("Unexpected operator: " + operator);
         }
     }
@@ -33,7 +33,7 @@ public final class Bandwidths implements Bandwidth, Serializable{
     }
 
     public static Bandwidth of(Bandwidth... bandwidths) {
-        return of(Operator.DEFAULT, bandwidths);
+        return of(Bandwidths.DEFAULT_OPERATOR, bandwidths);
     }
 
     public static Bandwidth of(Bandwidths bandwidths) {
@@ -77,8 +77,11 @@ public final class Bandwidths implements Bandwidth, Serializable{
 
     private Bandwidths(String id, Operator operator, Bandwidth... bandwidths) {
         this.id = Objects.requireNonNull(id);
-        this.operator = Operator.DEFAULT.equals(operator) ? DEFAULT_OPERATOR : operator;
+        this.operator = Objects.requireNonNull(operator);
         this.bandwidths = Arrays.copyOf(bandwidths, bandwidths.length);
+        if (Operator.NONE.equals(operator)) {
+            throw Checks.notSupported(this, "operator " + operator);
+        }
     }
 
     @Override
@@ -160,6 +163,10 @@ public final class Bandwidths implements Bandwidth, Serializable{
             permitsPerSecond[i] = bandwidths[i].getPermitsPerSecond();
         }
         return permitsPerSecond;
+    }
+
+    public boolean hasBandwidths() {
+        return bandwidths.length != 0;
     }
 
     public String getId() {

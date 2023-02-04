@@ -5,7 +5,7 @@ import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 import java.util.Objects;
 
 /**
- * A logical operator for a group of bandwidths/rates.
+ * A logical operator for composing a group of bandwidths/rates into a single one
  * @see Bandwidths
  */
 public enum Operator {
@@ -20,7 +20,7 @@ public enum Operator {
      */
     OR("|"),
 
-    DEFAULT("");
+    NONE("");
 
     private final String symbol;
 
@@ -36,6 +36,7 @@ public enum Operator {
         switch(symbol) {
             case "&": return AND;
             case "|": return OR;
+            case "": return NONE;
             default: throw Checks.notSupported(Operator.class, "symbol: " + symbol);
         }
     }

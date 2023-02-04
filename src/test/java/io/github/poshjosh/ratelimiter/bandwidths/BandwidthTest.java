@@ -135,6 +135,9 @@ class BandwidthTest {
     }
 
     private void testBandwidths(BandwidthFactory bandwidthFactory, Operator operator, boolean useInterval) {
+        if (Operator.NONE.equals(operator)) {
+            return;
+        }
         final int min = 1;
         final int max = 3;
         final long nowMicros = ticker.elapsedMicros();
