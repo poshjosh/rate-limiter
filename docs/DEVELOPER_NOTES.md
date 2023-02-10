@@ -1,5 +1,13 @@
 # Developer Notes
 
+We use tags all over in the code and docs. Format: `Tag:<TAG_TYPE>:<TAG_CONTENT>` 
+
+```
+Tag:Rule:<TAG_CONTENT>
+Tag:Issue:<TAG_CONTENT>
+```
+There is no restriction on tag type.
+
 ### Maven commands
 
 Generate coverage report (default at target/site/jacoco)

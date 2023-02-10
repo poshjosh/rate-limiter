@@ -46,7 +46,7 @@ final class DefaultRateLimiter implements RateLimiter {
      * argument passed in the factory method that produced the {@code Bandwidth}.
      */
     @Override
-    public final double getPermitsPerSecond() {
+    public double getPermitsPerSecond() {
         synchronized (mutex()) {
             return bandwidth.getPermitsPerSecond();
         }
@@ -73,7 +73,7 @@ final class DefaultRateLimiter implements RateLimiter {
      *
      * @return time in microseconds to wait until the resource can be acquired, never negative
      */
-    final long reserve(int permits) {
+    long reserve(int permits) {
         Checks.requirePositive(permits, "permits");
         synchronized (mutex()) {
             return bandwidth.reserveAndGetWaitLength(permits, ticker.elapsedMicros());
