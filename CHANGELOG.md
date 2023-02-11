@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -
 
+## [ [0.4.0](https://github.com/poshjosh/rate-limiter/tree/0.4.0) ] - 2023-02-11
+
+### Added
+
+- Added `Bandwidth#ALWAYS_AVAILABLE` and `RateLimiter#NO_LIMIT`.
+
 ## [ [0.3.4](https://github.com/poshjosh/rate-limiter/tree/0.3.4) ] - 2023-02-05
 
 ### Changed
