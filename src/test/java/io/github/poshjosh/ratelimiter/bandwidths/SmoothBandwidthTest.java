@@ -10,7 +10,7 @@ abstract class SmoothBandwidthTest {
 
     double permitsPerSeconds = 1;
 
-    final SleepingTicker ticker = SleepingTicker.zeroOffset();
+    final SleepingTicker ticker = SleepingTicker.ofDefaults();
 
     protected SmoothBandwidth getBandwidth() {
         return getBandwidth(permitsPerSeconds);

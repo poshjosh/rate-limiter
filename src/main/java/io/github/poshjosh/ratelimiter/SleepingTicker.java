@@ -10,9 +10,13 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  */
 public interface SleepingTicker extends Ticker {
 
+    static SleepingTicker ofDefaults() {
+        return zeroOffset();
+    }
+
     /**
-     * Create a ticker which starts ticking from zero. The first call to method {@link Ticker#elapsedNanos()}
-     * will return a number as close to zero as possible.
+     * Create a ticker which starts ticking from zero. The first call to method
+     * {@link Ticker#elapsedNanos()} will return a number as close to zero as possible.
      * @return a ticker which starts ticking from zero.
      */
     static SleepingTicker zeroOffset() {
@@ -32,9 +36,9 @@ public interface SleepingTicker extends Ticker {
         };
     }
 
-    /** Invokes {@code unit.}{@link TimeUnit#sleep(long) sleep(sleepFor)} uninterruptibly. */
+    /** Invokes {@code unit.}{@link TimeUnit#sleep(long) sleep(sleepFor)} without interruption. */
     @SuppressWarnings("GoodTime")
-    default void sleepMicrosUninterruptibly(long sleepFor) {
+    default void sleepMicrosWithoutInterruption(long sleepFor) {
         if (sleepFor <= 0) {
             return;
         }

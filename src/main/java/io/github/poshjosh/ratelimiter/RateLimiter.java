@@ -75,7 +75,7 @@ public interface RateLimiter {
     }
 
     static RateLimiter of(Bandwidth bandwidth) {
-        return of(bandwidth, SleepingTicker.zeroOffset());
+        return of(bandwidth, SleepingTicker.ofDefaults());
     }
 
     static RateLimiter of(Bandwidth bandwidth, SleepingTicker ticker) {

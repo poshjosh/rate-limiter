@@ -495,7 +495,7 @@ class RateLimiterTest {
     }
 
     private static RateLimiter create(double permitsPerSecond) {
-        return create(permitsPerSecond, SleepingTicker.zeroOffset());
+        return create(permitsPerSecond, SleepingTicker.ofDefaults());
     }
 
     private static RateLimiter create(double permitsPerSecond, SleepingTicker ticker) {
@@ -504,7 +504,7 @@ class RateLimiterTest {
     }
 
     private static RateLimiter create(double permitsPerSecond, long warmupPeriod, TimeUnit unit) {
-        SleepingTicker ticker = SleepingTicker.zeroOffset();
+        SleepingTicker ticker = SleepingTicker.ofDefaults();
         return create(permitsPerSecond, warmupPeriod, unit, 3.0, ticker);
     }
 
@@ -518,11 +518,11 @@ class RateLimiterTest {
         return Bandwidth.bursty(permitsPerSecond, ticker.elapsedMicros());
     }
     private static Bandwidth warmingUpBandwidth(double permitsPerSecond, long warmupPeriod) {
-        SleepingTicker ticker = SleepingTicker.zeroOffset();
+        SleepingTicker ticker = SleepingTicker.ofDefaults();
         return warmingUpBandwidth(permitsPerSecond, warmupPeriod, SECONDS, 3.0, ticker);
     }
     private static Bandwidth warmingUpBandwidth(double permitsPerSecond, long warmupPeriod, TimeUnit unit) {
-        SleepingTicker ticker = SleepingTicker.zeroOffset();
+        SleepingTicker ticker = SleepingTicker.ofDefaults();
         return warmingUpBandwidth(permitsPerSecond, warmupPeriod, unit, 3.0, ticker);
     }
     private static Bandwidth warmingUpBandwidth(
@@ -570,7 +570,7 @@ class RateLimiterTest {
         }
 
         @Override
-        public void sleepMicrosUninterruptibly(long sleepFor) {
+        public void sleepMicrosWithoutInterruption(long sleepFor) {
             sleepMicros("R", sleepFor);
         }
 

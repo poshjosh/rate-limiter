@@ -63,7 +63,7 @@ final class DefaultRateLimiter implements RateLimiter {
     @Override
     public double acquire(int permits) {
         long microsToWait = reserve(permits);
-        ticker.sleepMicrosUninterruptibly(microsToWait);
+        ticker.sleepMicrosWithoutInterruption(microsToWait);
         return 1.0 * microsToWait / SECONDS.toMicros(1L);
     }
 
@@ -102,7 +102,7 @@ final class DefaultRateLimiter implements RateLimiter {
                 return false;
             }
             long microsToWait = bandwidth.reserveAndGetWaitLength(permits, nowMicros);
-            ticker.sleepMicrosUninterruptibly(microsToWait);
+            ticker.sleepMicrosWithoutInterruption(microsToWait);
             return true;
         }
     }

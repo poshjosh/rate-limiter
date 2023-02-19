@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public abstract class AbstractBandwidthTest {
 
-    private final SleepingTicker ticker = SleepingTicker.zeroOffset();
+    private final SleepingTicker ticker = SleepingTicker.ofDefaults();
 
     protected abstract Bandwidth getBandwidth(double permitsPerSeconds, long nowMicros);
 

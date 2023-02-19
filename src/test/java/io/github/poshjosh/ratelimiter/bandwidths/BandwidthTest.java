@@ -33,7 +33,7 @@ class BandwidthTest {
             instant += MICROSECONDS.toNanos(micros);
         }
         @Override
-        public void sleepMicrosUninterruptibly(long sleepFor) {
+        public void sleepMicrosWithoutInterruption(long sleepFor) {
             sleepMicros(sleepFor);
         }
     }
@@ -83,7 +83,7 @@ class BandwidthTest {
         //testAllOrNothing(bandwidthFactory, 101, 1, SECONDS);
     }
     private void testAllOrNothing(BandwidthFactory bandwidthFactory, long permits, long duration, TimeUnit unit) {
-        final SleepingTicker ticker = SleepingTicker.zeroOffset();
+        final SleepingTicker ticker = SleepingTicker.ofDefaults();
         final Bandwidth bandwidth = bandwidthFactory.createNew(permits, duration, unit, ticker.elapsedMicros());
         final RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
         final double max = permits;

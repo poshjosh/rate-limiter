@@ -1,6 +1,6 @@
 # rate limiter
 
-__Light-weight rate limiter library.__
+__Enterprise ready rate limiter.__
 
 Some implementations:
 
