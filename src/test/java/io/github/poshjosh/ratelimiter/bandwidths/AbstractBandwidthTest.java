@@ -1,6 +1,6 @@
 package io.github.poshjosh.ratelimiter.bandwidths;
 
-import io.github.poshjosh.ratelimiter.SleepingTicker;
+import io.github.poshjosh.ratelimiter.Ticker;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public abstract class AbstractBandwidthTest {
 
-    private final SleepingTicker ticker = SleepingTicker.ofDefaults();
+    private final Ticker ticker = Ticker.ofDefaults();
 
     protected abstract Bandwidth getBandwidth(double permitsPerSeconds, long nowMicros);
 

@@ -495,39 +495,39 @@ class RateLimiterTest {
     }
 
     private static RateLimiter create(double permitsPerSecond) {
-        return create(permitsPerSecond, SleepingTicker.ofDefaults());
+        return create(permitsPerSecond, Ticker.ofDefaults());
     }
 
-    private static RateLimiter create(double permitsPerSecond, SleepingTicker ticker) {
+    private static RateLimiter create(double permitsPerSecond, Ticker ticker) {
         Bandwidth bandwidth = burstyBandwidth(permitsPerSecond, ticker);
         return RateLimiter.of(Bandwidths.of(bandwidth), ticker);
     }
 
     private static RateLimiter create(double permitsPerSecond, long warmupPeriod, TimeUnit unit) {
-        SleepingTicker ticker = SleepingTicker.ofDefaults();
+        Ticker ticker = Ticker.ofDefaults();
         return create(permitsPerSecond, warmupPeriod, unit, 3.0, ticker);
     }
 
     private static RateLimiter create(double permitsPerSecond, long warmupPeriod, TimeUnit unit,
-                                      double coldFactor, SleepingTicker ticker) {
+                                      double coldFactor, Ticker ticker) {
         Bandwidth bandwidth = warmingUpBandwidth(
                 permitsPerSecond, warmupPeriod, unit, coldFactor, ticker);
         return RateLimiter.of(Bandwidths.of(bandwidth), ticker);
     }
-    private static Bandwidth burstyBandwidth(double permitsPerSecond, SleepingTicker ticker) {
+    private static Bandwidth burstyBandwidth(double permitsPerSecond, Ticker ticker) {
         return Bandwidth.bursty(permitsPerSecond, ticker.elapsedMicros());
     }
     private static Bandwidth warmingUpBandwidth(double permitsPerSecond, long warmupPeriod) {
-        SleepingTicker ticker = SleepingTicker.ofDefaults();
+        Ticker ticker = Ticker.ofDefaults();
         return warmingUpBandwidth(permitsPerSecond, warmupPeriod, SECONDS, 3.0, ticker);
     }
     private static Bandwidth warmingUpBandwidth(double permitsPerSecond, long warmupPeriod, TimeUnit unit) {
-        SleepingTicker ticker = SleepingTicker.ofDefaults();
+        Ticker ticker = Ticker.ofDefaults();
         return warmingUpBandwidth(permitsPerSecond, warmupPeriod, unit, 3.0, ticker);
     }
     private static Bandwidth warmingUpBandwidth(
             double permitsPerSecond, long warmupPeriod, TimeUnit unit,
-            double coldFactor, SleepingTicker ticker) {
+            double coldFactor, Ticker ticker) {
         return Bandwidth
                 .warmingUp(permitsPerSecond, ticker.elapsedMicros(), warmupPeriod, unit, coldFactor);
     }
@@ -551,7 +551,7 @@ class RateLimiterTest {
      * The ticker gathers events and presents them as strings. R0.6 means a delay of 0.6 seconds
      * caused by the (R)ateLimiter U1.0 means the (U)ser caused the ticker to sleep for a second.
      */
-    static class FakeTicker implements SleepingTicker {
+    static class FakeTicker implements Ticker {
         long instant = 0L;
         final List<String> events = new ArrayList<>();
 

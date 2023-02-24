@@ -42,8 +42,8 @@ import static java.util.concurrent.TimeUnit.*;
  * <p>The state-changing methods are not idempotent; it is an error to start or stop a stopwatch
  * that is already in the desired state.
  *
- * <p>When testing code that uses this class, use {@link #createUnstarted(Ticker)} or {@link
- * #createStarted(Ticker)} to supply a fake or mock ticker. This allows you to simulate any valid
+ * <p>When testing code that uses this class, use {@link #ofUnstarted(Ticker)} or {@link
+ * #ofStarted(Ticker)} to supply a fake or mock ticker. This allows you to simulate any valid
  * behavior of the stopwatch.
  *
  * <p><b>Note:</b> This class is not thread-safe.
@@ -71,33 +71,33 @@ final class Stopwatch {
     /**
      * Creates (but does not start) a new stopwatch using {@link System#nanoTime} as its time source.
      */
-    public static Stopwatch createUnstarted() {
+    public static Stopwatch ofUnstarted() {
         return new Stopwatch();
     }
 
     /**
      * Creates (but does not start) a new stopwatch, using the specified time source.
      */
-    public static Stopwatch createUnstarted(Ticker ticker) {
+    public static Stopwatch ofUnstarted(Ticker ticker) {
         return new Stopwatch(ticker);
     }
 
     /**
      * Creates (and starts) a new stopwatch using {@link System#nanoTime} as its time source.
      */
-    public static Stopwatch createStarted() {
+    public static Stopwatch ofStarted() {
         return new Stopwatch().start();
     }
 
     /**
      * Creates (and starts) a new stopwatch, using the specified time source.
      */
-    public static Stopwatch createStarted(Ticker ticker) {
+    public static Stopwatch ofStarted(Ticker ticker) {
         return new Stopwatch(ticker).start();
     }
 
     Stopwatch() {
-        this.ticker = Ticker.systemTicker();
+        this(Ticker.SYSTEM_NANO_OFFSET);
     }
 
     Stopwatch(Ticker ticker) {

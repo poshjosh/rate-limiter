@@ -29,7 +29,7 @@ function insertTextAtLineInChangelog() {
 function updateChangelog() {
     local current_date=$(date '+%Y-%m-%d')
     insertTextAtLineInChangelog 10 "
-## [ [$NEW_VERSION](https://github.com/poshjosh/$1/tree/$NEW_VERSION) ] - $current_date
+## [ [$NEW_VERSION](https://github.com/poshjosh/$1/tree/v$NEW_VERSION) ] - $current_date
 
 ### Added
 

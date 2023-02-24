@@ -2,7 +2,7 @@ package io.github.poshjosh.ratelimiter.bandwidths;
 
 import io.github.poshjosh.ratelimiter.RateLimiter;
 import io.github.poshjosh.ratelimiter.Operator;
-import io.github.poshjosh.ratelimiter.SleepingTicker;
+import io.github.poshjosh.ratelimiter.Ticker;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -23,7 +23,7 @@ class BandwidthTest {
      * The ticker gathers events and presents them as strings. R0.6 means a delay of 0.6 seconds
      * caused by the (R)ateLimiter U1.0 means the (U)ser caused the ticker to sleep for a second.
      */
-    static class FakeTicker implements SleepingTicker {
+    static class FakeTicker implements Ticker {
         long instant = 0L;
         @Override
         public long elapsedNanos() {
@@ -83,7 +83,7 @@ class BandwidthTest {
         //testAllOrNothing(bandwidthFactory, 101, 1, SECONDS);
     }
     private void testAllOrNothing(BandwidthFactory bandwidthFactory, long permits, long duration, TimeUnit unit) {
-        final SleepingTicker ticker = SleepingTicker.ofDefaults();
+        final Ticker ticker = Ticker.ofDefaults();
         final Bandwidth bandwidth = bandwidthFactory.createNew(permits, duration, unit, ticker.elapsedMicros());
         final RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
         final double max = permits;
@@ -162,7 +162,7 @@ class BandwidthTest {
         assertFalse("Capable of acquiring permit: " + i, limiter.tryAcquire());
     }
 
-    private RateLimiter createRateLimiter(Bandwidth bandwidth, SleepingTicker ticker) {
+    private RateLimiter createRateLimiter(Bandwidth bandwidth, Ticker ticker) {
         return RateLimiter.of(bandwidth, ticker);
     }
 

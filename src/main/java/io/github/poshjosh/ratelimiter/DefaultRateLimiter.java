@@ -17,7 +17,7 @@ final class DefaultRateLimiter implements RateLimiter {
      * The underlying timer; used both to measure elapsed time and sleep as necessary. A separate
      * object to facilitate testing.
      */
-    private final SleepingTicker ticker;
+    private final Ticker ticker;
 
     // Can't be initialized in the constructor because mocks don't call the constructor.
     private volatile Object mutexDoNotUseDirectly;
@@ -35,7 +35,7 @@ final class DefaultRateLimiter implements RateLimiter {
         return mutex;
     }
 
-    DefaultRateLimiter(Bandwidth bandwidth, SleepingTicker ticker) {
+    DefaultRateLimiter(Bandwidth bandwidth, Ticker ticker) {
         this.bandwidth = Objects.requireNonNull(bandwidth);
         this.ticker = Objects.requireNonNull(ticker);
     }
