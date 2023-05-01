@@ -41,18 +41,6 @@ final class DefaultRateLimiter implements RateLimiter {
     }
 
     /**
-     * Returns the stable rate (as {@code permits per seconds}) with which the currently eligible {@code Bandwidth}
-     * in this {@code RateLimiter} is configured with. The initial value is same as the {@code permitsPerSecond}
-     * argument passed in the factory method that produced the {@code Bandwidth}.
-     */
-    @Override
-    public double getPermitsPerSecond() {
-        synchronized (mutex()) {
-            return bandwidth.getPermitsPerSecond();
-        }
-    }
-
-    /**
      * Acquires the given number of permits from this {@code ResourceLimiter}, blocking until the request
      * can be granted. Tells the amount of time slept, if any.
      *
@@ -111,7 +99,7 @@ final class DefaultRateLimiter implements RateLimiter {
     public String toString() {
         final StringBuilder builder = new StringBuilder(64);
         builder.append("DefaultRateLimiter{stableRates/second=");
-        builder.append(String.format(Locale.ROOT, "%3.1f", getPermitsPerSecond()));
+        builder.append(String.format(Locale.ROOT, "%3.1f", bandwidth.getPermitsPerSecond()));
         return builder.append("}]").toString();
     }
 }

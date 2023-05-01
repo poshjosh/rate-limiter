@@ -1,12 +1,9 @@
 package io.github.poshjosh.ratelimiter;
 
-import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
-
 import java.util.Objects;
 
 /**
  * A logical operator for composing a group of bandwidths/rates into a single one
- * @see Bandwidths
  */
 public enum Operator {
 

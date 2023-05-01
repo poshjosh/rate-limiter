@@ -53,9 +53,9 @@ class RateLimiterTest {
     public void testSimpleRateUpdate() {
         Bandwidth bandwidth = warmingUpBandwidth(5.0, 5);
         RateLimiter limiter = RateLimiter.of(bandwidth);
-        assertEquals(5.0, limiter.getPermitsPerSecond());
+        assertEquals(5.0, bandwidth.getPermitsPerSecond());
         setRate(bandwidth, 10.0);
-        assertEquals(10.0, limiter.getPermitsPerSecond());
+        assertEquals(10.0, bandwidth.getPermitsPerSecond());
     }
 
     @Test

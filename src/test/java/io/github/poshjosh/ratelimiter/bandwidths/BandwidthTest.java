@@ -171,11 +171,6 @@ class BandwidthTest {
         return (long)(SECONDS.toMicros(1L) / permitsPerSecond);
     }
 
-    private long getStableIntervalMicros(Bandwidths bandwidths) {
-        final double permitsPerSecond = bandwidths.getPermitsPerSecond();
-        return (long)(SECONDS.toMicros(1L) / permitsPerSecond);
-    }
-
     private static void assertTrue(String message, boolean expression) {
         if (!expression) {
             throw new AssertionError(message);

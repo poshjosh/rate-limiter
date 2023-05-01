@@ -97,9 +97,9 @@ public interface Bandwidth {
     Bandwidth with(long nowMicros);
 
     /**
-     * Returns the stable rate (as {@code permits per seconds}) with which this {@code Rate} is
+     * Returns the stable rate (as {@code permits per seconds}) with which this {@code Bandwidth} is
      * configured with. The initial value of this is the same as the {@code permitsPerSecond} argument
-     * passed in the factory method that produced this {@code Rate}.
+     * passed in the factory method that produced this {@code Bandwidth}.
      */
     double getPermitsPerSecond();
 

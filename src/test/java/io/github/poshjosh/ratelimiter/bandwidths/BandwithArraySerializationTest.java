@@ -2,7 +2,7 @@ package io.github.poshjosh.ratelimiter.bandwidths;
 
 import org.junit.jupiter.api.Test;
 
-class BandwithsSerializationTest extends SerializationTest<Bandwidths> {
+class BandwithArraySerializationTest extends SerializationTest<BandwidthArray> {
 
     @Test
     void testSerialization() {
@@ -14,7 +14,7 @@ class BandwithsSerializationTest extends SerializationTest<Bandwidths> {
     void testSerialization(double permitsPerSecond, long nowMicros, long warmUpPeriodSeconds) {
         Bandwidth a = Bandwidth.bursty(permitsPerSecond, nowMicros);
         Bandwidth b = Bandwidth.warmingUp(permitsPerSecond, nowMicros, warmUpPeriodSeconds);
-        super.testSerialization((Bandwidths)Bandwidths.and(a, b));
-        super.testSerialization((Bandwidths)Bandwidths.or(a, b));
+        super.testSerialization((BandwidthArray)Bandwidths.and(a, b));
+        super.testSerialization((BandwidthArray)Bandwidths.or(a, b));
     }
 }

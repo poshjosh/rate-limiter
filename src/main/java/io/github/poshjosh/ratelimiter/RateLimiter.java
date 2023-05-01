@@ -83,13 +83,6 @@ public interface RateLimiter {
     }
 
     /**
-     * Returns the stable rate (as {@code permits per seconds}) with which the currently eligible {@code Bandwidth}
-     * in this {@code RateLimiter} is configured with. The initial value is same as the {@code permitsPerSecond}
-     * argument passed in the factory method that produced the {@code Bandwidth}
-     */
-    double getPermitsPerSecond();
-
-    /**
      * Acquires the given number of permits from this {@code RateLimiter}, blocking until the request
      * can be granted. Tells the amount of time slept, if any.
      *
