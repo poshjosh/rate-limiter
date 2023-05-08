@@ -4,6 +4,8 @@ import io.github.poshjosh.ratelimiter.RateLimiter;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
 class ResourceLimiterPerformanceIT {
 
     @Test
@@ -13,20 +15,26 @@ class ResourceLimiterPerformanceIT {
 
         // Log level will affect the stats, so switch off logging
 
-        recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(1_000, 20_000, Usage.of(250, 50_000_000));
+        recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
+                1_000, 20_000, Usage.of(250, 50_000_000));
     }
 
-    void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(int count, int permitsPerSecond, Usage limit) {
+    void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
+            int count, int permitsPerSecond, Usage usageLimit) {
 
         RateLimiter rateLimiter = getRateLimiter(permitsPerSecond);
 
-        Usage bookmark = Usage.bookmark();
+        Usage usageBookmark = Usage.bookmark();
 
         for(int i = 0; i < count; i++) {
             rateLimiter.tryAcquire();
         }
 
-        bookmark.assertUsageLessThan(limit);
+        Usage currentUsage = usageBookmark.current();
+        System.out.println(currentUsage);
+        assertFalse(currentUsage.isAnyUsageGreaterThan(usageLimit),
+                "Usage should be less or equal to limit, but was not.\nUsage: " +
+                        currentUsage + "\nLimit: " + usageLimit);
     }
 
     public RateLimiter getRateLimiter(long permitsPerSecond) {
