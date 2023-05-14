@@ -64,7 +64,7 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
  */
 public interface RateLimiter {
 
-    RateLimiter NO_LIMIT = RateLimiter.of(Bandwidth.ALWAYS_AVAILABLE);
+    RateLimiter NO_LIMIT = RateLimiter.of(Bandwidth.UNLIMITED);
 
     static RateLimiter of(Bandwidth... bandwidths) {
         return of(Bandwidths.of(bandwidths));
