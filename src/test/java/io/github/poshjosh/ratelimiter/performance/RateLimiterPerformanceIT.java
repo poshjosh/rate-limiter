@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-class ResourceLimiterPerformanceIT {
+class RateLimiterPerformanceIT {
 
     @Test
     void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory() {
@@ -16,7 +16,7 @@ class ResourceLimiterPerformanceIT {
         // Log level will affect the stats, so switch off logging
 
         recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
-                1_000, 20_000, Usage.of(250, 50_000_000));
+                100_000, 1_000, Usage.of(20, 3_000_000));
     }
 
     void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
@@ -31,7 +31,8 @@ class ResourceLimiterPerformanceIT {
         }
 
         Usage currentUsage = usageBookmark.current();
-        System.out.println(currentUsage);
+        System.out.println("  Total " + currentUsage + ", invocations: " + count);
+        System.out.println("Average " + currentUsage.divideBy(count));
         assertFalse(currentUsage.isAnyUsageGreaterThan(usageLimit),
                 "Usage should be less or equal to limit, but was not.\nUsage: " +
                         currentUsage + "\nLimit: " + usageLimit);

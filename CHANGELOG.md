@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -
 
+## [ [0.5.1](https://github.com/poshjosh/rate-limiter/tree/v0.5.1) ] - 2023-05-20
+
+### Changed
+
+- Renamed `Bandwidth#ALWAYS_AVAILABLE` to `Bandwidth#UNLIMITED`
+
 ## [ [0.5.0](https://github.com/poshjosh/rate-limiter/tree/v0.5.0) ] - 2023-05-01
 
 ### Added
