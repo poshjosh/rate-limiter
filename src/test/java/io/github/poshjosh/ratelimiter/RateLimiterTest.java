@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 import io.github.poshjosh.ratelimiter.bandwidths.SmoothBandwidth;
+import io.github.poshjosh.ratelimiter.util.Ticker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;

@@ -8,21 +8,36 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class RateLimiterPerformanceIT {
 
+    private static final long PERMITS_PER_SECOND = 1;
+
+    // @TODO introduce maven profiles so performance tests could be INFO, while other tests DEBUG
+
+    // Log level will affect the stats, so switch off logging
+
     @Test
-    void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory() {
+    void tryAcquire_givenAllOrNothingBandwidth_shouldConsumeLimitedTimeAndMemory() {
+        tryAcquire_givenBandwidth_shouldConsumeLimitedTimeAndMemory(Bandwidth.allOrNothing(PERMITS_PER_SECOND));
+    }
 
-        // @TODO introduce maven profiles so performance tests could be INFO, while other tests DEBUG
+    @Test
+    void tryAcquire_givenBurstyBandwidth_shouldConsumeLimitedTimeAndMemory() {
+        tryAcquire_givenBandwidth_shouldConsumeLimitedTimeAndMemory(Bandwidth.bursty(PERMITS_PER_SECOND));
+    }
 
-        // Log level will affect the stats, so switch off logging
+    @Test
+    void tryAcquire_givenWarmingUpBandwidth_shouldConsumeLimitedTimeAndMemory() {
+        tryAcquire_givenBandwidth_shouldConsumeLimitedTimeAndMemory(Bandwidth.warmingUp(PERMITS_PER_SECOND));
+    }
 
+    void tryAcquire_givenBandwidth_shouldConsumeLimitedTimeAndMemory(Bandwidth bandwidth) {
         recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
-                100_000, 1_000, Usage.of(20, 3_000_000));
+                bandwidth, 100_000, Usage.of(20, 3_000_000));
     }
 
     void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
-            int count, int permitsPerSecond, Usage usageLimit) {
+            Bandwidth bandwidth, int count, Usage usageLimit) {
 
-        RateLimiter rateLimiter = getRateLimiter(permitsPerSecond);
+        RateLimiter rateLimiter = getRateLimiter(bandwidth);
 
         Usage usageBookmark = Usage.bookmark();
 
@@ -31,14 +46,15 @@ class RateLimiterPerformanceIT {
         }
 
         Usage currentUsage = usageBookmark.current();
-        System.out.println("  Total " + currentUsage + ", invocations: " + count);
-        System.out.println("Average " + currentUsage.divideBy(count));
+        final String bandwidthType = bandwidth.getClass().getSimpleName();
+        System.out.println(bandwidthType + "\t  Total " + currentUsage + ", invocations: " + count);
+        System.out.println(bandwidthType + "\tAverage " + currentUsage.divideBy(count));
         assertFalse(currentUsage.isAnyUsageGreaterThan(usageLimit),
                 "Usage should be less or equal to limit, but was not.\nUsage: " +
                         currentUsage + "\nLimit: " + usageLimit);
     }
 
-    public RateLimiter getRateLimiter(long permitsPerSecond) {
-        return RateLimiter.of(Bandwidth.bursty(permitsPerSecond));
+    public RateLimiter getRateLimiter(Bandwidth bandwidth) {
+        return RateLimiter.of(bandwidth);
     }
 }

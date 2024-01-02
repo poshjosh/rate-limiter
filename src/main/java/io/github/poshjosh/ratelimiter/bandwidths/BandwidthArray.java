@@ -1,6 +1,6 @@
 package io.github.poshjosh.ratelimiter.bandwidths;
 
-import io.github.poshjosh.ratelimiter.Operator;
+import io.github.poshjosh.ratelimiter.util.Operator;
 import io.github.poshjosh.ratelimiter.annotations.Beta;
 
 import java.io.InvalidObjectException;
