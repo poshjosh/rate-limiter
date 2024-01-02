@@ -1,10 +1,28 @@
 package io.github.poshjosh.ratelimiter.bandwidths;
 
+import io.github.poshjosh.ratelimiter.model.Rate;
+import io.github.poshjosh.ratelimiter.model.Rates;
 import io.github.poshjosh.ratelimiter.util.Operator;
+import io.github.poshjosh.ratelimiter.util.Ticker;
 
 public interface Bandwidths {
 
     Operator DEFAULT_OPERATOR = Operator.OR;
+
+    static Bandwidth ofSeconds(int permits) {
+        return of(Rate.ofSeconds(permits));
+    }
+
+    static Bandwidth of(Rate rate) {
+        return RateToBandwidthConverter.ofDefaults()
+                .convert(rate, Ticker.ofDefaults().elapsedMicros());
+    }
+
+    static Bandwidth of(Rates rates, long nowMicros) {
+        Bandwidth [] bandwidths = RateToBandwidthConverter.ofDefaults()
+                .convert("", rates, nowMicros);
+        return Bandwidths.of(rates.getOperator(), bandwidths);
+    }
 
     static Bandwidth and(Bandwidth... bandwidths) {
         return of(Operator.AND, bandwidths);
@@ -27,6 +45,6 @@ public interface Bandwidths {
     }
 
     static Bandwidth of(String id, Operator operator, Bandwidth... bandwidths) {
-        return new BandwidthArray(id, operator, bandwidths);
+        return bandwidths.length == 1 ? bandwidths[0] : new BandwidthArray(id, operator, bandwidths);
     }
 }
