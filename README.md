@@ -22,7 +22,54 @@ To add a dependency on `rate-limiter` using Maven, use the following:
         </dependency>
 ```
 
-### Concept
+### Usage
+
+We want rate limiting to be adjusted dynamically based on specific conditions. [See rate condition expression language](docs/RATE-CONDITION-EXPRESSION-LANGUAGE.md)
+
+```java
+import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
+import io.github.poshjosh.ratelimiter.util.Matcher;
+
+class DynamicRateLimiting {
+
+    static RateLimiter rateLimiter = RateLimiter.of(Bandwidths.ofSeconds(1));
+    static Matcher matchAfter2Seconds = Matcher.of("sys.time.elapsed>PT1S");
+
+    public static void main(String[] args) throws Exception {
+
+        final long startTime = System.currentTimeMillis();
+
+        for (int i = 0; i < 5; i++) {
+
+            final boolean matches = matchAfter2Seconds.matches(startTime);
+            System.out.println("Matches: " + matchesCondition + ", elapsed time: " + elapsedTime);
+
+            if (matchesCondition) {
+                final boolean acquired = rateLimiter.tryAcquire(1);
+                System.out.println("Within limit: " + acquired);
+            }
+
+            Thread.sleep(500);
+        }
+    }
+}
+
+// Output
+//        Matches: false, elapsed time: 0
+//        Matches: false, elapsed time: 504
+//        Matches: true, elapsed time: 1004
+//        Within limit: true
+//        Matches: true, elapsed time: 1505
+//        Within limit: true
+//        Matches: true, elapsed time: 2008
+//        Within limit: false
+```
+
+We have a flexible [expression language](docs/RATE-CONDITION-EXPRESSION-LANGUAGE.md) for example:
+
+```
+jvm.memory.available<500MB && sys.time.elapsed>PT1S
+```
 
 We have a list of tasks to execute, but we don't want to submit more than 2 per second.
 
@@ -49,51 +96,6 @@ class DataCap {
     networkService.send(packet);
   }
 }
-```
-
-We want rate limiting to be adjusted dynamically based on specific conditions. [See expression language](docs/RATE-CONDITION-EXPRESSION-LANGUAGE.md)
-
-```java
-import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
-import io.github.poshjosh.ratelimiter.expression.ExpressionMatcher;
-import io.github.poshjosh.ratelimiter.util.Matcher;
-
-class DynamicRateLimiting {
-
-    static RateLimiter rateLimiter = RateLimiter.of(Bandwidths.ofSeconds(1));
-    static Matcher matchAfter2Seconds = ExpressionMatcher.ofDefault()
-            .matcher("sys.time.elapsed>PT1S")
-            .orElseThrow(() -> new RuntimeException("Cannot create matcher"));
-
-    public static void main(String[] args) throws Exception {
-
-        final long startTime = System.currentTimeMillis();
-
-        for (int i = 0; i < 5; i++) {
-
-            final boolean matchesCondition = matchAfter2Seconds.matches(startTime);
-            System.out.println("Matches condition: " + matchesCondition +
-                    ", elapsed time: " + elapsedTime);
-
-            if (matchesCondition) {
-                final boolean acquired = rateLimiter.tryAcquire(1);
-                System.out.println("Within limit: " + acquired);
-            }
-
-            Thread.sleep(500);
-        }
-    }
-}
-
-// Output
-//        Matches condition: false, elapsed time: 0
-//        Matches condition: false, elapsed time: 504
-//        Matches condition: true, elapsed time: 1004
-//        Within limit: true
-//        Matches condition: true, elapsed time: 1505
-//        Within limit: true
-//        Matches condition: true, elapsed time: 2008
-//        Within limit: false
 ```
 
 ### Performance

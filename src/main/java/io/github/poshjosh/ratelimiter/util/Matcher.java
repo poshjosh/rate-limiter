@@ -1,5 +1,7 @@
 package io.github.poshjosh.ratelimiter.util;
 
+import io.github.poshjosh.ratelimiter.expression.ExpressionMatcher;
+
 import java.util.Objects;
 
 @FunctionalInterface
@@ -15,6 +17,13 @@ public interface Matcher<INPUT> {
     @SuppressWarnings("unchecked")
     static <T> Matcher<T> matchNone() {
         return (Matcher<T>)MATCH_NONE;
+    }
+
+    static Matcher of(String expression) {
+        return ExpressionMatcher.ofDefault().matcher(expression)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Not a valid expression: " + expression +
+                                ". For valid expressions see: https://github.com/poshjosh/rate-limiter/blob/master/docs/RATE-CONDITION-EXPRESSION-LANGUAGE.md"));
     }
 
     static String composeResults(String first, String second) {

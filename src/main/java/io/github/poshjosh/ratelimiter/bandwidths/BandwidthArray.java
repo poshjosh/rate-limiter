@@ -36,10 +36,6 @@ final class BandwidthArray implements Bandwidth, Serializable{
 
     private final Bandwidth[] bandwidths;
 
-    BandwidthArray(BandwidthArray bandwidths) {
-        this(bandwidths.id, bandwidths.operator, bandwidths.bandwidths);
-    }
-
     BandwidthArray(String id, Operator operator, Bandwidth... bandwidths) {
         this.id = Objects.requireNonNull(id);
         this.operator = Objects.requireNonNull(operator);

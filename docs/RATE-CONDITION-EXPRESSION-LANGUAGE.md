@@ -18,20 +18,33 @@ An expression is of format `LHS` `OPERATOR` `RHS` e.g `jvm.thread.count.started>
 
 __Note:__ `|` equals OR. `!` is used above for OR because markdown does not support `|` in tables
 
-Example:
+### Examples ###
+
+```java
+class MatchExamples {
+    
+    Matcher matchMemoryLessThan1g = Matcher.of("jvm.memory.available<1G");
+    
+    Matcher matchMemoryLt9gAndTimeElapsedGt2s = Matcher.of("jvm.memory.available<9G & sys.time.elapsed>PT2S");
+    
+    Matcher matchDeadlockedThreadsGt30 = Matcher.of("jvm.thread.count.deadlocked>30");
+    
+    Matcher matchSysUserNotGuest = Matcher.of("sys.property={user.name!=guest}");
+}
+```
+
+### Sample Usage ###
 
 ```java
 class Resource {
 
     // 5 permits per second when available system memory is less than 1 GB
     RateLimiter rateLimiter = RateLimiter.of(Bandwidths.ofSeconds(5));
-    Matcher matchAfter2Seconds = ExpressionMatcher.ofDefault()
-            .matcher("jvm.memory.available<1G")
-            .orElseThrow(() -> new RuntimeException("Cannot create matcher"));
-    final long startTime = System.currentTimeMillis();
+    Matcher matchMemoryLessThanOneG = Matcher.of("jvm.memory.available<1G");
+    long startTime = System.currentTimeMillis();
     
     String greet(String who) {
-        if (matchAfter2Seconds.matches(startTime)) {
+        if (matchMemoryLessThanOneG.matches(startTime)) {
             if (!rateLimiter.tryAcquire(1)) {
                 throw new RuntimeException("Rate limit exceeded");
             }
@@ -39,12 +52,6 @@ class Resource {
         return "Hello " + who;
     }
 }
-```
-
-A more contrived condition
-
-```
-jvm.memory.available<9G & web.request.user.role=GUEST
 ```
 
 ### jvm.thread

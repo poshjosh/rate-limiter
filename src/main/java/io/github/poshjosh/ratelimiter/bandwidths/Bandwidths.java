@@ -36,10 +36,6 @@ public interface Bandwidths {
         return of(Bandwidths.DEFAULT_OPERATOR, bandwidths);
     }
 
-    static Bandwidth of(BandwidthArray bandwidths) {
-        return new BandwidthArray(bandwidths);
-    }
-
     static Bandwidth of(Operator operator, Bandwidth... bandwidths) {
         return of(BandwidthArray.buildId(operator, bandwidths), operator, bandwidths);
     }
