@@ -19,7 +19,17 @@ mvn test jacoco:report
 Release to maven central using the following command:
 
 ```shell
-mvn clean deploy -Prelease -Dgpg.passphrase=[YOUR GPG PASSPHRASE]
+mvn clean deploy -Prelease -Dgpg.passphrase=[YOUR GPG PASSPHRASE] -s [PATH_TO_MAVEN_SETTINGS_XML]
+```
+
+The maven settings xml above should contain the following xml with appropriate values:
+
+```xml
+    <server>
+      <id>ossrh</id>
+      <username>posh.josh</username>
+      <password>1kjvdul-3xT-eeSw</password>
+    </server>
 ```
 
 After releasing browse to `https://s01.oss.sonatype.org/#stagingRepositories` and manually 
