@@ -20,7 +20,7 @@ class MatcherProviderTest {
     void createMatcher_givenNoRateCondition_shouldCreateANodeNameMatcher() {
         String nodeName = "test-node-name";
         RateConfig rateConfig = createRateConfig(nodeName);
-        Matcher<String> matcher = matcherProvider.createParentMatcher(rateConfig);
+        Matcher<String> matcher = matcherProvider.createGroupMatcher(rateConfig);
         assertTrue(matcher.matches(nodeName));
         assertFalse(matcher.matches(nodeName + "1"));
     }
@@ -31,7 +31,7 @@ class MatcherProviderTest {
         LocalDateTime time = LocalDateTime.now().plus(millis, ChronoUnit.MILLIS);
         String nodeName = "test-node-name";
         RateConfig rateConfig = createRateConfig(nodeName, "sys.time>"+time, "");
-        Matcher<String> matcher = matcherProvider.createParentMatcher(rateConfig);
+        Matcher<String> matcher = matcherProvider.createGroupMatcher(rateConfig);
         assertFalse(matcher.matches(nodeName));
         Thread.sleep(millis);
         assertTrue(matcher.matches(nodeName));
@@ -41,7 +41,7 @@ class MatcherProviderTest {
     void createMatchers_givenNoRateCondition_shouldReturnEmpty() {
         String nodeName = "test-node-name";
         RateConfig rateConfig = createRateConfig(nodeName);
-        List<Matcher<String>> matchers = matcherProvider.createChildMatchers(rateConfig);
+        List<Matcher<String>> matchers = matcherProvider.createMatchers(rateConfig);
         assertTrue(matchers.isEmpty());
     }
 
@@ -49,7 +49,7 @@ class MatcherProviderTest {
     void createMatchers_givenOnlyGlobalRateCondition_shouldReturnEmpty() {
         String nodeName = "test-node-name";
         RateConfig rateConfig = createRateConfig(nodeName, "sys.time.elapsed>PT0S", "");
-        List<Matcher<String>> matchers = matcherProvider.createChildMatchers(rateConfig);
+        List<Matcher<String>> matchers = matcherProvider.createMatchers(rateConfig);
         assertTrue(matchers.isEmpty());
     }
 
@@ -57,7 +57,7 @@ class MatcherProviderTest {
     void createMatchers_givenOneNonGlobalRateConditions_shouldReturnOne() {
         String nodeName = "test-node-name";
         RateConfig rateConfig = createRateConfig(nodeName, "", "sys.time.elapsed>PT0S");
-        List<Matcher<String>> matchers = matcherProvider.createChildMatchers(rateConfig);
+        List<Matcher<String>> matchers = matcherProvider.createMatchers(rateConfig);
         assertEquals(1, matchers.size());
     }
 

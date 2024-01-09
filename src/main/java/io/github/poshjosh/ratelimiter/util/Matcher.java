@@ -19,7 +19,11 @@ public interface Matcher<INPUT> {
         return (Matcher<T>)MATCH_NONE;
     }
 
-    static Matcher of(String expression) {
+    static Matcher ofLiteral(String text) {
+        return new LiteralMatcher<>(text);
+    }
+
+    static Matcher ofExpression(String expression) {
         return ExpressionMatcher.ofDefault().matcher(expression)
                 .orElseThrow(() ->
                         new IllegalArgumentException("Not a valid expression: " + expression +
@@ -29,9 +33,9 @@ public interface Matcher<INPUT> {
     static String composeResults(String first, String second) {
         return first + '_' + second;
     }
-    static boolean isMatch(String matchResult) { return matchResult.length() > 0; }
+    static boolean isMatch(String matchResult) { return !matchResult.isEmpty(); }
 
-    default boolean matches(INPUT input) { return match(input).length() > 0; }
+    default boolean matches(INPUT input) { return isMatch(match(input)); }
 
     /**
      * Match the input. Return a match, or empty text, if there is no match.

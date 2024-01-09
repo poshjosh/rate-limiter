@@ -11,6 +11,6 @@ public interface MatcherProvider<INPUT> {
     static <INPUT> MatcherProvider<INPUT> ofExpression(Class<INPUT> inputType) {
         return new DefaultMatcherProvider<>();
     }
-    Matcher<INPUT> createParentMatcher(RateConfig rateConfig);
-    List<Matcher<INPUT>> createChildMatchers(RateConfig rateConfig);
+    Matcher<INPUT> createGroupMatcher(RateConfig rateConfig);
+    List<Matcher<INPUT>> createMatchers(RateConfig rateConfig);
 }

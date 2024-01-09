@@ -1,7 +1,6 @@
 package io.github.poshjosh.ratelimiter.model;
 
 import java.lang.annotation.Annotation;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -10,26 +9,7 @@ import java.util.Optional;
 public interface RateSource {
 
     static RateSource of(String id, boolean isRateLimited) {
-        return new RateSource() {
-            @Override public Object getSource() { return this; }
-            @Override public String getId() { return id; }
-            @Override public <T extends Annotation> Optional<T> getAnnotation(
-                    Class<T> annotationClass) {
-                return Optional.empty();
-            }
-            @Override public boolean isRateLimited() { return isRateLimited; }
-            @Override public int hashCode() { return Objects.hashCode(getId()); }
-            @Override public boolean equals(Object o) {
-                if (this == o) return true;
-                if (!(o instanceof RateSource)) {
-                    return false;
-                }
-                return getId().equals(((RateSource)o).getId());
-            }
-            @Override public String toString() {
-                return this.getClass().getSimpleName() + '{' + getId() + '}';
-            }
-        };
+        return new SimpleRateSource(id, isRateLimited);
     }
 
     Object getSource();

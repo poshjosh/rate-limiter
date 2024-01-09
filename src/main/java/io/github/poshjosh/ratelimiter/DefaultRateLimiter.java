@@ -1,6 +1,7 @@
 package io.github.poshjosh.ratelimiter;
 
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
+import io.github.poshjosh.ratelimiter.bandwidths.BandwidthState;
 import io.github.poshjosh.ratelimiter.util.Ticker;
 
 import java.util.Locale;
@@ -39,6 +40,11 @@ final class DefaultRateLimiter implements RateLimiter {
     DefaultRateLimiter(Bandwidth bandwidth, Ticker ticker) {
         this.bandwidth = Objects.requireNonNull(bandwidth);
         this.ticker = Objects.requireNonNull(ticker);
+    }
+
+    @Override
+    public BandwidthState getBandwidth() {
+        return bandwidth;
     }
 
     /**
@@ -87,7 +93,7 @@ final class DefaultRateLimiter implements RateLimiter {
         long timeoutMicros = max(unit.toMicros(timeout), 0);
         synchronized (mutex()) {
             long nowMicros = ticker.elapsedMicros();
-            if (!bandwidth.canAcquire(nowMicros, timeoutMicros)) {
+            if (!bandwidth.isAvailable(nowMicros, timeoutMicros)) {
                 return false;
             }
             long microsToWait = bandwidth.reserveAndGetWaitLength(permits, nowMicros);

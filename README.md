@@ -33,7 +33,8 @@ import io.github.poshjosh.ratelimiter.util.Matcher;
 class DynamicRateLimiting {
 
     static RateLimiter rateLimiter = RateLimiter.of(Bandwidths.ofSeconds(1));
-    static Matcher matchAfter2Seconds = Matcher.of("sys.time.elapsed>PT1S");
+
+    static Matcher matchAfter2Seconds = Matcher.ofExpression("sys.time.elapsed>PT1S");
 
     public static void main(String[] args) throws Exception {
 

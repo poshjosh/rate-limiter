@@ -9,36 +9,23 @@ import java.util.stream.Collectors;
 
 final class DefaultMatcherProvider<INPUT> implements MatcherProvider<INPUT> {
 
-    private static final class NodeNameMatcher<I> implements Matcher<I> {
-        private final String name;
-        private NodeNameMatcher(String name) {
-            this.name = name;
-        }
-        @Override public String match(I target) {
-            return Objects.equals(name, target) ? name : Matcher.NO_MATCH;
-        }
-        @Override public String toString() {
-            return "NodeNameMatcher{" + "name='" + name + '\'' + '}';
-        }
-    }
-
     private final ExpressionMatcher<INPUT, Object> expressionMatcher;
 
     DefaultMatcherProvider() {
         expressionMatcher = ExpressionMatcher.ofDefault();
     }
 
-    @Override public Matcher<INPUT> createParentMatcher(RateConfig rateConfig) {
+    @Override public Matcher<INPUT> createGroupMatcher(RateConfig rateConfig) {
         final String expression = rateConfig.getRates().getRateCondition();
         return createMatcher(rateConfig.getId(), expression);
     }
 
-    @Override public List<Matcher<INPUT>> createChildMatchers(RateConfig rateConfig) {
+    @Override public List<Matcher<INPUT>> createMatchers(RateConfig rateConfig) {
         return createMatchers(rateConfig.getRates());
     }
 
     private Matcher<INPUT> createMatcher(String node, String expression) {
-        Matcher<INPUT> matcher = new NodeNameMatcher<>(node);
+        Matcher<INPUT> matcher = Matcher.ofLiteral(node);
         return createExpressionMatcher(expression).map(matcher::and).orElse(matcher);
     }
 

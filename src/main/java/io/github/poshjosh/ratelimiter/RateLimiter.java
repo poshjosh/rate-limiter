@@ -1,6 +1,7 @@
 package io.github.poshjosh.ratelimiter;
 
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
+import io.github.poshjosh.ratelimiter.bandwidths.BandwidthState;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 import io.github.poshjosh.ratelimiter.util.Operator;
 import io.github.poshjosh.ratelimiter.util.Ticker;
@@ -83,6 +84,8 @@ public interface RateLimiter {
     static RateLimiter of(Bandwidth bandwidth, Ticker ticker) {
         return new DefaultRateLimiter(bandwidth, ticker);
     }
+
+    BandwidthState getBandwidth();
 
     /**
      * Acquires the given number of permits from this {@code RateLimiter}, blocking until the request

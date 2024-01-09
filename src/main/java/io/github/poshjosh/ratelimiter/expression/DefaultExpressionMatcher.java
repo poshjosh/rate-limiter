@@ -78,4 +78,9 @@ final class DefaultExpressionMatcher<R, T> implements ExpressionMatcher<R, T> {
         return expressionResolver.isSupported(expression.getOperator())
                 && expressionParser.isSupported(expression);
     }
+
+    @Override
+    public String toString() {
+        return "DefaultExpressionMatcher{" + "expression=" + expression + '}';
+    }
 }

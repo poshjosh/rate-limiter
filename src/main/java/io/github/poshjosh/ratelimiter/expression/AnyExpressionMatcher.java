@@ -2,6 +2,8 @@ package io.github.poshjosh.ratelimiter.expression;
 
 import io.github.poshjosh.ratelimiter.util.Matcher;
 
+import java.util.Arrays;
+
 final class AnyExpressionMatcher<R> implements ExpressionMatcher<R, Object>{
 
     private ExpressionMatcher<R, ?> [] expressionMatchers;
@@ -40,5 +42,10 @@ final class AnyExpressionMatcher<R> implements ExpressionMatcher<R, Object>{
             }
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "AnyExpressionMatcher{matchers=" + Arrays.toString(expressionMatchers) + '}';
     }
 }

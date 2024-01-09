@@ -8,13 +8,17 @@ import java.util.concurrent.TimeUnit;
 import static java.lang.Math.max;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public interface Bandwidth {
+public interface Bandwidth extends BandwidthState {
 
     Bandwidth UNLIMITED = new Bandwidth() {
         @Override public Bandwidth with(long nowMicros) { return this; }
         @Override public double getPermitsPerSecond() { return Double.MAX_VALUE; }
         @Override public long queryEarliestAvailable(long now) { return now; }
         @Override public long reserveEarliestAvailable(int permits, long now) { return now; }
+
+        @Override public String toString() {
+            return "Bandwidth$UNLIMITED";
+        }
     };
 
     /** Beta */
@@ -97,26 +101,20 @@ public interface Bandwidth {
     Bandwidth with(long nowMicros);
 
     /**
-     * Returns the stable rate (as {@code permits per seconds}) with which this {@code Bandwidth} is
-     * configured with. The initial value of this is the same as the {@code permitsPerSecond} argument
-     * passed in the factory method that produced this {@code Bandwidth}.
+     * @deprecated Rather use {code #isAvailable(long, long)}
+     * @param nowMicros
+     * @param timeoutMicros
+     * @return true if the requested number of permits can be obtained within the specified timeout
      */
-    double getPermitsPerSecond();
-
+    @Deprecated
     default boolean canAcquire(long nowMicros, long timeoutMicros) {
+        return isAvailable(nowMicros, timeoutMicros);
+    }
+
+    @Override default boolean isAvailable(long nowMicros, long timeoutMicros) {
         final long nextFreeTicketAvailableAt = queryEarliestAvailable(nowMicros);
         return nextFreeTicketAvailableAt - timeoutMicros <= nowMicros;
     }
-
-    /**
-     * Returns the earliest time that permits are available (with one caveat).
-     *
-     * This operation must not lead to the modification of the Bandwidth.
-     *
-     * @return the time that permits are available, or, if permits are available immediately, an
-     *     arbitrary past or present time
-     */
-    long queryEarliestAvailable(long nowMicros);
 
     default long reserveAndGetWaitLength(int permits, long nowMicros) {
         final long nextFreeTickerAvailableAt = reserveEarliestAvailable(permits, nowMicros);

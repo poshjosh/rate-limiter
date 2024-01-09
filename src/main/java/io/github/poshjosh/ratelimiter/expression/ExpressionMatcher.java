@@ -17,6 +17,7 @@ public interface ExpressionMatcher<INPUT, T> extends Matcher<INPUT> {
         @Override public boolean isSupported(Expression<String> expression) {
             return true;
         }
+        @Override public String toString() { return "ExpressionMatcher$MATCH_NONE"; }
     };
 
     @SuppressWarnings("unchecked")

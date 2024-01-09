@@ -13,8 +13,8 @@ class RateToBandwidthConverterTest {
     void convert() {
         final int permits = 1;
         Bandwidth bandwidth = uut.convert(Rate.ofSeconds(permits), 0);
-        assertTrue(bandwidth.canAcquire(0, 0));
+        assertTrue(bandwidth.isAvailable(0, 0));
         bandwidth.reserveAndGetWaitLength(permits, 0);
-        assertFalse(bandwidth.canAcquire(0, 0));
+        assertFalse(bandwidth.isAvailable(0, 0));
     }
 }

@@ -141,7 +141,7 @@ final class BandwidthArray implements Bandwidth, Serializable{
 
     @Override
     public String toString() {
-        return "Bandwidths{id=" + id + ", " + operator + Arrays.toString(bandwidths) + "}";
+        return "BandwidthArray{id=" + id + ", operator=" + operator + ", bandwidths=" + Arrays.toString(bandwidths) + "}";
     }
 
     private static class SecureSerializationProxy implements Serializable {
