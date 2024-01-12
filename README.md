@@ -18,7 +18,7 @@ To add a dependency on `rate-limiter` using Maven, use the following:
         <dependency>
             <groupId>io.github.poshjosh</groupId>
             <artifactId>rate-limiter</artifactId>
-            <version>0.5.1</version>
+            <version>0.6.1</version>
         </dependency>
 ```
 
@@ -34,7 +34,7 @@ class DynamicRateLimiting {
 
     static RateLimiter rateLimiter = RateLimiter.of(Bandwidths.ofSeconds(1));
 
-    static Matcher matchAfter2Seconds = Matcher.ofExpression("sys.time.elapsed>PT1S");
+    static Matcher matchAfter2Seconds = Matcher.ofExpression("sys.time.elapsed>PT2S");
 
     public static void main(String[] args) throws Exception {
 

@@ -19,12 +19,8 @@ public interface Matcher<INPUT> {
         return (Matcher<T>)MATCH_NONE;
     }
 
-    static Matcher ofLiteral(String text) {
-        return new LiteralMatcher<>(text);
-    }
-
-    static Matcher ofExpression(String expression) {
-        return ExpressionMatcher.ofDefault().matcher(expression)
+    static <T> Matcher<T> ofExpression(String expression) {
+        return ExpressionMatcher.<T>ofDefault().matcher(expression)
                 .orElseThrow(() ->
                         new IllegalArgumentException("Not a valid expression: " + expression +
                                 ". For valid expressions see: https://github.com/poshjosh/rate-limiter/blob/master/docs/RATE-CONDITION-EXPRESSION-LANGUAGE.md"));
