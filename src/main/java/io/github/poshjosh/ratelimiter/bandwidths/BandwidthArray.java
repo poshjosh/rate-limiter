@@ -74,30 +74,47 @@ final class BandwidthArray implements Bandwidth, Serializable{
         return result;
     }
 
+    /**
+     * Reserves the requested number of permits and returns the time that those
+     * permits can be used (in microseconds).
+     * This implementation reserves multiple bandwidths and returns:
+     * <ul>
+     *     <li>for AND - the shortest wait time</li>
+     *     <li>for OR - the longest wait time</li>
+     * </ul>
+     * The largest bandwidth will have the shortest wait time.
+     * When this BandwidthArray is used in a RateLimiter, the RateLimiter will
+     * succeed for AND, but fail for OR, when only one of many limits is exceeded.
+     * AND fails only when all limits are exceeded. Therefore, for AND, we return
+     * the shortest wait time which corresponds to the largest bandwidth.
+     * @param permits The permits to reserve
+     * @param nowMicros The current time in microseconds
+     * @return The time in microseconds that the returned permits can be used
+     */
     @Override
     public long reserveEarliestAvailable(int permits, long nowMicros) {
         final boolean AND = Operator.AND.equals(operator);
-        long result = -1;
+        long waitTime = -1;
         for(Bandwidth bandwidth : bandwidths) {
-            final long current = bandwidth.reserveEarliestAvailable(permits, nowMicros);
-            if (result == -1) {
-                result = current;
+            final long currentWaitTime = bandwidth.reserveEarliestAvailable(permits, nowMicros);
+            if (waitTime == -1) {
+                waitTime = currentWaitTime;
             }
-            if (AND && current < result) {
-                result = current;
+            if (AND && currentWaitTime < waitTime) {
+                waitTime = currentWaitTime;
                 continue;
             }
-            if (!AND && current > result) {
-                result = current;
+            if (!AND && currentWaitTime > waitTime) {
+                waitTime = currentWaitTime;
             }
         }
-        return result;
+        return waitTime;
     }
 
     /**
-     * Returns the stable rate (as {@code permits per seconds}) with which an eligible {@code Bandwidth} in this
-     * {@code Bandwidths} is configured with. The initial value is the same as the {@code permitsPerSecond}
-     * argument passed in the factory method that produced the {@code Bandwidth}.
+     * Returns the stable rate (as {@code permits per seconds}) with which an eligible
+     * {@code Bandwidth} in this {@code Bandwidths} is configured with.
+     * For AND we return the largest value, for OR we return the smallest value.
      * @see #getAllPermitsPerSecond()
      */
     @Beta
@@ -107,8 +124,6 @@ final class BandwidthArray implements Bandwidth, Serializable{
         double [] arr = getAllPermitsPerSecond();
         double result = -1;
         for(double e : arr) {
-            // TODO Why are we returning the max here for AND, as oppose to min
-            //  returned for AND in other methods?
             result = result == - 1 ? e : (AND ? Math.max(e, result) : Math.min(e, result));
         }
         return result;

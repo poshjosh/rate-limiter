@@ -32,6 +32,10 @@ public final class Rate {
         return of(permits, Duration.ofDays(1));
     }
 
+    public static Rate of(String rateCondition) {
+        return of(0, rateCondition);
+    }
+
     public static Rate of(long permitsPerSecond, String rateCondition) {
         return of(permitsPerSecond, Duration.ofSeconds(1), rateCondition);
     }

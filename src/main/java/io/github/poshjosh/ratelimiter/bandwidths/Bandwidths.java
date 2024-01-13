@@ -3,7 +3,6 @@ package io.github.poshjosh.ratelimiter.bandwidths;
 import io.github.poshjosh.ratelimiter.model.Rate;
 import io.github.poshjosh.ratelimiter.model.Rates;
 import io.github.poshjosh.ratelimiter.util.Operator;
-import io.github.poshjosh.ratelimiter.util.Ticker;
 
 public interface Bandwidths {
 
@@ -14,14 +13,11 @@ public interface Bandwidths {
     }
 
     static Bandwidth of(Rate rate) {
-        return RateToBandwidthConverter.ofDefaults()
-                .convert(rate, Ticker.ofDefaults().elapsedMicros());
+        return RateToBandwidthConverter.ofDefaults().convert(rate);
     }
 
-    static Bandwidth of(Rates rates, long nowMicros) {
-        Bandwidth [] bandwidths = RateToBandwidthConverter.ofDefaults()
-                .convert("", rates, nowMicros);
-        return Bandwidths.of(rates.getOperator(), bandwidths);
+    static Bandwidth of(Rates rates) {
+        return RateToBandwidthConverter.ofDefaults().convert(rates);
     }
 
     static Bandwidth and(Bandwidth... bandwidths) {

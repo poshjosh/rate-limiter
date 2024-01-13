@@ -7,12 +7,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class RateToBandwidthConverterTest {
 
-    RateToBandwidthConverter uut = RateToBandwidthConverter.ofDefaults();
+    RateToBandwidthConverter rateToBandwidthConverter = RateToBandwidthConverter.ofDefaults();
 
     @Test
     void convert() {
         final int permits = 1;
-        Bandwidth bandwidth = uut.convert(Rate.ofSeconds(permits), 0);
+        Bandwidth bandwidth = rateToBandwidthConverter.convert(Rate.ofSeconds(permits));
         assertTrue(bandwidth.isAvailable(0, 0));
         bandwidth.reserveAndGetWaitLength(permits, 0);
         assertFalse(bandwidth.isAvailable(0, 0));

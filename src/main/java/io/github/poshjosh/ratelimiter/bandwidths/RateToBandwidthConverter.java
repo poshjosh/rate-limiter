@@ -1,39 +1,24 @@
 package io.github.poshjosh.ratelimiter.bandwidths;
 
-import io.github.poshjosh.ratelimiter.util.Operator;
 import io.github.poshjosh.ratelimiter.model.Rate;
 import io.github.poshjosh.ratelimiter.model.Rates;
-
-import java.util.List;
+import io.github.poshjosh.ratelimiter.util.Ticker;
 
 public interface RateToBandwidthConverter {
 
     static RateToBandwidthConverter ofDefaults() {
-        return (rate, nowMicros) -> {
-            BandwidthFactory factory = BandwidthFactories.getOrCreateBandwidthFactory(rate.getFactoryClass());
-            return factory.createNew(rate.getPermits(), rate.getDuration(), nowMicros);
-        };
+        return ofDefaults(Ticker.ofDefaults());
     }
 
-    Bandwidth convert(Rate rate, long nowMicros);
-
-    default Bandwidth[] convert(String id, Rates rates, long nowMicros) {
-        if (!rates.hasLimits()) {
-            return new Bandwidth[0];
-        }
-        final List<Rate> limits = rates.getLimits();
-        final Bandwidth[] bandwidths = new Bandwidth[limits.size()];
-        for (int i = 0; i < bandwidths.length; i++) {
-            Rate rate = limits.get(i);
-            bandwidths[i] = convert(rate, nowMicros);
-        }
-        if (bandwidths.length == 1 || rates.hasChildConditions()) {
-            // We ignore the operator
-            // see Tag:Rule:Operator-may-not-be-specified-when-multiple-rate-conditions-are-specified
-            return bandwidths;
-        }
-        final Operator operator =
-                Operator.NONE.equals(rates.getOperator()) ? Operator.OR : rates.getOperator();
-        return new Bandwidth[]{Bandwidths.of(id, operator, bandwidths)};
+    static RateToBandwidthConverter ofDefaults(Ticker ticker) {
+        return new DefaultRateToBandwidthConverter(ticker);
     }
+
+    Bandwidth convert(Rate rate);
+
+    default Bandwidth convert(Rates rates) {
+        return convert(rates, Bandwidth.UNLIMITED);
+    }
+
+    Bandwidth convert(Rates rates, Bandwidth resultIfNone);
 }

@@ -2,6 +2,8 @@ package io.github.poshjosh.ratelimiter.bandwidths;
 
 import io.github.poshjosh.ratelimiter.util.Ticker;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -30,8 +32,11 @@ public abstract class AbstractBandwidthTest {
         assertNotEquals(expected, expected.with(readMicros()));
     }
 
-    protected Bandwidth getBandwidth(double permitsPerSeconds) {
-        return getBandwidth(permitsPerSeconds, readMicros());
+    @ParameterizedTest
+    @ValueSource(longs = {0, 9, Long.MAX_VALUE})
+    void testGetPermitsPerSecond(long permitsPerSecond) {
+        Bandwidth bandwidth = getBandwidth(permitsPerSecond, readMicros());
+        assertEquals(permitsPerSecond, bandwidth.getPermitsPerSecond());
     }
 
     protected long readMicros() {

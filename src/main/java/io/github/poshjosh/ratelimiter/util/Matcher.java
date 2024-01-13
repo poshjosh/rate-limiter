@@ -2,8 +2,6 @@ package io.github.poshjosh.ratelimiter.util;
 
 import io.github.poshjosh.ratelimiter.expression.ExpressionMatcher;
 
-import java.util.Objects;
-
 @FunctionalInterface
 public interface Matcher<INPUT> {
 
@@ -55,19 +53,7 @@ public interface Matcher<INPUT> {
      * @throws NullPointerException if {@code after} is null
      */
     default Matcher<INPUT> and(Matcher<? super INPUT> after) {
-        Objects.requireNonNull(after);
-        return (INPUT t) -> {
-            final String result = match(t);
-            // If there was no match, do not continue
-            if(!isMatch(result)) {
-                return NO_MATCH;
-            }
-            final String afterResult = after.match(t);
-            if(!isMatch(afterResult)) {
-                return NO_MATCH;
-            }
-            return composeResults(result, afterResult);
-        };
+        return new AndMatcher<>(this, after);
     }
 
     /**
@@ -85,25 +71,6 @@ public interface Matcher<INPUT> {
      * @throws NullPointerException if {@code after} is null
      */
     default Matcher<INPUT> or(Matcher<? super INPUT> after) {
-        Objects.requireNonNull(after);
-        return (INPUT t) -> {
-            final String result = match(t);
-            final boolean resultMatch = isMatch(result);
-            final String afterResult = after.match(t);
-            final boolean afterResultMatch = isMatch(afterResult);
-            if (resultMatch) {
-                if (afterResultMatch) {
-                    return composeResults(result, afterResult);
-                } else {
-                    return result;
-                }
-            } else {
-                if (afterResultMatch) {
-                    return afterResult;
-                } else {
-                    return NO_MATCH;
-                }
-            }
-        };
+        return new OrMatcher<>(this, after);
     }
 }

@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 public class Rates {
 
     public static Rates of(Rate rate) {
-        return of(Operator.OR, rate);
+        return new Rates(rate);
     }
 
     public static Rates ofDefaults() {
@@ -38,25 +38,23 @@ public class Rates {
         return of(Operator.NONE, rateCondition, rates);
     }
 
+    public static Rates of(String rateCondition) {
+        final Rate rate = StringUtils.hasText(rateCondition) ? Rate.of(rateCondition) : null;
+        return of(rate);
+    }
+
     public static Rates of(Operator operator, String rateCondition, Rate... rates) {
         List<Rate> list = rates == null ? Collections.emptyList() : Arrays.asList(rates);
         return of(operator, rateCondition, list);
     }
 
     public static Rates of(List<Rate> rates) {
-        return of( "", rates);
-    }
-
-    public static Rates of(Operator operator, List<Rate> rates) {
-        return of(operator, "", rates);
-    }
-
-    public static Rates of(String rateCondition, List<Rate> rates) {
-        return of(Operator.NONE, rateCondition, rates);
+        return of(Operator.NONE, null, rates);
     }
 
     public static Rates of(Operator operator, String rateCondition, List<Rate> rates) {
-        return new Rates(operator, rateCondition, rates);
+        final Rate rate = StringUtils.hasText(rateCondition) ? Rate.of(rateCondition) : null;
+        return new Rates(operator, rate, rates);
     }
 
     private Operator operator = Operator.NONE;
@@ -65,9 +63,10 @@ public class Rates {
      * Multiple limits. Either set this or {@link #limit} but not both.
      * @see #limit
      */
-    // The naming of this variable is part of this class'  contract. Do not arbitrarily rename
-    // Always access this throw it's getter. A small inconvenience to pay for adding
-    // an additional single limit field.
+    // !!! DO NOT ARBITRARILY RENAME !!!
+    // The naming of this variable is part of this class'  contract.
+    // Always access this through its getter. A small inconvenience
+    // to pay for an additional single limit field.
     //
     private List<Rate> limits = Collections.emptyList();
 
@@ -79,27 +78,27 @@ public class Rates {
     //
     private Rate limit;
 
-    /**
-     * @see Rate#getRateCondition()
-     */
-    private String rateCondition = "";
-
     // A public no-argument constructor is required
     public Rates() { }
 
-    protected Rates(Rates rates) {
-        this(rates.operator, rates.rateCondition, rates.limits);
+    protected Rates(Rate limit) {
+        this.limit = limit;
     }
 
-    protected Rates(Operator operator, String rateCondition, List<Rate> limits) {
+    protected Rates(Rates rates) {
+        this(rates.operator, rates.limit, rates.limits);
+
+    }
+
+    protected Rates(Operator operator, Rate limit, List<Rate> limits) {
         this.operator = Objects.requireNonNull(operator);
-        this.rateCondition = Objects.requireNonNull(rateCondition);
+        this.limit = limit;
         this.limits = limits == null ? Collections.emptyList() : limits.stream()
                 .map(Rate::new).collect(Collectors.toList());
     }
 
-    public boolean hasChildConditions() {
-        for(Rate rate : getLimits()) {
+    public boolean hasSubConditions() {
+        for(Rate rate : limits) {
             String condition = rate.getRateCondition();
             if (StringUtils.hasText(condition)) {
                 return true;
@@ -109,11 +108,30 @@ public class Rates {
     }
 
     public boolean hasLimits() {
-        return size() > 0;
+        return totalSize() > 0;
     }
 
-    public int size() {
-        return getLimits() == null ? 0 : getLimits().size();
+    public int subLimitSize() {
+        return limits == null ? 0 : limits.size();
+    }
+
+    public int totalSize() {
+        final int mainSize = limit == null ? 0 : 1;
+        final int subSize = limits == null ? 0 : limits.size();
+        return mainSize + subSize;
+    }
+
+    public Rates limit(Rate limit) {
+        setLimit(limit);
+        return this;
+    }
+
+    public Rate getLimit() {
+        return limit;
+    }
+
+    public void setLimit(Rate limit) {
+        this.limit = limit;
     }
 
     public Rates operator(Operator operator) {
@@ -139,40 +157,46 @@ public class Rates {
         return this;
     }
 
+    public List<Rate> getSubLimits() {
+        return getLimits();
+    }
+
     public List<Rate> getLimits() {
-        if (limit != null) {
-
-            // We wrap any possibly unmodifiable instance in our own modifiable wrapper
-            limits = limits == null ? new ArrayList<>() : new ArrayList<>(limits);
-
-            // In springframework, the single limit was added twice to the limits array.
-            // To prevent this, we check if the limits array already contains the single limit.
-            if (!limits.contains(limit)) {
-                limits.add(limit);
-            }
-        }
         return limits;
+    }
+
+    public List<Rate> getAllLimits() {
+        Set<Rate> result = new LinkedHashSet<>();
+        // In springframework, the single limit was added twice to the limits array.
+        // To prevent this, we check if the limits array already contains the single limit.
+        if (limit != null) {
+            result.add(limit);
+        }
+        if (limits != null) {
+            result.addAll(limits);
+        }
+        return Arrays.asList(result.toArray(new Rate[0]));
     }
 
     public void setLimits(List<Rate> limits) {
         this.limits = limits;
     }
 
-    public Rates rateCondition(String rateCondition) {
-        this.rateCondition = rateCondition;
-        return this;
-    }
+    // Rate related properties
+    //
 
     public String getRateCondition() {
-        return rateCondition;
+        return this.limit == null ? null : this.limit.getRateCondition();
     }
 
     public void setRateCondition(String rateCondition) {
-        this.rateCondition = rateCondition;
+        if (this.limit == null) {
+            this.limit = Rate.of(rateCondition);
+            return;
+        }
+        this.limit.setRateCondition(rateCondition);
     }
 
-    // Rate related properties
-    //
     public long getPermits() {
         return limit == null ? 0 : limit.getPermits();
     }
@@ -218,18 +242,18 @@ public class Rates {
             return false;
         }
         Rates rates = (Rates) o;
-        return operator == rates.operator && Objects.equals(getLimits(), rates.getLimits())
-                && Objects.equals(rateCondition, rates.rateCondition);
+        return operator == rates.operator
+                && Objects.equals(limit, rates.limit)
+                && Objects.equals(limits, rates.limits);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(operator, getLimits(), rateCondition);
+        return Objects.hash(operator, limit, limits);
     }
 
     @Override
     public String toString() {
-        return "Rates{condition=" + rateCondition +
-                ", operator=" + operator + ", limits=" + getLimits() + '}';
+        return "Rates{main=" + limit + ", operator=" + operator + ", sub=" + limits + '}';
     }
 }
