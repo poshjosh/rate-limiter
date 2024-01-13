@@ -1,5 +1,8 @@
 package io.github.poshjosh.ratelimiter.bandwidths;
 
+import io.github.poshjosh.ratelimiter.annotations.Beta;
+
+@Beta
 public interface BandwidthState {
     /**
      * Returns the stable rate (as {@code permits per seconds}) with which this {@code Bandwidth} is

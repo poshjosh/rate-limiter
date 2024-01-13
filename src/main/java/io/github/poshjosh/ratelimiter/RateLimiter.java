@@ -1,5 +1,6 @@
 package io.github.poshjosh.ratelimiter;
 
+import io.github.poshjosh.ratelimiter.annotations.Beta;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
 import io.github.poshjosh.ratelimiter.bandwidths.BandwidthState;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
@@ -85,6 +86,10 @@ public interface RateLimiter {
         return new DefaultRateLimiter(bandwidth, ticker);
     }
 
+    /**
+     * @return A read-only view of this RateLimiter's Bandwidth.
+     */
+    @Beta
     BandwidthState getBandwidth();
 
     /**

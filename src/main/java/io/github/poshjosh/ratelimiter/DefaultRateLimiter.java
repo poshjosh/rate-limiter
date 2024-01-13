@@ -1,5 +1,6 @@
 package io.github.poshjosh.ratelimiter;
 
+import io.github.poshjosh.ratelimiter.annotations.Beta;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
 import io.github.poshjosh.ratelimiter.bandwidths.BandwidthState;
 import io.github.poshjosh.ratelimiter.util.Ticker;
@@ -43,12 +44,13 @@ final class DefaultRateLimiter implements RateLimiter {
     }
 
     @Override
+    @Beta
     public BandwidthState getBandwidth() {
         return bandwidth;
     }
 
     /**
-     * Acquires the given number of permits from this {@code ResourceLimiter}, blocking until the request
+     * Acquires the given number of permits from this {@code RateLimiter}, blocking until the request
      * can be granted. Tells the amount of time slept, if any.
      *
      * @param permits the number of permits to acquire
@@ -63,7 +65,7 @@ final class DefaultRateLimiter implements RateLimiter {
     }
 
     /**
-     * Reserves the given number of permits from this {@code ResourceLimiter} for future use, returning
+     * Reserves the given number of permits from this {@code RateLimiter} for future use, returning
      * the number of microseconds until the reservation can be consumed.
      *
      * @return time in microseconds to wait until the resource can be acquired, never negative
@@ -76,7 +78,7 @@ final class DefaultRateLimiter implements RateLimiter {
     }
 
     /**
-     * Acquires the given number of permits from this {@code ResourceLimiter} if it can be obtained
+     * Acquires the given number of permits from this {@code RateLimiter} if it can be obtained
      * without exceeding the specified {@code timeout}, or returns {@code false} immediately (without
      * waiting) if the permits would not have been granted before the timeout expired.
      *
