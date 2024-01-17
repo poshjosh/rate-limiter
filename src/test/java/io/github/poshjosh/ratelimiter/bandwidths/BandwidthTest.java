@@ -135,6 +135,7 @@ class BandwidthTest {
     }
 
     private void testBandwidths(BandwidthFactory bandwidthFactory, Operator operator, boolean useInterval) {
+        //System.out.println("Operator: " + operator);
         if (Operator.NONE.equals(operator)) {
             return;
         }
@@ -156,10 +157,12 @@ class BandwidthTest {
             if (useInterval && i > 0) {
                 ticker.sleepMicros(getStableIntervalMicros(bandwidth));
             }
-            assertTrue("Unable to acquire permit: " + i, limiter.tryAcquire());
+            //System.out.println(i + ", " + limiter);
+            assertTrue("Unable to acquire permit: " + i + ", " + limiter, limiter.tryAcquire());
         }
         //System.out.println(i);
-        assertFalse("Capable of acquiring permit: " + i, limiter.tryAcquire());
+        //System.out.println(i + ", " + limiter);
+        assertFalse("Capable of acquiring permit: " + i + ", " + limiter, limiter.tryAcquire());
     }
 
     private RateLimiter createRateLimiter(Bandwidth bandwidth, Ticker ticker) {

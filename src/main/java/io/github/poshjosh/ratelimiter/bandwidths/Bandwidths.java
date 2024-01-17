@@ -37,6 +37,6 @@ public interface Bandwidths {
     }
 
     static Bandwidth of(String id, Operator operator, Bandwidth... bandwidths) {
-        return bandwidths.length == 1 ? bandwidths[0] : new BandwidthArray(id, operator, bandwidths);
+        return BandwidthArray.of(id, operator, bandwidths);
     }
 }

@@ -13,6 +13,27 @@ import java.util.UUID;
 
 final class BandwidthArray implements Bandwidth, Serializable{
 
+    static Bandwidth of(String id, Operator operator, Bandwidth... bandwidths) {
+        if (bandwidths.length == 1) {
+            return bandwidths[0];
+        }
+
+        if (!Operator.AND.equals(operator) && hasAnyUnlimited(bandwidths)) {
+            return Bandwidth.UNLIMITED;
+        }
+
+        return new BandwidthArray(id, operator, bandwidths);
+    }
+
+    private static boolean hasAnyUnlimited(Bandwidth... bandwidths) {
+        for(Bandwidth bandwidth : bandwidths) {
+            if (Bandwidth.UNLIMITED.equals(bandwidth)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     static String buildId(Operator operator, Bandwidth...bandwidths) {
         Objects.requireNonNull(operator);
         StringBuilder b = new StringBuilder(64 * bandwidths.length);
@@ -36,7 +57,7 @@ final class BandwidthArray implements Bandwidth, Serializable{
 
     private final Bandwidth[] bandwidths;
 
-    BandwidthArray(String id, Operator operator, Bandwidth... bandwidths) {
+    private BandwidthArray(String id, Operator operator, Bandwidth... bandwidths) {
         this.id = Objects.requireNonNull(id);
         this.operator = Objects.requireNonNull(operator);
         this.bandwidths = Arrays.copyOf(bandwidths, bandwidths.length);
