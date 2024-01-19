@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 import static java.lang.Math.max;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public interface Bandwidth extends BandwidthState {
+public interface Bandwidth {
 
     Bandwidth UNLIMITED = new Bandwidth() {
         @Override public Bandwidth with(long nowMicros) { return this; }
@@ -98,8 +98,6 @@ public interface Bandwidth extends BandwidthState {
         return SmoothBandwidth.warmingUp(permitsPerSecond, nowMicros, warmupPeriod, timeUnit, coldFactor);
     }
 
-    Bandwidth with(long nowMicros);
-
     /**
      * @deprecated Rather use {code #isAvailable(long, long)}
      * @param nowMicros
@@ -111,7 +109,7 @@ public interface Bandwidth extends BandwidthState {
         return isAvailable(nowMicros, timeoutMicros);
     }
 
-    @Override default boolean isAvailable(long nowMicros, long timeoutMicros) {
+    default boolean isAvailable(long nowMicros, long timeoutMicros) {
         final long nextFreeTicketAvailableAt = queryEarliestAvailable(nowMicros);
         return nextFreeTicketAvailableAt - timeoutMicros <= nowMicros;
     }
@@ -122,6 +120,23 @@ public interface Bandwidth extends BandwidthState {
     }
 
     /**
+     * Returns the stable rate (as {@code permits per seconds}) with which this {@code Bandwidth} is
+     * configured with. The initial value of this is the same as the {@code permitsPerSecond} argument
+     * passed in the factory method that produced this {@code Bandwidth}.
+     */
+    double getPermitsPerSecond();
+
+    /**
+     * Returns the earliest time that permits are available (with one caveat).
+     * <p>
+     * This operation must not lead to the modification of the Bandwidth.
+     *
+     * @return the time that permits are available, or, if permits are available immediately, an
+     * arbitrary past or present time
+     */
+    long queryEarliestAvailable(long nowMicros);
+
+    /**
      * Reserves the requested number of permits and returns the time that those permits can be used
      * (with one caveat).
      *
@@ -129,4 +144,11 @@ public interface Bandwidth extends BandwidthState {
      *     arbitrary past or present time
      */
     long reserveEarliestAvailable(int permits, long nowMicros);
+
+    /**
+     * Return a copy of this Bandwidth with the specified time.
+     * @param nowMicros The time to set.
+     * @return A copy of this Bandwidth with the specified time.
+     */
+    Bandwidth with(long nowMicros);
 }

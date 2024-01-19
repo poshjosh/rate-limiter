@@ -33,7 +33,7 @@ public final class Rate {
     }
 
     public static Rate of(String rateCondition) {
-        return of(0, rateCondition);
+        return of(0, Duration.ZERO, rateCondition);
     }
 
     public static Rate of(long permitsPerSecond, String rateCondition) {

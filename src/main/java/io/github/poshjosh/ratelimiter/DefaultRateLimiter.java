@@ -2,7 +2,7 @@ package io.github.poshjosh.ratelimiter;
 
 import io.github.poshjosh.ratelimiter.annotations.Beta;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
-import io.github.poshjosh.ratelimiter.bandwidths.BandwidthState;
+import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 import io.github.poshjosh.ratelimiter.util.Ticker;
 
 import java.util.Locale;
@@ -45,8 +45,8 @@ final class DefaultRateLimiter implements RateLimiter {
 
     @Override
     @Beta
-    public BandwidthState getBandwidth() {
-        return bandwidth;
+    public Bandwidth getBandwidth() {
+        return Bandwidths.unmodifiable(bandwidth);
     }
 
     /**

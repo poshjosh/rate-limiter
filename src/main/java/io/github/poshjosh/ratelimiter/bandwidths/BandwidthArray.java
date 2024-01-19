@@ -11,6 +11,11 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * Compose a {@code Bandwidth} from multiple {@code Bandwidth}s.
+ * For multiple Bandwidths conjugated with {@code Operator#OR}, the composed Bandwidth
+ * succeeds only when all Bandwidths succeed. This is the case here.
+ */
 final class BandwidthArray implements Bandwidth, Serializable{
 
     static Bandwidth of(String id, Operator operator, Bandwidth... bandwidths) {
@@ -106,8 +111,10 @@ final class BandwidthArray implements Bandwidth, Serializable{
      * The largest bandwidth will have the shortest wait time.
      * When this BandwidthArray is used in a RateLimiter, the RateLimiter will
      * succeed for AND, but fail for OR, when only one of many limits is exceeded.
+     * <p>
      * AND fails only when all limits are exceeded. Therefore, for AND, we return
      * the shortest wait time which corresponds to the largest bandwidth.
+     * </p>
      * @param permits The permits to reserve
      * @param nowMicros The current time in microseconds
      * @return The time in microseconds that the returned permits can be used

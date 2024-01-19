@@ -12,13 +12,13 @@ class JvmMemoryExpressionParserTest {
 
     @Test
     void shouldSupport() {
-        assertTrue(ExpressionParser.ofSystemMemory().isSupported(
+        assertTrue(ExpressionParser.ofJvmMemory().isSupported(
                 JvmMemoryExpressionParser.MEMORY_AVAILABLE+"="));
     }
 
     @Test
     void shouldNotSupport() {
-        assertFalse(ExpressionParser.ofSystemMemory().isSupported("sys.time="));
+        assertFalse(ExpressionParser.ofJvmMemory().isSupported("sys.time="));
     }
 
     @ParameterizedTest
@@ -36,7 +36,7 @@ class JvmMemoryExpressionParserTest {
     })
     void shouldSucceed_givenValidExpression(String value, String power) {
         final long expected = (long)Math.pow(1000, Long.parseLong(power));
-        Expression<Long> result = ExpressionParser.ofSystemMemory().parse(this, Expression.of(value));
+        Expression<Long> result = ExpressionParser.ofJvmMemory().parse(this, Expression.of(value));
         assertEquals(expected, result.requireRight());
     }
 
@@ -44,6 +44,6 @@ class JvmMemoryExpressionParserTest {
     @ArgumentsSource(InvalidExpressionArgumentsProvider.class)
     void shouldFail_givenInvalidExpression(String value) {
         assertThrows(RuntimeException.class, () ->
-                ExpressionParser.ofSystemMemory().parse(this, Expression.of(value)));
+                ExpressionParser.ofJvmMemory().parse(this, Expression.of(value)));
     }
 }

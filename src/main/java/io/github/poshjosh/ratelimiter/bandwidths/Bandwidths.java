@@ -39,4 +39,8 @@ public interface Bandwidths {
     static Bandwidth of(String id, Operator operator, Bandwidth... bandwidths) {
         return BandwidthArray.of(id, operator, bandwidths);
     }
+
+    static Bandwidth unmodifiable(Bandwidth bandwidth) {
+        return new UnmodifiableBandwidth(bandwidth);
+    }
 }

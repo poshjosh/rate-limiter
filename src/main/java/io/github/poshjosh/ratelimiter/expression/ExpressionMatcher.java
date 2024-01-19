@@ -35,7 +35,7 @@ public interface ExpressionMatcher<INPUT, T> extends Matcher<INPUT> {
     }
 
     static <R> ExpressionMatcher<R, Long> ofSystemMemory() {
-        return of(ExpressionParser.ofSystemMemory(),
+        return of(ExpressionParser.ofJvmMemory(),
                 ExpressionResolver.ofLong(),
                 JvmMemoryExpressionParser.MEMORY_MAX+"=");
     }

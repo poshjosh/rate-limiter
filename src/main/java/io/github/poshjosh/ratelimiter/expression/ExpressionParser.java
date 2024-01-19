@@ -11,7 +11,7 @@ public interface ExpressionParser<S, T> {
 
     long TIME_AT_STARTUP = System.currentTimeMillis();
 
-    static <S> ExpressionParser<S, Long> ofSystemMemory() {
+    static <S> ExpressionParser<S, Long> ofJvmMemory() {
         return new JvmMemoryExpressionParser<>();
     }
 

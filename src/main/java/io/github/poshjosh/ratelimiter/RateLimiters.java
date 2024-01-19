@@ -2,12 +2,14 @@ package io.github.poshjosh.ratelimiter;
 
 import io.github.poshjosh.ratelimiter.annotations.Beta;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
-import io.github.poshjosh.ratelimiter.bandwidths.BandwidthState;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
+import io.github.poshjosh.ratelimiter.util.Operator;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 final class RateLimiters implements RateLimiter {
 
@@ -23,13 +25,16 @@ final class RateLimiters implements RateLimiter {
 
     @Override
     @Beta
-    public BandwidthState getBandwidth() {
-        // We do a cast from BandwidthState to Bandwidth - a bad assumption
-        // TODO - Find a better way to do this
-        return Arrays.stream(rateLimiters)
-                .map(RateLimiter::getBandwidth)
-                .reduce((one, two) -> Bandwidths.of((Bandwidth)one, (Bandwidth)two))
-                .orElseThrow(() -> new IllegalStateException("No bandwidths found"));
+    public Bandwidth getBandwidth() {
+        if (rateLimiters.length == 0) {
+            throw new IllegalStateException("No bandwidths for this RateLimiter");
+        }
+        if (rateLimiters.length == 1) {
+            return rateLimiters[0].getBandwidth();
+        }
+        List<Bandwidth> bandwidthList = Arrays.stream(rateLimiters)
+                .map(RateLimiter::getBandwidth).collect(Collectors.toList());
+        return Bandwidths.of(Operator.OR, bandwidthList.toArray(new Bandwidth[0]));
     }
 
     @Override
@@ -37,7 +42,7 @@ final class RateLimiters implements RateLimiter {
         double totalTime = 0;
         for (RateLimiter rateLimiter : rateLimiters) {
             final double timeSpent = rateLimiter.acquire(permits);
-            if (timeSpent > 0) {
+            if (timeSpent > 0) { // Only increment when > 0, as some value may be negative.
                 totalTime += timeSpent;
             }
         }
@@ -58,6 +63,6 @@ final class RateLimiters implements RateLimiter {
 
     @Override
     public String toString() {
-        return "RateLimiters{" + rateLimiters.length + "=" + Arrays.toString(rateLimiters) + '}';
+        return "RateLimiters{" + rateLimiters.length + ", " + Arrays.toString(rateLimiters) + '}';
     }
 }

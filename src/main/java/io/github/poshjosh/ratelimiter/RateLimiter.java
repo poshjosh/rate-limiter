@@ -2,7 +2,6 @@ package io.github.poshjosh.ratelimiter;
 
 import io.github.poshjosh.ratelimiter.annotations.Beta;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
-import io.github.poshjosh.ratelimiter.bandwidths.BandwidthState;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 import io.github.poshjosh.ratelimiter.util.Operator;
 import io.github.poshjosh.ratelimiter.util.Ticker;
@@ -87,10 +86,12 @@ public interface RateLimiter {
     }
 
     /**
+     * Get a read-only view of this RateLimiter's bandwidth.
+     * Any attempt to modify the returned Bandwidth will throw an exception.
      * @return A read-only view of this RateLimiter's Bandwidth.
      */
     @Beta
-    BandwidthState getBandwidth();
+    Bandwidth getBandwidth();
 
     /**
      * Acquires the given number of permits from this {@code RateLimiter}, blocking until the request

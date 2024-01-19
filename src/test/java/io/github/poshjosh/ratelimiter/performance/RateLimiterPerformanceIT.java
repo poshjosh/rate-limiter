@@ -16,22 +16,32 @@ class RateLimiterPerformanceIT {
 
     @Test
     void tryAcquire_givenAllOrNothingBandwidth_shouldConsumeLimitedTimeAndMemory() {
-        tryAcquire_givenBandwidth_shouldConsumeLimitedTimeAndMemory(Bandwidth.allOrNothing(PERMITS_PER_SECOND));
+        recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
+                Bandwidth.allOrNothing(PERMITS_PER_SECOND), 10_000, Usage.of(10, 3000));
+        recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
+                Bandwidth.allOrNothing(PERMITS_PER_SECOND), 100_000, Usage.of(20, 3_000_000));
+        recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
+                Bandwidth.allOrNothing(PERMITS_PER_SECOND), 1_000_000, Usage.of(100, 30_000_000));
     }
 
     @Test
     void tryAcquire_givenBurstyBandwidth_shouldConsumeLimitedTimeAndMemory() {
-        tryAcquire_givenBandwidth_shouldConsumeLimitedTimeAndMemory(Bandwidth.bursty(PERMITS_PER_SECOND));
+        recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
+                Bandwidth.bursty(PERMITS_PER_SECOND), 10_000, Usage.of(10, 3000));
+        recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
+                Bandwidth.bursty(PERMITS_PER_SECOND), 100_000, Usage.of(20, 3000));
+        recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
+                Bandwidth.bursty(PERMITS_PER_SECOND), 1_000_000, Usage.of(50, 3000));
     }
 
     @Test
     void tryAcquire_givenWarmingUpBandwidth_shouldConsumeLimitedTimeAndMemory() {
-        tryAcquire_givenBandwidth_shouldConsumeLimitedTimeAndMemory(Bandwidth.warmingUp(PERMITS_PER_SECOND));
-    }
-
-    void tryAcquire_givenBandwidth_shouldConsumeLimitedTimeAndMemory(Bandwidth bandwidth) {
         recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
-                bandwidth, 100_000, Usage.of(20, 3_000_000));
+                Bandwidth.warmingUp(PERMITS_PER_SECOND), 10_000, Usage.of(10, 3000));
+        recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
+                Bandwidth.warmingUp(PERMITS_PER_SECOND), 100_000, Usage.of(20, 3000));
+        recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
+                Bandwidth.warmingUp(PERMITS_PER_SECOND), 1_000_000, Usage.of(50, 3000));
     }
 
     void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
