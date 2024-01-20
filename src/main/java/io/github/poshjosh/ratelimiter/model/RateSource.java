@@ -12,13 +12,14 @@ public interface RateSource {
         return new SimpleRateSource(id, isRateLimited);
     }
 
-    Object getSource();
     String getId();
+    Object getSource();
     <T extends Annotation> Optional<T> getAnnotation(Class<T> annotationClass);
-    boolean isRateLimited();
-    default boolean isGroupType() { return false; }
     default boolean isOwnDeclarer() {
         return getDeclarer().orElse(null) == this;
     }
     default Optional<RateSource> getDeclarer() { return Optional.empty(); }
+
+    boolean isRateLimited();
+    default boolean isGroupType() { return false; }
 }

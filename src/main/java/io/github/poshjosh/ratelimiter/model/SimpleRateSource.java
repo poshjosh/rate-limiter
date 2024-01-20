@@ -13,12 +13,12 @@ final class SimpleRateSource implements RateSource {
         this.isRateLimited = isRateLimited;
     }
 
-    @Override public Object getSource() {
-        return this;
-    }
-
     @Override public String getId() {
         return id;
+    }
+
+    @Override public Object getSource() {
+        return this;
     }
 
     @Override public <T extends Annotation> Optional<T> getAnnotation(Class<T> annotationClass) {

@@ -8,6 +8,7 @@
     </appender>
 
     <logger name="io.github.poshjosh.ratelimiter" level="debug"/>
+<!--    <logger name="io.github.poshjosh.ratelimiter.bandwidths.DefaultRateToBandwidthConverter" level="trace"/>-->
 
     <root level="debug">
         <appender-ref ref="STDOUT"/>
