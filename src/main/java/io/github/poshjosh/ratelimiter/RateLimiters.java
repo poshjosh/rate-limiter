@@ -27,7 +27,8 @@ final class RateLimiters implements RateLimiter {
     @Beta
     public Bandwidth getBandwidth() {
         if (rateLimiters.length == 0) {
-            throw new IllegalStateException("No bandwidths for this RateLimiter");
+            // We are unlimited if there is no bandwidth
+            return Bandwidth.UNLIMITED;
         }
         if (rateLimiters.length == 1) {
             return rateLimiters[0].getBandwidth();
