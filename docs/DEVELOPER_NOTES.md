@@ -28,7 +28,7 @@ The maven settings xml above should contain the following xml with appropriate v
     <server>
       <id>ossrh</id>
       <username>posh.josh</username>
-      <password>1kjvdul-3xT-eeSw</password>
+      <password>password</password>
     </server>
 ```
 
