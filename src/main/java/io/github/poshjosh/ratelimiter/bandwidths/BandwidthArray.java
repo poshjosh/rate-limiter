@@ -6,66 +6,79 @@ import io.github.poshjosh.ratelimiter.annotations.Beta;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.UUID;
 
 /**
  * Compose a {@code Bandwidth} from multiple {@code Bandwidth}s.
- * For multiple Bandwidths conjugated with {@code Operator#OR}, the composed Bandwidth
- * succeeds only when all Bandwidths succeed. This is the case here.
+ * For multiple Bandwidths conjugated with {@code Operator#OR}, the composed
+ * Bandwidth fails if one or more of the Bandwidth's limit is exceeded.
+ * For multiple Bandwidths conjugated with {@code Operator#AND}, the composed
+ * Bandwidth fails only if all the Bandwidth's limits are exceeded.
  */
-final class BandwidthArray implements Bandwidth, Serializable{
+final class BandwidthArray implements Bandwidth, Serializable {
 
-    static Bandwidth of(String id, Operator operator, Bandwidth... bandwidths) {
+    static Bandwidth of(Operator operator, Bandwidth... bandwidths) {
+
+        if (bandwidths.length == 0) {
+            return Bandwidth.UNLIMITED;
+        }
+
+        if (bandwidths.length == 1 && Bandwidth.UNLIMITED.equals(bandwidths[0])) {
+            return Bandwidth.UNLIMITED;
+        }
+
+        bandwidths = copyWithoutUnlimitedInstances(bandwidths);
+
+        if (bandwidths.length == 0) {
+            return Bandwidth.UNLIMITED;
+        }
+
         if (bandwidths.length == 1) {
             return bandwidths[0];
         }
 
-        if (!Operator.AND.equals(operator) && hasAnyUnlimited(bandwidths)) {
-            return Bandwidth.UNLIMITED;
-        }
-
-        return new BandwidthArray(id, operator, bandwidths);
+        return new BandwidthArray(operator, bandwidths);
     }
 
-    private static boolean hasAnyUnlimited(Bandwidth... bandwidths) {
+    private static Bandwidth[] copyWithoutUnlimitedInstances(Bandwidth... bandwidths) {
+        final int numOfUnlimited = countUnlimitedInstances(bandwidths);
+        if (numOfUnlimited == 0) {
+            return Arrays.copyOf(bandwidths, bandwidths.length);
+        }
+        final Bandwidth[] result = new Bandwidth[bandwidths.length - numOfUnlimited];
+        int skipped = 0;
+        for(int i = 0; i < bandwidths.length; i++) {
+            if (Bandwidth.UNLIMITED.equals(bandwidths[i])) {
+                ++skipped;
+                continue;
+            }
+            result[i - skipped] = bandwidths[i];
+        }
+        return result;
+    }
+
+    private static int countUnlimitedInstances(Bandwidth... bandwidths) {
+        if (bandwidths.length == 0) {
+            return 0;
+        }
+        int count = 0;
         for(Bandwidth bandwidth : bandwidths) {
             if (Bandwidth.UNLIMITED.equals(bandwidth)) {
-                return true;
+                ++count;
             }
         }
-        return false;
-    }
-
-    static String buildId(Operator operator, Bandwidth...bandwidths) {
-        Objects.requireNonNull(operator);
-        StringBuilder b = new StringBuilder(64 * bandwidths.length);
-        b.append(operator);
-        if (bandwidths != null) {
-            for(Bandwidth bandwidth : bandwidths) {
-                b.append('{').append(Double.toHexString(bandwidth.getPermitsPerSecond())).append('-')
-                        .append(Long.toHexString(bandwidth.queryEarliestAvailable(0)))
-                        .append('}');
-            }
-        }
-        // Best effort only
-        return UUID.nameUUIDFromBytes(b.toString().getBytes(StandardCharsets.UTF_8)).toString();
+        return count;
     }
 
     private static final long serialVersionUID = 20L;
 
-    private final String id;
-
     private final Operator operator;
-
     private final Bandwidth[] bandwidths;
 
-    private BandwidthArray(String id, Operator operator, Bandwidth... bandwidths) {
-        this.id = Objects.requireNonNull(id);
+    private BandwidthArray(Operator operator, Bandwidth... bandwidths) {
         this.operator = Objects.requireNonNull(operator);
-        this.bandwidths = Arrays.copyOf(bandwidths, bandwidths.length);
+        this.bandwidths = Objects.requireNonNull(bandwidths);
         if (Operator.NONE.equals(operator)) {
             throw Checks.notSupported(this, "operator " + operator);
         }
@@ -169,39 +182,43 @@ final class BandwidthArray implements Bandwidth, Serializable{
         }
         return permitsPerSecond;
     }
-    @Override public boolean equals(Object o) {
+
+    @Override
+    public boolean equals(Object o) {
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
         BandwidthArray that = (BandwidthArray) o;
-        return id.equals(that.id);
+        return operator == that.operator && Arrays.equals(bandwidths, that.bandwidths);
     }
 
-    @Override public int hashCode() {
-        return Objects.hash(id);
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(operator);
+        result = 31 * result + Arrays.hashCode(bandwidths);
+        return result;
     }
 
     @Override
     public String toString() {
-        return "BandwidthArray{id=" + id + ", operator=" + operator + ", bandwidths=" + Arrays.toString(bandwidths) + "}";
+        return "BandwidthArray{operator=" + operator +
+                ", bandwidths=" + Arrays.toString(bandwidths) + "}";
     }
 
     private static class SecureSerializationProxy implements Serializable {
 
         private static final long serialVersionUID = 21L;
 
-        private final String id;
         private final Operator operator;
         private final Bandwidth[] members;
 
         public SecureSerializationProxy(BandwidthArray candidate){
-            this.id = candidate.id;
             this.operator = candidate.operator;
             this.members = candidate.bandwidths;
         }
         private Object readResolve() throws InvalidObjectException {
-            return new BandwidthArray(id, operator, members);
+            return new BandwidthArray(operator, members);
         }
     }
 

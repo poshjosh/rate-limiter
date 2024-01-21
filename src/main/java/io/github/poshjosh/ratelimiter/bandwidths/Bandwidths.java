@@ -33,11 +33,7 @@ public interface Bandwidths {
     }
 
     static Bandwidth of(Operator operator, Bandwidth... bandwidths) {
-        return of(BandwidthArray.buildId(operator, bandwidths), operator, bandwidths);
-    }
-
-    static Bandwidth of(String id, Operator operator, Bandwidth... bandwidths) {
-        return BandwidthArray.of(id, operator, bandwidths);
+        return BandwidthArray.of(operator, bandwidths);
     }
 
     static Bandwidth unmodifiable(Bandwidth bandwidth) {

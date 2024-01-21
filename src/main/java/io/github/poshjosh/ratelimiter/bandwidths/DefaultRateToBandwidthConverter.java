@@ -48,8 +48,7 @@ final class DefaultRateToBandwidthConverter implements RateToBandwidthConverter 
         }
         final Operator operator =
                 Operator.NONE.equals(rates.getOperator()) ? Operator.OR : rates.getOperator();
-        final String id = BandwidthArray.buildId(operator, bandwidths);
-        final Bandwidth bandwidth = Bandwidths.of(id, operator, bandwidths);
+        final Bandwidth bandwidth = Bandwidths.of(operator, bandwidths);
         log(rates, bandwidth);
         return bandwidth;
     }
