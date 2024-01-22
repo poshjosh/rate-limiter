@@ -19,7 +19,6 @@ final class SystemTimeElapsedExpressionParser<S> implements ExpressionParser<S, 
 
     @Override
     public Expression<Long> parse(S source, Expression<String> expression) {
-
         final String lhs = expression.requireLeft();
         if (TIME_ELAPSED.equals(lhs)) {
             return expression.with(System.currentTimeMillis() - getStartTime(source), right(expression));
