@@ -2,26 +2,19 @@ package io.github.poshjosh.ratelimiter.expression;
 
 import java.util.Objects;
 
-final class JvmThreadExpressionResolver implements ExpressionResolver<Object> {
+final class JvmThreadExpressionResolver extends AbstractExpressionResolver<Object> {
     private final ExpressionResolver<Long> longExpressionResolver;
     JvmThreadExpressionResolver() {
         this.longExpressionResolver = ExpressionResolver.ofLong();
     }
     @Override
-    public boolean resolve(Expression<Object> expression) {
-        if (!expression.getOperator().isNegation()) {
-            return resolvePositive(expression);
-        }
-        return !resolvePositive(expression.flipOperator());
-    }
-
-    private boolean resolvePositive(Expression<?> expression) {
-        if (expression.requireLeft() instanceof Long) {
-            return longExpressionResolver.resolve((Expression<Long>)expression);
+    public boolean resolvePositive(Object left, Operator operator, Object right) {
+        if (left instanceof Long) {
+            Objects.requireNonNull(left);
+            Objects.requireNonNull(right);
+            return longExpressionResolver.resolve((Long)left, operator, (Long)right);
         } else {
-            return Objects.equals(
-                    expression.getLeftOrDefault(null),
-                    expression.getRightOrDefault(null));
+            return Objects.equals(left, right);
         }
     }
 

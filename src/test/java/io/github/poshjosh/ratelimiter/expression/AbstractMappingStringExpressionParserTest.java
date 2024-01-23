@@ -47,7 +47,7 @@ abstract class AbstractMappingStringExpressionParserTest {
     void parse_shouldSucceed_givenValidExpression(String expressionStr, Expression<String> expected) {
         Expression<String> expression = Expression.of(expressionStr);
         Expression<String> actual = getExpressionParser().parse(this, expression);
-        //System.out.println("Input: " + expressionStr + ", expected: " + expected + ", actual: " + actual);
+//        System.out.println("Input: " + expressionStr + ", expected: " + expected + ", actual: " + actual);
         assertEquals(expected, actual);
     }
 

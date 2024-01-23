@@ -13,18 +13,8 @@ class DefaultExpression<T> implements Expression<T> {
         this.left = left;
         this.operator = Objects.requireNonNull(operator);
         this.right = right; // Nullable
-        this.id = "{" + left + operator.getSymbol() + right + "}";
+        this.id = StringExprUtil.buildId(left, operator, right);
     }
-
-    public <U> Expression<U> with(U left, U right) {
-        return new DefaultExpression<>(left, operator, right);
-    }
-
-    public Expression<T> flipOperator() {
-        return new DefaultExpression<>(left, operator.flip(), right);
-    }
-
-    public T requireLeft() { return Objects.requireNonNull(left); }
 
     public T getLeftOrDefault(T resultIfNone) { return left == null ? resultIfNone: left; }
 
@@ -32,9 +22,10 @@ class DefaultExpression<T> implements Expression<T> {
         return operator;
     }
 
-    public T requireRight() { return Objects.requireNonNull(right); }
-
     public T getRightOrDefault(T resultIfNone) { return right == null ? resultIfNone: right; }
+
+    // TODO - If this is really an ID, why are we not using it in equals() and hashCode():
+    public String getId() { return id; }
 
     @Override public boolean equals(Object o) {
         if (this == o)
@@ -49,8 +40,6 @@ class DefaultExpression<T> implements Expression<T> {
     @Override public int hashCode() {
         return Objects.hash(left, operator, right);
     }
-
-    public String getId() { return id; }
 
     @Override
     public String toString() {

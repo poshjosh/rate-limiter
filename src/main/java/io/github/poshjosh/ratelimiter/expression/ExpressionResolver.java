@@ -27,7 +27,14 @@ public interface ExpressionResolver<T> {
     static ExpressionResolver<LocalDateTime> ofDateTime() { return new DateTimeExpressionResolver(); }
     static ExpressionResolver<Object> ofJvmThread() { return new JvmThreadExpressionResolver(); }
 
-    boolean resolve(Expression<T> expression);
+    default boolean resolve(Expression<T> expression) {
+        return resolve(
+                expression.getLeftOrDefault(null),
+                expression.getOperator(),
+                expression.getRightOrDefault(null));
+    }
+
+    boolean resolve(T left, Operator operator, T right);
 
     boolean isSupported(Operator operator);
 }

@@ -1,5 +1,7 @@
 package io.github.poshjosh.ratelimiter.expression;
 
+import io.github.poshjosh.ratelimiter.util.StringUtils;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
@@ -54,40 +56,39 @@ final class JvmThreadExpressionParser<S> implements ExpressionParser<S, Object> 
     }
 
     @Override
-    public Expression<Object> parse(S source, Expression<String> expression) {
+    public Object parseLeft(S source, Expression<String> expression) {
         final String lhs = expression.requireLeft();
-        final Object right = right(expression);
         switch (lhs) {
             case COUNT:
-                return expression.with((long)threadMXBean.getThreadCount(), right);
+                return (long)threadMXBean.getThreadCount();
             case COUNT_DAEMON:
-                return expression.with((long)threadMXBean.getDaemonThreadCount(), right);
+                return (long)threadMXBean.getDaemonThreadCount();
             case COUNT_DEADLOCKED:
-                return expression.with(length(threadMXBean.findDeadlockedThreads()), right);
+                return length(threadMXBean.findDeadlockedThreads());
             case COUNT_DEADLOCKED_MONITOR:
-                return expression.with(length(threadMXBean.findMonitorDeadlockedThreads()), right);
+                return length(threadMXBean.findMonitorDeadlockedThreads());
             case COUNT_PEAK:
-                return expression.with((long)threadMXBean.getPeakThreadCount(), right);
+                return (long)threadMXBean.getPeakThreadCount();
             case COUNT_STARTED:
-                return expression.with(threadMXBean.getTotalStartedThreadCount(), right);
+                return threadMXBean.getTotalStartedThreadCount();
             case CURRENT_COUNT_BLOCKED:
-                return expression.with(threadInfo(source).getBlockedCount(), right);
+                return threadInfo(source).getBlockedCount();
             case CURRENT_COUNT_WAITED:
-                return expression.with(threadInfo(source).getWaitedCount(), right);
+                return threadInfo(source).getWaitedCount();
             case CURRENT_ID:
-                return expression.with(getThreadId(source), right);
+                return getThreadId(source);
             case CURRENT_STATE:
-                return expression.with(threadInfo(source).getThreadState(), right);
+                return threadInfo(source).getThreadState();
             case CURRENT_SUSPENDED:
-                return expression.with(threadInfo(source).isSuspended(), right);
+                return threadInfo(source).isSuspended();
             case CURRENT_TIME_BLOCKED:
-                return expression.with(threadInfo(source).getBlockedTime(), right);
+                return threadInfo(source).getBlockedTime();
             case CURRENT_TIME_CPU:
-                return expression.with(threadMXBean.getThreadCpuTime(getThreadId(source)), right);
+                return threadMXBean.getThreadCpuTime(getThreadId(source));
             case CURRENT_TIME_USER:
-                return expression.with(threadMXBean.getThreadUserTime(getThreadId(source)), right);
+                return threadMXBean.getThreadUserTime(getThreadId(source));
             case CURRENT_TIME_WAITED:
-                return expression.with(threadInfo(source).getWaitedTime(), right);
+                return threadInfo(source).getWaitedTime();
             default:
                 throw Checks.notSupported(this, lhs);
         }
@@ -115,8 +116,10 @@ final class JvmThreadExpressionParser<S> implements ExpressionParser<S, Object> 
         return Thread.currentThread().getId();
     }
 
-    private Object right(Expression<String> expression) {
+    @Override
+    public Object parseRight(Expression<String> expression) {
         final String lhs = expression.requireLeft();
+        final String rhs = expression.getRightOrDefault("");
         switch (lhs) {
             case COUNT:
             case COUNT_DAEMON:
@@ -127,16 +130,16 @@ final class JvmThreadExpressionParser<S> implements ExpressionParser<S, Object> 
             case CURRENT_COUNT_BLOCKED:
             case CURRENT_COUNT_WAITED:
             case CURRENT_ID:
-                return Long.parseLong(expression.requireRight());
+                return !StringUtils.hasText(rhs) ? null : Long.parseLong(rhs);
             case CURRENT_STATE:
-                return Thread.State.valueOf(expression.requireRight());
+                return !StringUtils.hasText(rhs) ? null : Thread.State.valueOf(rhs);
             case CURRENT_SUSPENDED:
-                return Boolean.parseBoolean(expression.requireRight());
+                return !StringUtils.hasText(rhs) ? null : Boolean.parseBoolean(rhs);
             case CURRENT_TIME_BLOCKED:
             case CURRENT_TIME_CPU:
             case CURRENT_TIME_USER:
             case CURRENT_TIME_WAITED:
-                return Duration.parse(expression.requireRight()).toMillis();
+                return !StringUtils.hasText(rhs) ? null : Duration.parse(rhs).toMillis();
             default:
                 throw Checks.notSupported(this, lhs);
         }

@@ -14,12 +14,6 @@ class SystemTimeElapsedExpressionParserTest {
     private final ExpressionParser<Object, Long> expressionParser = ExpressionParser.ofSystemTimeElapsed();
 
     @Test
-    void a() {
-        System.out.println(Duration.ofHours(1).toMillis());
-        System.out.println(Duration.ofDays(1).toMillis());
-    }
-
-    @Test
     void shouldSupport() {
         assertTrue(expressionParser.isSupported(SystemTimeElapsedExpressionParser.TIME_ELAPSED+"="));
     }

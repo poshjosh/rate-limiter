@@ -1,5 +1,7 @@
 package io.github.poshjosh.ratelimiter.expression;
 
+import io.github.poshjosh.ratelimiter.util.StringUtils;
+
 import java.time.LocalDateTime;
 
 /**
@@ -8,8 +10,6 @@ import java.time.LocalDateTime;
  * @param <T> The type of the resulting expression
  */
 public interface ExpressionParser<S, T> {
-
-    long TIME_AT_STARTUP = System.currentTimeMillis();
 
     static <S> ExpressionParser<S, Long> ofJvmMemory() {
         return new JvmMemoryExpressionParser<>();
@@ -55,5 +55,43 @@ public interface ExpressionParser<S, T> {
      * Parse a string expression into another type of expression
      * @return the result of parsing a string expression into another type
      */
-    Expression<T> parse(S source, Expression<String> expression);
+    default Expression<T> parse(S source, Expression<String> expression) {
+        return Expression.of(
+                parseLeft(source, expression), parseOperator(expression), parseRight(expression));
+    }
+
+    T parseLeft(S source, Expression<String> expression);
+
+    /**
+     * Parse the operator from the expression
+     * For input: "sys.environment={service.instances>1}", output operator is ">" not "="
+     * @param expression The expression whose operator will be returned
+     * @return The operator of the expression
+     */
+    default Operator parseOperator(Expression<String> expression) {
+        final String rhsText = expression.getRightOrDefault("");
+        if (StringUtils.hasText(rhsText)) {
+            final Operator [] operators = Operator.valuesInMatchSuitableOrder();
+            for(Operator operator : operators) {
+                if (rhsText.contains(operator.getSymbol())) {
+                    return operator;
+                }
+            }
+        }
+        return expression.getOperator();
+    }
+    default boolean isRightAnExpression(Expression<String> expression) {
+        final String rhsText = expression.getRightOrDefault("");
+        if (StringUtils.hasText(rhsText)) {
+            final Operator [] operators = Operator.valuesInMatchSuitableOrder();
+            for(Operator operator : operators) {
+                if (rhsText.contains(operator.getSymbol())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    T parseRight(Expression<String> expression);
 }

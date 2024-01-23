@@ -1,5 +1,7 @@
 package io.github.poshjosh.ratelimiter.expression;
 
+import io.github.poshjosh.ratelimiter.util.StringUtils;
+
 import java.util.Locale;
 
 final class JvmMemoryExpressionParser<S> implements ExpressionParser<S, Long> {
@@ -31,27 +33,32 @@ final class JvmMemoryExpressionParser<S> implements ExpressionParser<S, Long> {
     }
 
     @Override
-    public Expression<Long> parse(S source, Expression<String> expression) {
+    public Long parseLeft(S source, Expression<String> expression) {
         final String lhs = expression.requireLeft();
         switch (lhs) {
             case MEMORY_AVAILABLE:
-                return expression.with(MemoryUtil.availableMemory(), right(expression));
+                return MemoryUtil.availableMemory();
             case MEMORY_FREE:
-                return expression.with(Runtime.getRuntime().freeMemory(), right(expression));
+                return Runtime.getRuntime().freeMemory();
             case MEMORY_MAX:
-                return expression.with(Runtime.getRuntime().maxMemory(), right(expression));
+                return Runtime.getRuntime().maxMemory();
             case MEMORY_TOTAL:
-                return expression.with(Runtime.getRuntime().totalMemory(), right(expression));
+                return Runtime.getRuntime().totalMemory();
             case MEMORY_USED:
-                return expression.with(MemoryUtil.usedMemory(), right(expression));
+                return MemoryUtil.usedMemory();
             default:
                 throw Checks.notSupported(this, lhs);
         }
     }
 
-    private Long right(Expression<String> expression) {
+    @Override
+    public Long parseRight(Expression<String> expression) {
+        final String rhsText = expression.getRightOrDefault("");
+        if (!StringUtils.hasText(rhsText)) {
+            return null;
+        }
         // This .replace('_', '\u0000') did not yield the desired result in some cases
-        final String rhs = expression.requireRight().replace("_", "").toLowerCase(Locale.ROOT);
+        final String rhs = rhsText.replace("_", "").toLowerCase(Locale.ROOT);
         for (int i = 0; i < SUFFIXES.length; i++) {
             final int factor = SUFFIXES.length - i - 1;
             if (rhs.endsWith(SUFFIXES[i])) {

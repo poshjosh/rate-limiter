@@ -14,10 +14,18 @@ abstract class AbstractStringMappingExpressionParser<S> implements ExpressionPar
     }
 
     @Override
-    public Expression<String> parse(S source, Expression<String> expression) {
+    public String parseLeft(S source, Expression<String> expression) {
         Expression<String> rhs = expression.requireRightAsExpression();
         String name = rhs.requireLeft();
-        String value = rhs.getRightOrDefault(null);
-        return rhs.with(getValue(name), value);
+        return getValue(name);
+    }
+
+    @Override
+    public String parseRight(Expression<String> expression) {
+        if(expression.getRightOrDefault("").isEmpty()) {
+            return null;
+        }
+        Expression<String> rhs = expression.requireRightAsExpression();
+        return rhs.getRightOrDefault(null);
     }
 }

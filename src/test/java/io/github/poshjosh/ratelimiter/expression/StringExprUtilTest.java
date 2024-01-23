@@ -8,22 +8,23 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class SplitterTest {
+class StringExprUtilTest {
 
     @ParameterizedTest
     @CsvSource({
             "web.invalid.uri,=,/abc?key1=val1",
             "jvm.memory.free,=,1_000",
             "jvm.memory.free,!<=,1_000",
-            "     \tweb.request.user.role ,  !$,  ROLE_ADMIN  "
+            "     \tweb.request.user.role ,  !$,  ROLE_ADMIN  ",
+            "sys.environment,=,{service.instances!>=3}",
+            "something,=,[a|b]",
+            "something,=,{key=[a&b]}"
     })
     void testValidExpressions(String lhs, String operator, String rhs) {
-        String expression = lhs + operator + rhs;
-        String [] parts = Splitter.splitExpression(expression);
-        assertEquals(parts.length, 3);
-        assertEquals(lhs, parts[0]);
-        assertEquals(operator, parts[1]);
-        assertEquals(rhs, parts[2]);
+        Expression<String> expression = StringExprUtil.splitIntoExpression(lhs + operator + rhs);
+        assertEquals(lhs, expression.getLeftOrDefault(null));
+        assertEquals(operator, expression.getOperator().getSymbol());
+        assertEquals(rhs, expression.getRightOrDefault(null));
     }
 
     @ParameterizedTest
@@ -33,7 +34,7 @@ class SplitterTest {
             "1_000"
     })
     void testInValidExpressions(String expression) {
-        assertThrows(RuntimeException.class, () -> Splitter.splitExpression(expression));
+        assertThrows(RuntimeException.class, () -> StringExprUtil.splitIntoExpression(expression));
     }
 
 
@@ -47,7 +48,7 @@ class SplitterTest {
         String [] arr = s.split(",");
         String [] expected = new String[arr.length - 1];
         System.arraycopy(arr, 1, expected, 0, expected.length);
-        String [] actual = Splitter.splitIntoExpressionsAndConjunctors(arr[0]);
+        String [] actual = StringExprUtil.splitIntoExpressionsAndConjunctors(arr[0]);
 
         assertArrayEquals(expected, actual,
                 "\nExpected: " + Arrays.toString(expected) +

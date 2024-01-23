@@ -29,6 +29,24 @@ public final class Operator {
                 NOT_LESS_OR_EQUALS, NOT_LIKE, NOT_STARTS_WITH, NOT_ENDS_WITH
         };
     }
+
+    /**
+     * We want to match in this order.
+     * In this order:
+     * <ul>
+     *     <li>The negations come first: e.g "!>=" comes before ">="</li>
+     *     <li>The compound form comes first: e.g: "<=" comes before "="</li>
+     * </ul>
+     * @return
+     */
+    static Operator[] valuesInMatchSuitableOrder() {
+        return new Operator[]{
+                NOT_GREATER_OR_EQUALS, NOT_LESS_OR_EQUALS, NOT_EQUALS, NOT_GREATER, NOT_LESS,
+                NOT_LIKE, NOT_STARTS_WITH, NOT_ENDS_WITH,
+                LESS_OR_EQUALS, GREATER_OR_EQUALS, EQUALS, GREATER, LESS,
+                LIKE, STARTS_WITH, ENDS_WITH
+        };
+    }
     public static Operator of(String symbol) {
         if (symbol.startsWith("!")) {
             return of(symbol.substring(1)).flip();
@@ -49,8 +67,7 @@ public final class Operator {
     private final Type [] types;
     private Operator(String symbol, Type... types) {
         this.symbol = Checks.requireContent(symbol);
-        this.types = Arrays.copyOf(types, types.length);
-        Arrays.sort(this.types);
+        this.types = Objects.requireNonNull(types);
     }
     public boolean equalsIgnoreNegation(Operator operator) {
         return isNegation() ? equals(operator.negative()) : equals(operator.positive());
@@ -67,13 +84,10 @@ public final class Operator {
     public Operator flip() {
         return new Operator((isNegation() ? symbol.substring(1) : "!" + symbol), types);
     }
-    public boolean isType(Type... types) {
-        Arrays.sort(types);
-        for(Type t0 : this.types) {
-            for (Type t1 : types) {
-                if (t0.equals(t1)) {
-                    return true;
-                }
+    public boolean isType(Type type) {
+        for(Type t : this.types) {
+            if (t.equals(type)) {
+                return true;
             }
         }
         return false;

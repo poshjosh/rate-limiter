@@ -1,5 +1,7 @@
 package io.github.poshjosh.ratelimiter.expression;
 
+import io.github.poshjosh.ratelimiter.util.StringUtils;
+
 import java.time.LocalDateTime;
 
 final class SystemTimeExpressionParser<S> implements ExpressionParser<S, LocalDateTime> {
@@ -18,18 +20,23 @@ final class SystemTimeExpressionParser<S> implements ExpressionParser<S, LocalDa
     }
 
     @Override
-    public Expression<LocalDateTime> parse(S source, Expression<String> expression) {
+    public LocalDateTime parseLeft(S source, Expression<String> expression) {
         final String lhs = expression.requireLeft();
         if (TIME.equals(lhs)) {
-            return expression.with(LocalDateTime.now(), right(expression));
+            return LocalDateTime.now();
         }
         throw Checks.notSupported(this, lhs);
     }
 
-    private LocalDateTime right(Expression<String> expression) {
+    @Override
+    public LocalDateTime parseRight(Expression<String> expression) {
         final String lhs = expression.requireLeft();
         if (TIME.equals(lhs)) {
-            return LocalDateTime.parse(expression.requireRight());
+            final String rhsText = expression.getRightOrDefault("");
+            if (StringUtils.hasText(rhsText)) {
+                return LocalDateTime.parse(rhsText);
+            }
+            return null;
         }
         throw Checks.notSupported(this, lhs);
     }

@@ -2,32 +2,27 @@ package io.github.poshjosh.ratelimiter.expression;
 
 import java.util.Objects;
 
-final class StringExpressionResolver implements ExpressionResolver<String>{
+final class StringExpressionResolver extends AbstractExpressionResolver<String>{
 
     StringExpressionResolver() {}
 
-    @Override
-    public boolean resolve(Expression<String> expression) {
-        if (!expression.getOperator().isNegation()) {
-            return resolvePositive(expression);
+    @Override 
+    protected boolean resolvePositive(String left, Operator operator, String right) {
+        if (!"=".equals(operator.getSymbol())) {
+            Objects.requireNonNull(left);
+            Objects.requireNonNull(right);
         }
-        return !resolvePositive(expression.flipOperator());
-    }
-
-    private boolean resolvePositive(Expression<String> expression) {
-        switch (expression.getOperator().getSymbol()) {
+        switch (operator.getSymbol()) {
             case "=":
-                final String left = expression.getLeftOrDefault(null);
-                final String right = expression.getRightOrDefault(null);
                 return Objects.equals(left, right);
             case "^":
-                return expression.requireLeft().startsWith(expression.requireRight());
+                return left.startsWith(right);
             case "$":
-                return expression.requireLeft().endsWith(expression.requireRight());
+                return left.endsWith(right);
             case "%":
-                return expression.requireLeft().contains(expression.requireRight());
+                return left.contains(right);
             default:
-                throw Checks.notSupported(this, expression.getOperator());
+                throw Checks.notSupported(this, operator);
         }
     }
 

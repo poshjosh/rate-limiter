@@ -35,54 +35,61 @@ public interface ExpressionMatcher<INPUT, T> extends Matcher<INPUT> {
     }
 
     static <R> ExpressionMatcher<R, Long> ofSystemMemory() {
-        return of(ExpressionParser.ofJvmMemory(),
+        return ofDefaults(ExpressionParser.ofJvmMemory(),
                 ExpressionResolver.ofLong(),
                 JvmMemoryExpressionParser.MEMORY_MAX+"=");
     }
 
     static <R> ExpressionMatcher<R, LocalDateTime> ofSystemTime() {
-        return of(ExpressionParser.ofSystemTime(),
+        return ofDefaults(ExpressionParser.ofSystemTime(),
                 ExpressionResolver.ofDateTime(),
                 SystemTimeExpressionParser.TIME+"=");
     }
 
     static <R> ExpressionMatcher<R, Long> ofSystemTimeElapsed() {
-        return of(ExpressionParser.ofSystemTimeElapsed(),
+        return ofDefaults(ExpressionParser.ofSystemTimeElapsed(),
                 ExpressionResolver.ofLong(),
                 SystemTimeElapsedExpressionParser.TIME_ELAPSED+"=");
     }
 
     static <R> ExpressionMatcher<R, String> ofSystemProperty() {
-        return of(ExpressionParser.ofSystemProperty(),
+        return ofDefaults(ExpressionParser.ofSystemProperty(),
                 ExpressionResolver.ofString(),
                 SystemPropertyExpressionParser.LHS+"=");
     }
 
 
     static <R> ExpressionMatcher<R, String> ofSystemEnvironment() {
-        return of(ExpressionParser.ofSystemEnvironment(),
+        return ofDefaults(ExpressionParser.ofSystemEnvironment(),
                 ExpressionResolver.ofString(),
                 SystemEnvironmentExpressionParser.LHS+"=");
     }
 
     static <R> ExpressionMatcher<R, Object> ofJvmThread() {
-        return of(ExpressionParser.ofJvmThread(),
+        return ofDefaults(ExpressionParser.ofJvmThread(),
                 ExpressionResolver.ofJvmThread(),
                 JvmThreadExpressionParser.COUNT+"=");
     }
 
-    static <R, T> ExpressionMatcher<R, T> of(
+    static <R, T> ExpressionMatcher<R, T> ofDefaults(
             ExpressionParser<R, T> expressionParser,
             ExpressionResolver<T> expressionResolver,
             String sampleExpression) {
-        return of(expressionParser, expressionResolver, Expression.of(sampleExpression));
+        return ofParseAhead(expressionParser, expressionResolver, Expression.of(sampleExpression));
     }
 
-    static <R, T> ExpressionMatcher<R, T> of(
+    static <R, T> ExpressionMatcher<R, T> ofParseAhead(
             ExpressionParser<R, T> expressionParser,
             ExpressionResolver<T> expressionResolver,
             Expression<String> sampleExpression) {
-        return new DefaultExpressionMatcher<>(expressionParser, expressionResolver, sampleExpression);
+        return new ParseAheadExpressionMatcher<>(expressionParser, expressionResolver, sampleExpression);
+    }
+
+    static <R, T> ExpressionMatcher<R, T> ofParseAtMatchTime(
+            ExpressionParser<R, T> expressionParser,
+            ExpressionResolver<T> expressionResolver,
+            Expression<String> sampleExpression) {
+        return new ParseAtMatchTimeExpressionMatcher<>(expressionParser, expressionResolver, sampleExpression);
     }
 
     @Override String match(INPUT request);
@@ -95,7 +102,7 @@ public interface ExpressionMatcher<INPUT, T> extends Matcher<INPUT> {
         if (!StringUtils.hasText(text)) {
             return Optional.empty();
         }
-        String [] parts = Splitter.splitIntoExpressionsAndConjunctors(text);
+        String [] parts = StringExprUtil.splitIntoExpressionsAndConjunctors(text);
         if (parts.length == 0) {
             return Optional.empty();
         }

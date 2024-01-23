@@ -2,31 +2,25 @@ package io.github.poshjosh.ratelimiter.expression;
 
 import java.util.Objects;
 
-final class DecimalExpressionResolver implements ExpressionResolver<Double> {
+final class DecimalExpressionResolver extends AbstractExpressionResolver<Double> {
     DecimalExpressionResolver() {}
     @Override
-    public boolean resolve(Expression<Double> expression) {
-        if (!expression.getOperator().isNegation()) {
-            return resolvePositive(expression);
+    public boolean resolvePositive(Double left, Operator operator, Double right) {
+        if ("!".equals(operator.getSymbol())) {
+            Objects.requireNonNull(left);
+            Objects.requireNonNull(right);
         }
-        return !resolvePositive(expression.flipOperator());
-    }
-
-    private boolean resolvePositive(Expression<Double> expression) {
-        final Operator operator = expression.getOperator();
         switch (operator.getSymbol()) {
             case "=":
-                final Double left = expression.getLeftOrDefault(null);
-                final Double right = expression.getRightOrDefault(null);
                 return Objects.equals(left, right);
             case ">":
-                return expression.requireLeft() > expression.requireRight();
+                return left > right;
             case ">=":
-                return expression.requireLeft() >= expression.requireRight();
+                return left >= right;
             case "<":
-                return expression.requireLeft() < expression.requireRight();
+                return left < right;
             case "<=":
-                return expression.requireLeft() <= expression.requireRight();
+                return left <= right;
             default:
                 throw Checks.notSupported(this, operator);
         }
