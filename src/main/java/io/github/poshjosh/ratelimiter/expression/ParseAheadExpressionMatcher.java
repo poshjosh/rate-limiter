@@ -4,26 +4,41 @@ import io.github.poshjosh.ratelimiter.util.Matcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-final class ParseAheadExpressionMatcher<R, T> extends ParseAtMatchTimeExpressionMatcher<R, T> {
+import java.util.Objects;
+
+final class ParseAheadExpressionMatcher<R, T> implements ExpressionMatcher<R, T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ParseAheadExpressionMatcher.class);
 
+    private final ExpressionParser<R, T> expressionParser;
+
+    private final ExpressionResolver<T> expressionResolver;
+
+    private final Expression<String> expression;
     private final T rhs;
 
     ParseAheadExpressionMatcher(
             ExpressionParser<R, T> expressionParser,
             ExpressionResolver<T> expressionResolver,
             Expression<String> expression) {
-        super(expressionParser, expressionResolver, expression);
+        if (!expressionResolver.isSupported(expression.getOperator())) {
+            throw Checks.notSupported(expressionResolver,
+                    "operator: " + expression.getOperator());
+        }
+        if (!expressionParser.isSupported(expression)) {
+            throw Checks.notSupported(expressionParser, expression);
+        }
+        this.expressionParser = Objects.requireNonNull(expressionParser);
+        this.expressionResolver = Objects.requireNonNull(expressionResolver);
+        this.expression = Objects.requireNonNull(expression);
         this.rhs = expressionParser.parseRight(expression);
     }
 
     @Override
     public String match(R request) {
-        final Expression<String> expression = getExpression();
-        final T lhs = getExpressionParser().parseLeft(request, expression);
+        final T lhs = expressionParser.parseLeft(request, expression);
         final Operator operator = expression.getOperator();
-        final boolean success = getExpressionResolver().resolve(lhs, operator, rhs);
+        final boolean success = expressionResolver.resolve(lhs, operator, rhs);
         if (LOG.isTraceEnabled()) {
             LOG.trace("Result: {}, expression: typed {}, text {}",
                     success, StringExprUtil.buildId(lhs, operator, rhs), expression);
@@ -31,8 +46,20 @@ final class ParseAheadExpressionMatcher<R, T> extends ParseAtMatchTimeExpression
         return success ? StringExprUtil.determineResult(expression, lhs, rhs) : Matcher.NO_MATCH;
     }
 
+
+    @Override
+    public ParseAheadExpressionMatcher<R, T> matcher(Expression<String> expression) {
+        return new ParseAheadExpressionMatcher<>(expressionParser, expressionResolver, expression);
+    }
+
+    @Override
+    public boolean isSupported(Expression<String> expression) {
+        return expressionResolver.isSupported(expression.getOperator())
+                && expressionParser.isSupported(expression);
+    }
+
     @Override
     public String toString() {
-        return "ParseAheadExpressionMatcher{" + "expression=" + getExpression() + '}';
+        return "ParseAheadExpressionMatcher{" + "expression=" + expression + '}';
     }
 }

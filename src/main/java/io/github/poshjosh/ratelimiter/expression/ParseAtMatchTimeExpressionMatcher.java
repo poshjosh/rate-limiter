@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
-class ParseAtMatchTimeExpressionMatcher<R, T> implements ExpressionMatcher<R, T> {
+final class ParseAtMatchTimeExpressionMatcher<R, T> implements ExpressionMatcher<R, T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ParseAtMatchTimeExpressionMatcher.class);
 
@@ -52,18 +52,6 @@ class ParseAtMatchTimeExpressionMatcher<R, T> implements ExpressionMatcher<R, T>
     public boolean isSupported(Expression<String> expression) {
         return expressionResolver.isSupported(expression.getOperator())
                 && expressionParser.isSupported(expression);
-    }
-
-    public ExpressionParser<R, T> getExpressionParser() {
-        return expressionParser;
-    }
-
-    public ExpressionResolver<T> getExpressionResolver() {
-        return expressionResolver;
-    }
-
-    public Expression<String> getExpression() {
-        return expression;
     }
 
     @Override

@@ -21,22 +21,22 @@ final class SystemTimeElapsedExpressionParser<S> implements ExpressionParser<S, 
     }
 
     @Override
-    public Long parseLeft(S source, Expression<String> expression) {
+    public Long parseLeft(S context, Expression<String> expression) {
         final String lhs = expression.requireLeft();
         if (TIME_ELAPSED.equals(lhs)) {
-            return System.currentTimeMillis() - getStartTime(source);
+            return System.currentTimeMillis() - getStartTime(context);
         }
         throw Checks.notSupported(this, lhs);
     }
 
-    private long getStartTime(S source) {
-        if (source instanceof Long) {
-            return (Long)source;
+    private long getStartTime(S context) {
+        if (context instanceof Long) {
+            return (Long)context;
         }
         // Memory intensive, as revealed by profiler
         // We never needed to do this in the first place.
-//        if (source instanceof String) {
-//            final String sval = (String)source;
+//        if (context instanceof String) {
+//            final String sval = (String)context;
 //            if (StringUtils.hasText(sval)) {
 //                try {
 //                    return Long.parseLong(sval);

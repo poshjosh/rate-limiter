@@ -8,6 +8,8 @@ import java.util.Optional;
  */
 public interface RateSource {
 
+    RateSource NONE = RateSource.of("", false);
+
     static RateSource of(String id, boolean isRateLimited) {
         return new SimpleRateSource(id, isRateLimited);
     }

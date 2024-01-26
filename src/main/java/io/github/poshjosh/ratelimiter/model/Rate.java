@@ -144,7 +144,7 @@ public final class Rate {
     }
 
     public boolean isSet() {
-        return permits > 0 && duration != null;
+        return !Duration.ZERO.equals(duration);
     }
 
     public Rate permits(long permits) {

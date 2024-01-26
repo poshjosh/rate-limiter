@@ -14,7 +14,7 @@ abstract class AbstractStringMappingExpressionParser<S> implements ExpressionPar
     }
 
     @Override
-    public String parseLeft(S source, Expression<String> expression) {
+    public String parseLeft(S context, Expression<String> expression) {
         Expression<String> rhs = expression.requireRightAsExpression();
         String name = rhs.requireLeft();
         return getValue(name);

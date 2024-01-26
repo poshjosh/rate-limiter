@@ -33,7 +33,7 @@ final class JvmMemoryExpressionParser<S> implements ExpressionParser<S, Long> {
     }
 
     @Override
-    public Long parseLeft(S source, Expression<String> expression) {
+    public Long parseLeft(S context, Expression<String> expression) {
         final String lhs = expression.requireLeft();
         switch (lhs) {
             case MEMORY_AVAILABLE:

@@ -20,7 +20,7 @@ final class SystemTimeExpressionParser<S> implements ExpressionParser<S, LocalDa
     }
 
     @Override
-    public LocalDateTime parseLeft(S source, Expression<String> expression) {
+    public LocalDateTime parseLeft(S context, Expression<String> expression) {
         final String lhs = expression.requireLeft();
         if (TIME.equals(lhs)) {
             return LocalDateTime.now();

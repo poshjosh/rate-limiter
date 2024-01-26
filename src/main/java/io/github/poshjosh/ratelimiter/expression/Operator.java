@@ -21,13 +21,14 @@ public final class Operator {
     public static final Operator NOT_LIKE = new Operator("!%", Type.STRING);
     public static final Operator NOT_STARTS_WITH = new Operator("!^", Type.STRING);
     public static final Operator NOT_ENDS_WITH = new Operator("!$", Type.STRING);
+    private static final Operator [] VALUES_IN_MATCH_SUITABLE_ORDER = new Operator[]{
+            NOT_GREATER_OR_EQUALS, NOT_LESS_OR_EQUALS, NOT_EQUALS, NOT_GREATER, NOT_LESS,
+            NOT_LIKE, NOT_STARTS_WITH, NOT_ENDS_WITH,
+            LESS_OR_EQUALS, GREATER_OR_EQUALS, EQUALS, GREATER, LESS,
+            LIKE, STARTS_WITH, ENDS_WITH
+    };
     public static Operator[] values() {
-        return new Operator[]{
-                EQUALS, GREATER, GREATER_OR_EQUALS, LESS,
-                LESS_OR_EQUALS, LIKE, STARTS_WITH, ENDS_WITH,
-                NOT_EQUALS, NOT_GREATER, NOT_GREATER_OR_EQUALS, NOT_LESS,
-                NOT_LESS_OR_EQUALS, NOT_LIKE, NOT_STARTS_WITH, NOT_ENDS_WITH
-        };
+        return VALUES_IN_MATCH_SUITABLE_ORDER;
     }
 
     /**
@@ -40,12 +41,7 @@ public final class Operator {
      * @return
      */
     static Operator[] valuesInMatchSuitableOrder() {
-        return new Operator[]{
-                NOT_GREATER_OR_EQUALS, NOT_LESS_OR_EQUALS, NOT_EQUALS, NOT_GREATER, NOT_LESS,
-                NOT_LIKE, NOT_STARTS_WITH, NOT_ENDS_WITH,
-                LESS_OR_EQUALS, GREATER_OR_EQUALS, EQUALS, GREATER, LESS,
-                LIKE, STARTS_WITH, ENDS_WITH
-        };
+        return VALUES_IN_MATCH_SUITABLE_ORDER;
     }
     public static Operator of(String symbol) {
         if (symbol.startsWith("!")) {

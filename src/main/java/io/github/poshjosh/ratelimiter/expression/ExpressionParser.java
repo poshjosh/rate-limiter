@@ -6,33 +6,33 @@ import java.time.LocalDateTime;
 
 /**
  * Parses expression of one type to another type
- * @param <S> The type of the source e.g a web request (web) or a system (sys) etc
+ * @param <C> The type of the context e.g a web request (web) or a system (sys) etc
  * @param <T> The type of the resulting expression
  */
-public interface ExpressionParser<S, T> {
+public interface ExpressionParser<C, T> {
 
-    static <S> ExpressionParser<S, Long> ofJvmMemory() {
+    static <C> ExpressionParser<C, Long> ofJvmMemory() {
         return new JvmMemoryExpressionParser<>();
     }
 
-    static <S> ExpressionParser<S, LocalDateTime> ofSystemTime() {
+    static <C> ExpressionParser<C, LocalDateTime> ofSystemTime() {
         return new SystemTimeExpressionParser<>();
     }
 
-    static <S> ExpressionParser<S, Long> ofSystemTimeElapsed() {
+    static <C> ExpressionParser<C, Long> ofSystemTimeElapsed() {
         return new SystemTimeElapsedExpressionParser<>();
     }
 
-    static <S> ExpressionParser<S, String> ofSystemProperty() {
+    static <C> ExpressionParser<C, String> ofSystemProperty() {
         return new SystemPropertyExpressionParser<>();
     }
 
 
-    static <S> ExpressionParser<S, String> ofSystemEnvironment() {
+    static <C> ExpressionParser<C, String> ofSystemEnvironment() {
         return new SystemEnvironmentExpressionParser<>();
     }
 
-    static <S> ExpressionParser<S, Object> ofJvmThread() {
+    static <C> ExpressionParser<C, Object> ofJvmThread() {
         return new JvmThreadExpressionParser<>();
     }
 
@@ -55,12 +55,12 @@ public interface ExpressionParser<S, T> {
      * Parse a string expression into another type of expression
      * @return the result of parsing a string expression into another type
      */
-    default Expression<T> parse(S source, Expression<String> expression) {
+    default Expression<T> parse(C context, Expression<String> expression) {
         return Expression.of(
-                parseLeft(source, expression), parseOperator(expression), parseRight(expression));
+                parseLeft(context, expression), parseOperator(expression), parseRight(expression));
     }
 
-    T parseLeft(S source, Expression<String> expression);
+    T parseLeft(C context, Expression<String> expression);
 
     /**
      * Parse the operator from the expression

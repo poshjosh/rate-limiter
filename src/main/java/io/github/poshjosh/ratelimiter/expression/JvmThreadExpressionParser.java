@@ -56,7 +56,7 @@ final class JvmThreadExpressionParser<S> implements ExpressionParser<S, Object> 
     }
 
     @Override
-    public Object parseLeft(S source, Expression<String> expression) {
+    public Object parseLeft(S context, Expression<String> expression) {
         final String lhs = expression.requireLeft();
         switch (lhs) {
             case COUNT:
@@ -72,23 +72,23 @@ final class JvmThreadExpressionParser<S> implements ExpressionParser<S, Object> 
             case COUNT_STARTED:
                 return threadMXBean.getTotalStartedThreadCount();
             case CURRENT_COUNT_BLOCKED:
-                return threadInfo(source).getBlockedCount();
+                return threadInfo(context).getBlockedCount();
             case CURRENT_COUNT_WAITED:
-                return threadInfo(source).getWaitedCount();
+                return threadInfo(context).getWaitedCount();
             case CURRENT_ID:
-                return getThreadId(source);
+                return getThreadId(context);
             case CURRENT_STATE:
-                return threadInfo(source).getThreadState();
+                return threadInfo(context).getThreadState();
             case CURRENT_SUSPENDED:
-                return threadInfo(source).isSuspended();
+                return threadInfo(context).isSuspended();
             case CURRENT_TIME_BLOCKED:
-                return threadInfo(source).getBlockedTime();
+                return threadInfo(context).getBlockedTime();
             case CURRENT_TIME_CPU:
-                return threadMXBean.getThreadCpuTime(getThreadId(source));
+                return threadMXBean.getThreadCpuTime(getThreadId(context));
             case CURRENT_TIME_USER:
-                return threadMXBean.getThreadUserTime(getThreadId(source));
+                return threadMXBean.getThreadUserTime(getThreadId(context));
             case CURRENT_TIME_WAITED:
-                return threadInfo(source).getWaitedTime();
+                return threadInfo(context).getWaitedTime();
             default:
                 throw Checks.notSupported(this, lhs);
         }

@@ -1,11 +1,10 @@
 package io.github.poshjosh.ratelimiter.model;
 
 import java.util.Objects;
-import java.util.Optional;
 
 public final class RateConfig {
 
-    private static final RateSource NO_SOURCE = RateSource.of("", false);
+    public static final RateConfig NONE = RateConfig.of(RateSource.NONE, Rates.none(), null);
 
     public static RateConfig of(long permitsPerSecond) {
         return of(permitsPerSecond, "");
@@ -16,7 +15,11 @@ public final class RateConfig {
     }
 
     public static RateConfig of(Rates value) {
-        return new RateConfig(NO_SOURCE, value, null);
+        return new RateConfig(RateSource.NONE, value, NONE);
+    }
+
+    public static RateConfig of(RateSource source, Rates value) {
+        return of(source, value, NONE);
     }
 
     public static RateConfig of(RateSource source, Rates value, RateConfig parent) {
@@ -30,7 +33,7 @@ public final class RateConfig {
     private RateConfig(RateSource source, Rates rates, RateConfig parent) {
         this.source = Objects.requireNonNull(source);
         this.rates = Objects.requireNonNull(rates);
-        this.parent = parent;
+        this.parent = parent == null ? NONE : parent;
     }
 
     public RateConfig withSource(RateSource source) {
@@ -51,19 +54,17 @@ public final class RateConfig {
 
     public Rates getRatesWithParentRatesAsFallback() {
         if (shouldDelegateToParent()) {
-            return getParentOptional()
-                    .map(RateConfig::getRates)
-                    .orElse(rates);
+            return parent == null ? rates : parent.getRates();
         }
-        return Rates.of(rates);
+        return rates;
     }
 
-    public Optional<RateConfig> getParentOptional() {
-        return Optional.ofNullable(parent);
+    public RateConfig getParent() {
+        return parent;
     }
 
     public boolean shouldDelegateToParent() {
-        return !rates.hasLimits() && hasRateGroupAsParentSource();
+        return !rates.hasLimitsSet() && hasRateGroupAsParentSource();
     }
 
     private boolean hasRateGroupAsParentSource() {

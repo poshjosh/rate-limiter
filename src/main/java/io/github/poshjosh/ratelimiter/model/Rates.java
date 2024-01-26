@@ -10,12 +10,10 @@ import java.util.stream.Collectors;
 
 public class Rates {
 
+    public static Rates none() { return NONE; }
+
     public static Rates of(Rate rate) {
         return new Rates(rate);
-    }
-
-    public static Rates ofDefaults() {
-        return empty();
     }
 
     public static Rates empty() { return new Rates(); }
@@ -39,21 +37,24 @@ public class Rates {
     }
 
     public static Rates of(String rateCondition) {
-        final Rate rate = StringUtils.hasText(rateCondition) ? Rate.of(rateCondition) : null;
+        final Rate rate = StringUtils.hasText(rateCondition)
+                ? Rate.of(rateCondition) : null;
         return of(rate);
     }
 
     public static Rates of(Operator operator, String rateCondition, Rate... rates) {
-        List<Rate> list = rates == null ? Collections.emptyList() : Arrays.asList(rates);
+        List<Rate> list = rates == null || rates.length == 0
+                ? Collections.emptyList() : Arrays.asList(rates);
         return of(operator, rateCondition, list);
     }
 
     public static Rates of(List<Rate> rates) {
-        return of(Operator.NONE, null, rates);
+        return of(Operator.NONE, "", rates);
     }
 
     public static Rates of(Operator operator, String rateCondition, List<Rate> rates) {
-        final Rate rate = StringUtils.hasText(rateCondition) ? Rate.of(rateCondition) : null;
+        final Rate rate = StringUtils.hasText(rateCondition)
+                ? Rate.of(rateCondition) : null;
         return new Rates(operator, rate, rates);
     }
 
@@ -93,8 +94,23 @@ public class Rates {
     protected Rates(Operator operator, Rate limit, List<Rate> limits) {
         this.operator = Objects.requireNonNull(operator);
         this.limit = limit;
-        this.limits = limits == null ? Collections.emptyList() : limits.stream()
+        this.limits = limits == null || limits.isEmpty()
+                ? Collections.emptyList() : limits.stream()
+                .filter(Objects::nonNull)
+                .filter(Rate::isSet)
                 .map(Rate::new).collect(Collectors.toList());
+    }
+
+    public boolean isSet() {
+        if (limit != null && limit.isSet()) {
+            return true;
+        }
+        for(Rate rate : limits) {
+            if (rate.isSet()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean hasSubConditions() {
@@ -107,8 +123,22 @@ public class Rates {
         return false;
     }
 
-    public boolean hasLimits() {
-        return totalSize() > 0;
+    public boolean hasLimitsSet() {
+        final int mainSize = limit == null || !limit.isSet() ? 0 : 1;
+        if (mainSize > 0) {
+            return true;
+        }
+        return hasSubLimitsSet();
+    }
+
+    public boolean hasSubLimitsSet() {
+        if (limits == null || limits.isEmpty()) {
+            return false;
+        }
+        if (limits.size() == 1) {
+            return limits.get(0).isSet();
+        }
+        return limits.stream().anyMatch(Rate::isSet);
     }
 
     public int subLimitSize() {
@@ -117,8 +147,7 @@ public class Rates {
 
     public int totalSize() {
         final int mainSize = limit == null ? 0 : 1;
-        final int subSize = limits == null ? 0 : limits.size();
-        return mainSize + subSize;
+        return mainSize + subLimitSize();
     }
 
     public Rates limit(Rate limit) {
@@ -256,4 +285,17 @@ public class Rates {
     public String toString() {
         return "Rates{main=" + limit + ", operator=" + operator + ", sub=" + limits + '}';
     }
+
+    private static final Rates NONE = new Rates(){
+        @Override public boolean isSet() { return false; }
+        @Override public boolean hasSubConditions() { return false; }
+        @Override public boolean hasLimitsSet() { return false; }
+        @Override public int subLimitSize() { return 0; }
+        @Override public int totalSize() { return 0; }
+        @Override public void setLimit(Rate limit) { throw new UnsupportedOperationException(); }
+        @Override public void setOperator(Operator optr) { throw new UnsupportedOperationException(); }
+        @Override public void setLimits(List<Rate> limits) { throw new UnsupportedOperationException(); }
+        @Override public void setRateCondition(String val) { throw new UnsupportedOperationException(); }
+        @Override public void setPermits(long permits) { throw new UnsupportedOperationException(); }
+    };
 }

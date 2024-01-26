@@ -83,10 +83,10 @@ final class StringExprUtil {
             operator = value.substring(m.start(), m.end()).trim();
             rhs = value.substring(m.end()).trim();
         } else {
-            throw Checks.notSupported(StringExprUtil.class, value);
+            throw Checks.notSupported(Expression.class, value);
         }
         if (operator.isEmpty()) {
-            throw Checks.notSupported(StringExprUtil.class, value);
+            throw Checks.notSupported(Expression.class, value);
         }
         return Expression.of(lhs, operator, rhs);
     }
@@ -109,7 +109,7 @@ final class StringExprUtil {
         final char ch = rhs.charAt(0);
         for(Operator op: operators) {
             if(op.getSymbol().charAt(0) == ch) {
-                throw Checks.notSupported(StringExprUtil.class, value);
+                throw Checks.notSupported(Expression.class, value);
             }
         }
     }
@@ -179,6 +179,6 @@ final class StringExprUtil {
             final String lhs = expression.substring(0, operatorStart).trim();
             return Expression.of(lhs, operator, rhs);
         }
-        throw Checks.notSupported(StringExprUtil.class, expression);
+        throw Checks.notSupported(Expression.class, expression);
     }
 }

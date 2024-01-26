@@ -7,7 +7,6 @@ import io.github.poshjosh.ratelimiter.util.Ticker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,7 +21,7 @@ final class DefaultRateToBandwidthConverter implements RateToBandwidthConverter 
 
     @Override
     public Bandwidth convert(Rate rate) {
-        if (rate.getPermits() == 0 && Duration.ZERO.equals(rate.getDuration())) {
+        if (!rate.isSet()) {
             return Bandwidth.UNLIMITED;
         }
         final BandwidthFactory factory = BandwidthFactories
@@ -32,7 +31,7 @@ final class DefaultRateToBandwidthConverter implements RateToBandwidthConverter 
 
     @Override
     public Bandwidth convert(Rates rates, Bandwidth resultIfNone) {
-        if (!rates.hasLimits()) {
+        if (!rates.hasLimitsSet()) {
             log(rates, resultIfNone);
             return resultIfNone;
         }
