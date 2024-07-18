@@ -27,15 +27,17 @@ final class RateLimiters implements RateLimiter {
     @Beta
     public Bandwidth getBandwidth() {
         if (rateLimiters.length == 0) {
-            // We are unlimited if there is no bandwidth
+            // We have unlimited bandwidth if there is no rate limiting
             return Bandwidth.UNLIMITED;
         }
         if (rateLimiters.length == 1) {
             return rateLimiters[0].getBandwidth();
         }
-        List<Bandwidth> bandwidthList = Arrays.stream(rateLimiters)
-                .map(RateLimiter::getBandwidth).collect(Collectors.toList());
-        return Bandwidths.of(Operator.OR, bandwidthList.toArray(new Bandwidth[0]));
+        Bandwidth [] bandwidths = new Bandwidth[rateLimiters.length];
+        for (int i = 0; i < rateLimiters.length; i++) {
+            bandwidths[i] = rateLimiters[i].getBandwidth();
+        }
+        return Bandwidths.of(Operator.OR, bandwidths);
     }
 
     @Override

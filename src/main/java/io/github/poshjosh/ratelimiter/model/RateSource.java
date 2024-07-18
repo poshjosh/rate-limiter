@@ -1,6 +1,7 @@
 package io.github.poshjosh.ratelimiter.model;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.GenericDeclaration;
 import java.util.Optional;
 
 /**
@@ -24,4 +25,6 @@ public interface RateSource {
 
     boolean isRateLimited();
     default boolean isGroupType() { return false; }
+
+    default boolean isGenericDeclaration() { return getSource() instanceof GenericDeclaration; }
 }

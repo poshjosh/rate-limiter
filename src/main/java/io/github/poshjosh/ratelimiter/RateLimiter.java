@@ -86,9 +86,10 @@ public interface RateLimiter {
     }
 
     /**
-     * Get a read-only view of this RateLimiter's bandwidth.
-     * Any attempt to modify the returned Bandwidth will throw an exception.
-     * @return A read-only view of this RateLimiter's Bandwidth.
+     * Get this RateLimiter's bandwidth.
+     * Meant for introspection and monitoring purposes.
+     * Method may be suboptimal, depending on the implementation.
+     * @return This RateLimiter's Bandwidth.
      */
     @Beta
     Bandwidth getBandwidth();

@@ -44,6 +44,10 @@ public final class RateConfig {
         return source.getId();
     }
 
+    public boolean isGroupType() {
+        return source.isGroupType();
+    }
+
     public RateSource getSource() {
         return source;
     }
@@ -64,11 +68,7 @@ public final class RateConfig {
     }
 
     public boolean shouldDelegateToParent() {
-        return !rates.hasLimitsSet() && hasRateGroupAsParentSource();
-    }
-
-    private boolean hasRateGroupAsParentSource() {
-        return parent != null && parent.getSource().isGroupType();
+        return !rates.hasLimitsSet() && (parent != null && parent.isGroupType());
     }
 
     @Override public boolean equals(Object o) {
