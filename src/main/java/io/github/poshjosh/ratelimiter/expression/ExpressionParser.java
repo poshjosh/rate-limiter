@@ -39,7 +39,7 @@ public interface ExpressionParser<C, T> {
     /**
      * @param expression the expression to check if supported
      * @return true if the provided expression is supported
-     * @see #isSupported(Expression <String>)
+     * @see #isSupported(Expression java.lang.String)
      */
     default boolean isSupported(String expression) {
         return isSupported(Expression.of(expression));

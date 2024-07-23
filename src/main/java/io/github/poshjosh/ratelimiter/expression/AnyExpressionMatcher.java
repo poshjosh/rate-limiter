@@ -4,19 +4,19 @@ import io.github.poshjosh.ratelimiter.util.Matcher;
 
 import java.util.Arrays;
 
-final class AnyExpressionMatcher<R> implements ExpressionMatcher<R, Object>{
+final class AnyExpressionMatcher<TARGET> implements ExpressionMatcher<TARGET>{
 
-    private ExpressionMatcher<R, ?> [] expressionMatchers;
+    private final ExpressionMatcher<TARGET>[] expressionMatchers;
 
-    AnyExpressionMatcher(ExpressionMatcher<R, ?>... matchers) {
+    AnyExpressionMatcher(ExpressionMatcher<TARGET>[] matchers) {
         this.expressionMatchers = new ExpressionMatcher[matchers.length];
         System.arraycopy(matchers, 0, this.expressionMatchers, 0, matchers.length);
     }
 
     @Override
-    public String match(R request) {
-        for (ExpressionMatcher<R, ?> expressionMatcher : expressionMatchers) {
-            final String match = expressionMatcher.match(request);
+    public String match(TARGET target) {
+        for (ExpressionMatcher<TARGET> expressionMatcher : expressionMatchers) {
+            final String match = expressionMatcher.match(target);
             if (Matcher.isMatch(match)) {
                 return match;
             }
@@ -25,10 +25,10 @@ final class AnyExpressionMatcher<R> implements ExpressionMatcher<R, Object>{
     }
 
     @Override
-    public ExpressionMatcher<R, Object> matcher(Expression<String> expression) {
-        for (ExpressionMatcher<R, ?> expressionMatcher : expressionMatchers) {
+    public ExpressionMatcher<TARGET> matcher(Expression<String> expression) {
+        for (ExpressionMatcher<TARGET> expressionMatcher : expressionMatchers) {
             if (expressionMatcher.isSupported(expression)) {
-                return (ExpressionMatcher<R, Object>)expressionMatcher.matcher(expression);
+                return expressionMatcher.matcher(expression);
             }
         }
         throw Checks.notSupported(this, expression);
@@ -36,7 +36,7 @@ final class AnyExpressionMatcher<R> implements ExpressionMatcher<R, Object>{
 
     @Override
     public boolean isSupported(Expression<String> expression) {
-        for (ExpressionMatcher<R, ?> expressionMatcher : expressionMatchers) {
+        for (ExpressionMatcher<TARGET> expressionMatcher : expressionMatchers) {
             if (expressionMatcher.isSupported(expression)) {
                 return true;
             }

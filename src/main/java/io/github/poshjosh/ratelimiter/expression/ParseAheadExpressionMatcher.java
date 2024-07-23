@@ -6,20 +6,20 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
-final class ParseAheadExpressionMatcher<R, T> implements ExpressionMatcher<R, T> {
+final class ParseAheadExpressionMatcher<INPUT, EXPRESSION_TYPE> implements ExpressionMatcher<INPUT> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ParseAheadExpressionMatcher.class);
 
-    private final ExpressionParser<R, T> expressionParser;
+    private final ExpressionParser<INPUT, EXPRESSION_TYPE> expressionParser;
 
-    private final ExpressionResolver<T> expressionResolver;
+    private final ExpressionResolver<EXPRESSION_TYPE> expressionResolver;
 
     private final Expression<String> expression;
-    private final T rhs;
+    private final EXPRESSION_TYPE rhs;
 
     ParseAheadExpressionMatcher(
-            ExpressionParser<R, T> expressionParser,
-            ExpressionResolver<T> expressionResolver,
+            ExpressionParser<INPUT, EXPRESSION_TYPE> expressionParser,
+            ExpressionResolver<EXPRESSION_TYPE> expressionResolver,
             Expression<String> expression) {
         if (!expressionResolver.isSupported(expression.getOperator())) {
             throw Checks.notSupported(expressionResolver,
@@ -35,8 +35,8 @@ final class ParseAheadExpressionMatcher<R, T> implements ExpressionMatcher<R, T>
     }
 
     @Override
-    public String match(R request) {
-        final T lhs = expressionParser.parseLeft(request, expression);
+    public String match(INPUT request) {
+        final EXPRESSION_TYPE lhs = expressionParser.parseLeft(request, expression);
         final Operator operator = expression.getOperator();
         final boolean success = expressionResolver.resolve(lhs, operator, rhs);
         if (LOG.isTraceEnabled()) {
@@ -48,7 +48,7 @@ final class ParseAheadExpressionMatcher<R, T> implements ExpressionMatcher<R, T>
 
 
     @Override
-    public ParseAheadExpressionMatcher<R, T> matcher(Expression<String> expression) {
+    public ParseAheadExpressionMatcher<INPUT, EXPRESSION_TYPE> matcher(Expression<String> expression) {
         return new ParseAheadExpressionMatcher<>(expressionParser, expressionResolver, expression);
     }
 

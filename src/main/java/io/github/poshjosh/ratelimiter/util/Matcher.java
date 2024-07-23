@@ -8,7 +8,7 @@ public interface Matcher<INPUT> {
     String NO_MATCH = "";
 
     Matcher<Object> MATCH_NONE = new Matcher<Object>() {
-        @Override public String match(Object target) { return Matcher.NO_MATCH; }
+        @Override public String match(Object input) { return Matcher.NO_MATCH; }
         @Override public String toString() { return Matcher.class.getSimpleName() + "$MATCH_NONE"; }
     };
 

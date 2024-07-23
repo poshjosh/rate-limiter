@@ -6,18 +6,18 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
-final class ParseAtMatchTimeExpressionMatcher<R, T> implements ExpressionMatcher<R, T> {
+final class ParseAtMatchTimeExpressionMatcher<INPUT, EXPRESSION_TYPE> implements ExpressionMatcher<INPUT> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ParseAtMatchTimeExpressionMatcher.class);
 
-    private final ExpressionParser<R, T> expressionParser;
+    private final ExpressionParser<INPUT, EXPRESSION_TYPE> expressionParser;
 
-    private final ExpressionResolver<T> expressionResolver;
+    private final ExpressionResolver<EXPRESSION_TYPE> expressionResolver;
 
     private final Expression<String> expression;
     ParseAtMatchTimeExpressionMatcher(
-            ExpressionParser<R, T> expressionParser,
-            ExpressionResolver<T> expressionResolver,
+            ExpressionParser<INPUT, EXPRESSION_TYPE> expressionParser,
+            ExpressionResolver<EXPRESSION_TYPE> expressionResolver,
             Expression<String> expression) {
         if (!expressionResolver.isSupported(expression.getOperator())) {
             throw Checks.notSupported(expressionResolver,
@@ -32,8 +32,8 @@ final class ParseAtMatchTimeExpressionMatcher<R, T> implements ExpressionMatcher
     }
 
     @Override
-    public String match(R request) {
-        final Expression<T> typedExpression = expressionParser.parse(request, expression);
+    public String match(INPUT request) {
+        final Expression<EXPRESSION_TYPE> typedExpression = expressionParser.parse(request, expression);
         final boolean success = expressionResolver.resolve(typedExpression);
         if (LOG.isTraceEnabled()) {
             LOG.trace("Success: {}, expression: typed {}, text {}",
@@ -44,7 +44,7 @@ final class ParseAtMatchTimeExpressionMatcher<R, T> implements ExpressionMatcher
     }
 
     @Override
-    public ParseAtMatchTimeExpressionMatcher<R, T> matcher(Expression<String> expression) {
+    public ParseAtMatchTimeExpressionMatcher<INPUT, EXPRESSION_TYPE> matcher(Expression<String> expression) {
         return new ParseAtMatchTimeExpressionMatcher<>(expressionParser, expressionResolver, expression);
     }
 

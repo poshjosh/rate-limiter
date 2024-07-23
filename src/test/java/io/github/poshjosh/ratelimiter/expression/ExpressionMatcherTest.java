@@ -4,22 +4,25 @@ import io.github.poshjosh.ratelimiter.util.Matcher;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ExpressionMatcherTest {
 
     @Test void matchNone_shouldNotMatchValidExpression() {
-        Matcher matcher = ExpressionMatcher.matchNone().matcher("sys.time.elapsed>PT1S").orElse(null);
-        assertNotNull(matcher);
+        Matcher<Object> matcher = ExpressionMatcher.matchNone()
+                .matcher("sys.time.elapsed>PT1S")
+                .orElseThrow(matcherCreationShouldBeSuccessful());
         assertFalse(matcher.matches(0));
         assertFalse(matcher.matches(1000));
         assertFalse(matcher.matches(System.currentTimeMillis()));
     }
 
     @Test void matchNone_shouldNotMatchInvalidExpression() {
-        Matcher matcher = ExpressionMatcher.matchNone().matcher("1=").orElse(null);
-        assertNotNull(matcher);
+        Matcher<Object> matcher = ExpressionMatcher.matchNone()
+                .matcher("1=")
+                .orElseThrow(matcherCreationShouldBeSuccessful());
         assertFalse(matcher.matches(0));
         assertFalse(matcher.matches(1000));
         assertFalse(matcher.matches(System.currentTimeMillis()));
@@ -38,33 +41,33 @@ class ExpressionMatcherTest {
     }
 
     @Test void ofSystemTimeElapsed() {
-        Matcher matcher = ExpressionMatcher.ofSystemTimeElapsed()
-                .matcher("sys.time.elapsed>PT1H").orElse(null);
-        assertNotNull(matcher);
+        Matcher<Object> matcher = ExpressionMatcher.ofSystemTimeElapsed()
+                .matcher("sys.time.elapsed>PT1H")
+                .orElseThrow(matcherCreationShouldBeSuccessful());
         assertFalse(matcher.matches(System.currentTimeMillis()));
     }
 
     @Test void ofSystemTimeElapsed_compositeOr() {
-        Matcher matcher = ExpressionMatcher.ofSystemTimeElapsed()
-                .matcher("sys.time.elapsed>=PT0S|sys.time.elapsed<PT1M").orElse(null);
-        assertNotNull(matcher);
+        Matcher<Object> matcher = ExpressionMatcher.ofSystemTimeElapsed()
+                .matcher("sys.time.elapsed>=PT0S|sys.time.elapsed<PT1M")
+                .orElseThrow(matcherCreationShouldBeSuccessful());
         assertTrue(matcher.matches(System.currentTimeMillis()));
     }
 
     @Test void ofSystemTimeElapsed_compositeAnd() {
-        Matcher matcher = ExpressionMatcher.ofSystemTimeElapsed()
-                .matcher("sys.time.elapsed>=PT0S&sys.time.elapsed<PT1M").orElse(null);
-        assertNotNull(matcher);
+        Matcher<Object> matcher = ExpressionMatcher.ofSystemTimeElapsed()
+                .matcher("sys.time.elapsed>=PT0S&sys.time.elapsed<PT1M")
+                .orElseThrow(matcherCreationShouldBeSuccessful());
         assertTrue(matcher.matches(System.currentTimeMillis()));
     }
 
     @Test void ofSystemProperty() {
         String name0 = UUID.randomUUID().toString() + "0";
         String name1 = UUID.randomUUID().toString() + "1";
-        Matcher matcher = ExpressionMatcher.ofSystemProperty()
+        Matcher<Object> matcher = ExpressionMatcher.ofSystemProperty()
                 .matcher("sys.property={user.name=" + name0 +
-                        "}|sys.property={user.name=" + name1 + "}").orElse(null);
-        assertNotNull(matcher);
+                        "}|sys.property={user.name=" + name1 + "}")
+                .orElseThrow(matcherCreationShouldBeSuccessful());
     }
 
     @Test void ofSystemEnvironment() {
@@ -72,17 +75,21 @@ class ExpressionMatcherTest {
 
     @Test void ofJvmThread_matchingId() {
         final long currentThreadId = Thread.currentThread().getId();
-        Matcher matcher = ExpressionMatcher.ofJvmThread()
-                .matcher("jvm.thread.current.id=" + currentThreadId).orElse(null);
-        assertNotNull(matcher);
+        Matcher<Object> matcher = ExpressionMatcher.ofJvmThread()
+                .matcher("jvm.thread.current.id=" + currentThreadId)
+                .orElseThrow(matcherCreationShouldBeSuccessful());
         assertTrue(matcher.matches(currentThreadId));
     }
 
     @Test void ofJvmThread_notMatchingId() {
-        Matcher matcher = ExpressionMatcher.ofJvmThread()
-                .matcher("jvm.thread.current.id=111").orElse(null);
-        assertNotNull(matcher);
+        Matcher<Object> matcher = ExpressionMatcher.ofJvmThread()
+                .matcher("jvm.thread.current.id=111")
+                .orElseThrow(matcherCreationShouldBeSuccessful());
         assertFalse(matcher.matches(222));
+    }
+
+    private Supplier<AssertionError> matcherCreationShouldBeSuccessful() {
+        return () -> new AssertionError("Matcher creation should be successful, but was not.");
     }
 
     @Test void of() {
