@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `RateLimiterFactory`. Rather use `RateLimiterRegistry` directly.
 
+### Changed
+
+- `.bandwidths.AllOrNothingBandwidth` is no longer in beta.
+
 ### Moved
 
 - Static factory methods from `.bandwidths.Bandwidth` to `.bandwidths.Bandwidths`.

@@ -1,7 +1,5 @@
 package io.github.poshjosh.ratelimiter.bandwidths;
 
-import io.github.poshjosh.ratelimiter.annotations.Beta;
-
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
@@ -11,10 +9,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * An all or nothing Bandwidth, wired to return a value between zero and stable interval for both methods
  * {@link #queryEarliestAvailable(long)} and {@link #reserveEarliestAvailable(int, long)}
- *
- * Beta
  */
-@Beta
 final class AllOrNothingBandwidth implements Bandwidth, Serializable {
 
     private static final long serialVersionUID = 90L;

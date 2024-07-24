@@ -1,6 +1,5 @@
 package io.github.poshjosh.ratelimiter.bandwidths;
 
-import io.github.poshjosh.ratelimiter.annotations.Beta;
 import io.github.poshjosh.ratelimiter.model.Rate;
 import io.github.poshjosh.ratelimiter.model.Rates;
 import io.github.poshjosh.ratelimiter.util.Operator;
@@ -57,20 +56,14 @@ public interface Bandwidths {
         return new UnmodifiableBandwidth(bandwidth);
     }
 
-    /** Beta */
-    @Beta
     static Bandwidth allOrNothing(long permitsPerSecond) {
         return allOrNothing(permitsPerSecond, Duration.ofSeconds(1));
     }
 
-    /** Beta */
-    @Beta
     static Bandwidth allOrNothing(long permits, Duration duration) {
         return allOrNothing(permits, duration, 0);
     }
 
-    /** Beta */
-    @Beta
     static Bandwidth allOrNothing(long permits, Duration duration, long nowMicros) {
         return allOrNothing(permits, duration.toNanos(), TimeUnit.NANOSECONDS, nowMicros);
     }
@@ -79,10 +72,7 @@ public interface Bandwidths {
      * Creates an {@code AllOrNothingBandwidth}, wired to return a value between
      * zero and the stable interval for {@link Bandwidth#queryEarliestAvailable(long)}
      * and {@link Bandwidth#reserveEarliestAvailable(int, long)}
-     *
-     * Beta
      */
-    @Beta
     static Bandwidth allOrNothing(long permits, long duration, TimeUnit timeUnit, long nowMicros) {
         return new AllOrNothingBandwidth(permits, duration, timeUnit, nowMicros);
     }
