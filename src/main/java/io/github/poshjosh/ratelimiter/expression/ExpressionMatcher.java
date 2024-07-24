@@ -15,7 +15,7 @@ public interface ExpressionMatcher<INPUT> extends Matcher<INPUT> {
         return ExpressionMatchers.ofDefaults();
     }
 
-    @Override String match(INPUT request);
+    @Override String match(INPUT toMatch);
 
     ExpressionMatcher<INPUT> matcher(Expression<String> expression);
 

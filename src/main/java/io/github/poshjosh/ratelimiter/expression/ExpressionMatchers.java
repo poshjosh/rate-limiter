@@ -6,7 +6,7 @@ import io.github.poshjosh.ratelimiter.util.Matchers;
 public interface ExpressionMatchers {
 
     ExpressionMatcher<Object> MATCH_NONE = new ExpressionMatcher<Object>() {
-        @Override public String match(Object input) { return Matchers.NO_MATCH; }
+        @Override public String match(Object toMatch) { return Matchers.NO_MATCH; }
         @Override public ExpressionMatcher<Object> matcher(Expression<String> expression) {
             return this;
         }

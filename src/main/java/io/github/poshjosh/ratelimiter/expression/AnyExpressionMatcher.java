@@ -5,19 +5,19 @@ import io.github.poshjosh.ratelimiter.util.Matchers;
 
 import java.util.Arrays;
 
-final class AnyExpressionMatcher<TARGET> implements ExpressionMatcher<TARGET>{
+final class AnyExpressionMatcher<INPUT> implements ExpressionMatcher<INPUT>{
 
-    private final ExpressionMatcher<TARGET>[] expressionMatchers;
+    private final ExpressionMatcher<INPUT>[] expressionMatchers;
 
-    AnyExpressionMatcher(ExpressionMatcher<TARGET>[] matchers) {
+    AnyExpressionMatcher(ExpressionMatcher<INPUT>[] matchers) {
         this.expressionMatchers = new ExpressionMatcher[matchers.length];
         System.arraycopy(matchers, 0, this.expressionMatchers, 0, matchers.length);
     }
 
     @Override
-    public String match(TARGET target) {
-        for (ExpressionMatcher<TARGET> expressionMatcher : expressionMatchers) {
-            final String match = expressionMatcher.match(target);
+    public String match(INPUT toMatch) {
+        for (ExpressionMatcher<INPUT> expressionMatcher : expressionMatchers) {
+            final String match = expressionMatcher.match(toMatch);
             if (Matcher.isMatch(match)) {
                 return match;
             }
@@ -26,8 +26,8 @@ final class AnyExpressionMatcher<TARGET> implements ExpressionMatcher<TARGET>{
     }
 
     @Override
-    public ExpressionMatcher<TARGET> matcher(Expression<String> expression) {
-        for (ExpressionMatcher<TARGET> expressionMatcher : expressionMatchers) {
+    public ExpressionMatcher<INPUT> matcher(Expression<String> expression) {
+        for (ExpressionMatcher<INPUT> expressionMatcher : expressionMatchers) {
             if (expressionMatcher.isSupported(expression)) {
                 return expressionMatcher.matcher(expression);
             }
@@ -37,7 +37,7 @@ final class AnyExpressionMatcher<TARGET> implements ExpressionMatcher<TARGET>{
 
     @Override
     public boolean isSupported(Expression<String> expression) {
-        for (ExpressionMatcher<TARGET> expressionMatcher : expressionMatchers) {
+        for (ExpressionMatcher<INPUT> expressionMatcher : expressionMatchers) {
             if (expressionMatcher.isSupported(expression)) {
                 return true;
             }

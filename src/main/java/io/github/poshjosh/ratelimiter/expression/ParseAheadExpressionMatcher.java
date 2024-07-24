@@ -35,8 +35,8 @@ final class ParseAheadExpressionMatcher<INPUT, EXPRESSION_TYPE> implements Expre
     }
 
     @Override
-    public String match(INPUT request) {
-        final EXPRESSION_TYPE lhs = expressionParser.parseLeft(request, expression);
+    public String match(INPUT toMatch) {
+        final EXPRESSION_TYPE lhs = expressionParser.parseLeft(toMatch, expression);
         final Operator operator = expression.getOperator();
         final boolean success = expressionResolver.resolve(lhs, operator, rhs);
         if (LOG.isTraceEnabled()) {

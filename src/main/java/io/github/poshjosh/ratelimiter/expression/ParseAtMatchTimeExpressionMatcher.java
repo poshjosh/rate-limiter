@@ -32,8 +32,8 @@ final class ParseAtMatchTimeExpressionMatcher<INPUT, EXPRESSION_TYPE> implements
     }
 
     @Override
-    public String match(INPUT request) {
-        final Expression<EXPRESSION_TYPE> typedExpression = expressionParser.parse(request, expression);
+    public String match(INPUT toMatch) {
+        final Expression<EXPRESSION_TYPE> typedExpression = expressionParser.parse(toMatch, expression);
         final boolean success = expressionResolver.resolve(typedExpression);
         if (LOG.isTraceEnabled()) {
             LOG.trace("Success: {}, expression: typed {}, text {}",
