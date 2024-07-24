@@ -1,6 +1,7 @@
 package io.github.poshjosh.ratelimiter.model;
 
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
+import io.github.poshjosh.ratelimiter.bandwidths.BandwidthFactories;
 import io.github.poshjosh.ratelimiter.bandwidths.BandwidthFactory;
 
 import java.time.Duration;
@@ -45,7 +46,7 @@ public final class Rate {
     }
 
     public static Rate of(long permits, Duration duration, String rateCondition) {
-        return of(permits, duration, rateCondition, BandwidthFactory.Default.class);
+        return of(permits, duration, rateCondition, BandwidthFactories.Default.class);
     }
 
     public static Rate of(long permits, Duration duration,
@@ -117,7 +118,7 @@ public final class Rate {
      * {@link Bandwidth}s from this rate limit.
      * The class must have a zero-argument constructor.
      */
-    private Class<? extends BandwidthFactory> factoryClass = BandwidthFactory.getDefaultClass();
+    private Class<? extends BandwidthFactory> factoryClass = BandwidthFactories.getDefaultClass();
 
     public Rate() { }
 
