@@ -2,8 +2,6 @@ package io.github.poshjosh.ratelimiter.expression;
 
 import io.github.poshjosh.ratelimiter.util.StringUtils;
 
-import java.time.LocalDateTime;
-
 /**
  * Parses expression of one type to another type
  * @param <C> The type of the context e.g a web request (web) or a system (sys) etc
@@ -11,38 +9,13 @@ import java.time.LocalDateTime;
  */
 public interface ExpressionParser<C, T> {
 
-    static <C> ExpressionParser<C, Long> ofJvmMemory() {
-        return new JvmMemoryExpressionParser<>();
-    }
-
-    static <C> ExpressionParser<C, LocalDateTime> ofSystemTime() {
-        return new SystemTimeExpressionParser<>();
-    }
-
-    static <C> ExpressionParser<C, Long> ofSystemTimeElapsed() {
-        return new SystemTimeElapsedExpressionParser<>();
-    }
-
-    static <C> ExpressionParser<C, String> ofSystemProperty() {
-        return new SystemPropertyExpressionParser<>();
-    }
-
-
-    static <C> ExpressionParser<C, String> ofSystemEnvironment() {
-        return new SystemEnvironmentExpressionParser<>();
-    }
-
-    static <C> ExpressionParser<C, Object> ofJvmThread() {
-        return new JvmThreadExpressionParser<>();
-    }
-
     /**
      * @param expression the expression to check if supported
      * @return true if the provided expression is supported
      * @see #isSupported(Expression java.lang.String)
      */
     default boolean isSupported(String expression) {
-        return isSupported(Expression.of(expression));
+        return isSupported(Expression.ofDefault(expression));
     }
 
     /**
@@ -56,7 +29,7 @@ public interface ExpressionParser<C, T> {
      * @return the result of parsing a string expression into another type
      */
     default Expression<T> parse(C context, Expression<String> expression) {
-        return Expression.of(
+        return Expression.ofDefault(
                 parseLeft(context, expression), parseOperator(expression), parseRight(expression));
     }
 

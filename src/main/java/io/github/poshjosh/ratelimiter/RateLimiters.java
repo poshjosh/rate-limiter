@@ -1,69 +1,32 @@
 package io.github.poshjosh.ratelimiter;
 
-import io.github.poshjosh.ratelimiter.annotations.Beta;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 import io.github.poshjosh.ratelimiter.util.Operator;
+import io.github.poshjosh.ratelimiter.util.Ticker;
+import io.github.poshjosh.ratelimiter.util.Tickers;
 
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
+public interface RateLimiters {
 
-final class RateLimiters implements RateLimiter {
+    RateLimiter NO_LIMIT = of(Bandwidths.UNLIMITED);
 
     static RateLimiter of(RateLimiter... rateLimiters) {
-        return new RateLimiters(rateLimiters);
+        return new RateLimiterArray(rateLimiters);
     }
 
-    private final RateLimiter[] rateLimiters;
-
-    private RateLimiters(RateLimiter[] rateLimiters) {
-        this.rateLimiters = Objects.requireNonNull(rateLimiters);
+    static RateLimiter of(Bandwidth... bandwidths) {
+        return of(Bandwidths.of(bandwidths));
     }
 
-    @Override
-    @Beta
-    public Bandwidth getBandwidth() {
-        if (rateLimiters.length == 0) {
-            // We have unlimited bandwidth if there is no rate limiting
-            return Bandwidths.UNLIMITED;
-        }
-        if (rateLimiters.length == 1) {
-            return rateLimiters[0].getBandwidth();
-        }
-        Bandwidth [] bandwidths = new Bandwidth[rateLimiters.length];
-        for (int i = 0; i < rateLimiters.length; i++) {
-            bandwidths[i] = rateLimiters[i].getBandwidth();
-        }
-        return Bandwidths.of(Operator.OR, bandwidths);
+    static RateLimiter of(Operator operator, Bandwidth... bandwidths) {
+        return of(Bandwidths.of(operator, bandwidths));
     }
 
-    @Override
-    public double acquire(int permits) {
-        double totalTime = 0;
-        for (RateLimiter rateLimiter : rateLimiters) {
-            final double timeSpent = rateLimiter.acquire(permits);
-            if (timeSpent > 0) { // Only increment when > 0, as some value may be negative.
-                totalTime += timeSpent;
-            }
-        }
-        return totalTime;
+    static RateLimiter of(Bandwidth bandwidth) {
+        return of(bandwidth, Tickers.ofDefaults());
     }
 
-    @Override
-    public boolean tryAcquire(int permits, long timeout, TimeUnit unit) {
-        int successCount = 0;
-        for (RateLimiter rateLimiter : rateLimiters) {
-            // We need to call all tryAcquire methods to ensure that the permits are reserved
-            if (rateLimiter.tryAcquire(permits, timeout, unit)) {
-                ++successCount;
-            }
-        }
-        return successCount == rateLimiters.length;
-    }
-
-    @Override
-    public String toString() {
-        return "RateLimiters{" + rateLimiters.length + ", " + Arrays.toString(rateLimiters) + '}';
+    static RateLimiter of(Bandwidth bandwidth, Ticker ticker) {
+        return new DefaultRateLimiter(bandwidth, ticker);
     }
 }

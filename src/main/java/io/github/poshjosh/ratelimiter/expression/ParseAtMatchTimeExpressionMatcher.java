@@ -1,6 +1,6 @@
 package io.github.poshjosh.ratelimiter.expression;
 
-import io.github.poshjosh.ratelimiter.util.Matcher;
+import io.github.poshjosh.ratelimiter.util.Matchers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ final class ParseAtMatchTimeExpressionMatcher<INPUT, EXPRESSION_TYPE> implements
                     success, typedExpression, expression);
         }
         return success ?
-                StringExprUtil.determineResult(expression, typedExpression) : Matcher.NO_MATCH;
+                StringExprUtil.determineResult(expression, typedExpression) : Matchers.NO_MATCH;
     }
 
     @Override

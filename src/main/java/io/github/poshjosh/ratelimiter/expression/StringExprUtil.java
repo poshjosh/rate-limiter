@@ -88,7 +88,7 @@ final class StringExprUtil {
         if (operator.isEmpty()) {
             throw Checks.notSupported(Expression.class, value);
         }
-        return Expression.of(lhs, operator, rhs);
+        return Expression.ofDefault(lhs, operator, rhs);
     }
 
     private static int indexOfRightExpression(String expression) {
@@ -177,7 +177,7 @@ final class StringExprUtil {
                     ? rightExpression.trim() : expression.substring(operatorEnd).trim();
             validateRhs(rhs, operators, expression);
             final String lhs = expression.substring(0, operatorStart).trim();
-            return Expression.of(lhs, operator, rhs);
+            return Expression.ofDefault(lhs, operator, rhs);
         }
         throw Checks.notSupported(Expression.class, expression);
     }

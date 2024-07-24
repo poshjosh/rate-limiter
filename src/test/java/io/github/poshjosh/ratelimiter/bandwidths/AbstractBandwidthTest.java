@@ -1,6 +1,7 @@
 package io.github.poshjosh.ratelimiter.bandwidths;
 
 import io.github.poshjosh.ratelimiter.util.Ticker;
+import io.github.poshjosh.ratelimiter.util.Tickers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -10,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public abstract class AbstractBandwidthTest {
 
-    private final Ticker ticker = Ticker.ofDefaults();
+    private final Ticker ticker = Tickers.ofDefaults();
 
     protected abstract Bandwidth getBandwidth(double permitsPerSeconds, long nowMicros);
 

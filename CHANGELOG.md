@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -
 
+## [ [0.7.2](https://github.com/poshjosh/rate-limiter/tree/v0.7.2) ] - 2024-07-26
+
+### Removed
+
+- `RateLimiterFactory`. Rather use `RateLimiterRegistry` directly.
+
+### Moved
+
+- Static factory methods from `.bandwidths.Bandwidth` to `.bandwidths.Bandwidths`.
+- Static factory methods from `.bandwidths.BandwidthFactory` to `.bandwidths.BandwidthFactories`.
+- Static factory methods from `.expression.ExpressionMatcher` to `.expression.ExpressionMatchers`.
+- Static factory methods from `.expression.ExpressionParser` to `.expression.ExpressionParsers`.
+- Static factory methods from `.expression.ExpressionResolver` to `.expression.ExpressionResolvers`.
+- Static factory methods from `.util.Matcher` to `.util.Matchers`.
+- Static factory methods from `.util.Ticker` to `.util.Tickers`.
+- Static factory methods from `.RateLimiter` to `.RateLimiters`.
+
 ## [ [0.7.1](https://github.com/poshjosh/rate-limiter/tree/v0.7.1) ] - 2024-01-26
 
 ### Added

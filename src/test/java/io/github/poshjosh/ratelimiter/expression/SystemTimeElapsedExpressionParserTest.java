@@ -5,13 +5,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import java.time.Duration;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class SystemTimeElapsedExpressionParserTest {
 
-    private final ExpressionParser<Object, Long> expressionParser = ExpressionParser.ofSystemTimeElapsed();
+    private final ExpressionParser<Object, Long> expressionParser = ExpressionParsers.ofSystemTimeElapsed();
 
     @Test
     void shouldSupport() {
@@ -30,13 +28,13 @@ class SystemTimeElapsedExpressionParserTest {
             SystemTimeElapsedExpressionParser.TIME_ELAPSED+"<PT24H",
     })
     void shouldSucceed_givenValidExpression(String value) {
-        expressionParser.parse(System.currentTimeMillis(), Expression.of(value));
+        expressionParser.parse(System.currentTimeMillis(), Expression.ofDefault(value));
     }
 
     @ParameterizedTest
     @ArgumentsSource(InvalidExpressionArgumentsProvider.class)
     void shouldFail_givenInvalidExpression(String value) {
       assertThrows(RuntimeException.class, () -> 
-              expressionParser.parse(System.currentTimeMillis(), Expression.of(value)));
+              expressionParser.parse(System.currentTimeMillis(), Expression.ofDefault(value)));
     }
 }

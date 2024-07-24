@@ -26,10 +26,10 @@ class ExpressionResolverTest {
             JvmThreadExpressionParser.CURRENT_TIME_WAITED + "<=PT0S,true",
     })
     void testJvmThreadExpression(String expressionString, String expectedResult) {
-        Expression<Object> expression = ExpressionParser.ofJvmThread()
-                .parse(this, Expression.of(expressionString));
+        Expression<Object> expression = ExpressionParsers.ofJvmThread()
+                .parse(this, Expression.ofDefault(expressionString));
         //System.out.println(expression);
-        testExpression(ExpressionResolver.ofJvmThread(), expression, expectedResult);
+        testExpression(ExpressionResolvers.ofJvmThread(), expression, expectedResult);
     }
 
     @ParameterizedTest
@@ -43,7 +43,7 @@ class ExpressionResolverTest {
     void testValidLongExpression(String lhs, String operator, String rhs, String expectedResult) {
         Long l = Long.parseLong(lhs);
         Long r = Long.parseLong(rhs);
-        testExpression(ExpressionResolver.ofLong(), l, operator, r, expectedResult);
+        testExpression(ExpressionResolvers.ofLong(), l, operator, r, expectedResult);
     }
 
     @ParameterizedTest
@@ -57,12 +57,12 @@ class ExpressionResolverTest {
     void testValidDecimalExpression(String lhs, String operator, String rhs, String expectedResult) {
         Double l = Double.parseDouble(lhs);
         Double r = Double.parseDouble(rhs);
-        testExpression(ExpressionResolver.ofDecimal(), l, operator, r, expectedResult);
+        testExpression(ExpressionResolvers.ofDecimal(), l, operator, r, expectedResult);
     }
 
     void testExpression(ExpressionResolver<?> resolver,
             Object l, String operator, Object r, String expectedResult) {
-        Expression<?> expression = Expression.of(l, operator, r);
+        Expression<?> expression = Expression.ofDefault(l, operator, r);
         testExpression(resolver, expression, expectedResult);
     }
 

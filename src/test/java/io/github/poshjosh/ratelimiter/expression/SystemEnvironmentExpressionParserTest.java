@@ -7,7 +7,7 @@ import org.junit.jupiter.params.provider.*;
 class SystemEnvironmentExpressionParserTest extends AbstractMappingStringExpressionParserTest {
 
     @Override ExpressionParser<Object, String> getExpressionParser() {
-        return ExpressionParser.ofSystemEnvironment();
+        return ExpressionParsers.ofSystemEnvironment();
     }
 
     @Override String getLHS() {
@@ -33,7 +33,7 @@ class SystemEnvironmentExpressionParserTest extends AbstractMappingStringExpress
     @Test
     void parse_shouldSucceed_givenValidExpression() {
         final String expressionStr = "sys.environment={LANG!<=C}";
-        final Expression<String> expected = Expression.of("C!<=C");
+        final Expression<String> expected = Expression.ofDefault("C!<=C");
         super.parse_shouldSucceed_givenValidExpression(expressionStr, expected);
     }
 }

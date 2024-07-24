@@ -97,7 +97,7 @@ final class Stopwatch {
     }
 
     Stopwatch() {
-        this(Ticker.SYSTEM_NANO_OFFSET);
+        this(Tickers.SYSTEM_NANO_OFFSET);
     }
 
     Stopwatch(Ticker ticker) {

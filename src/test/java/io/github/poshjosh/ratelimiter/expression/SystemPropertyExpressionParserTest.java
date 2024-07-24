@@ -6,7 +6,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 class SystemPropertyExpressionParserTest extends AbstractMappingStringExpressionParserTest {
 
     @Override ExpressionParser<Object, String> getExpressionParser() {
-        return ExpressionParser.ofSystemProperty();
+        return ExpressionParsers.ofSystemProperty();
     }
 
     @Override String getLHS() {

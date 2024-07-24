@@ -12,6 +12,7 @@ import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 import io.github.poshjosh.ratelimiter.bandwidths.SmoothBandwidth;
 import io.github.poshjosh.ratelimiter.util.Ticker;
+import io.github.poshjosh.ratelimiter.util.Tickers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -53,7 +54,7 @@ class RateLimiterTest {
     @Test
     public void testSimpleRateUpdate() {
         Bandwidth bandwidth = warmingUpBandwidth(5.0, 5);
-        RateLimiter limiter = RateLimiter.of(bandwidth);
+        RateLimiter limiter = RateLimiters.of(bandwidth);
         assertEquals(5.0, bandwidth.getPermitsPerSecond());
         setRate(bandwidth, 10.0);
         assertEquals(10.0, bandwidth.getPermitsPerSecond());
@@ -62,7 +63,7 @@ class RateLimiterTest {
     @Test
     public void testWithParameterValidation() {
         Bandwidth bandwidth = warmingUpBandwidth(5.0, 5, SECONDS);
-        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
+        RateLimiter limiter = RateLimiters.of(Bandwidths.of(bandwidth), ticker);
         assertThrowsIllegalArgumentException(() -> setRate(bandwidth, 0.0));
         assertThrowsIllegalArgumentException(() -> setRate(bandwidth, -10.0));
     }
@@ -215,7 +216,7 @@ class RateLimiterTest {
         Bandwidth bandwidth = warmingUpBandwidth(
                 2.0, 4000, MILLISECONDS, 3.0, ticker);
 
-        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
+        RateLimiter limiter = RateLimiters.of(Bandwidths.of(bandwidth), ticker);
         for (int i = 0; i < 8; i++) {
             limiter.acquire(); // // #1
         }
@@ -250,7 +251,7 @@ class RateLimiterTest {
     public void testWarmUpAndUpdateWithColdFactor() {
         Bandwidth bandwidth = warmingUpBandwidth(
                 5.0, 4000, MILLISECONDS, 10.0, ticker);
-        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
+        RateLimiter limiter = RateLimiters.of(Bandwidths.of(bandwidth), ticker);
         for (int i = 0; i < 8; i++) {
             limiter.acquire(); // #1
         }
@@ -283,7 +284,7 @@ class RateLimiterTest {
     @Test
     public void testBurstyAndUpdate() {
         Bandwidth bandwidth = burstyBandwidth(1.0, ticker);
-        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
+        RateLimiter limiter = RateLimiters.of(Bandwidths.of(bandwidth), ticker);
         limiter.acquire(1); // no wait
         limiter.acquire(1); // R1.00, to repay previous
 
@@ -349,7 +350,7 @@ class RateLimiterTest {
     @Test
     public void testInfinity_Bursty() {
         Bandwidth bandwidth = burstyBandwidth(Double.POSITIVE_INFINITY, ticker);
-        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
+        RateLimiter limiter = RateLimiters.of(Bandwidths.of(bandwidth), ticker);
         limiter.acquire(Integer.MAX_VALUE / 4);
         limiter.acquire(Integer.MAX_VALUE / 2);
         limiter.acquire(Integer.MAX_VALUE);
@@ -378,7 +379,7 @@ class RateLimiterTest {
     @Test
     public void testInfinity_BustyTimeElapsed() {
         Bandwidth bandwidth = burstyBandwidth(Double.POSITIVE_INFINITY, ticker);
-        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
+        RateLimiter limiter = RateLimiters.of(Bandwidths.of(bandwidth), ticker);
         ticker.instant += 1000000;
         setRate(bandwidth, 2.0);
         for (int i = 0; i < 5; i++) {
@@ -396,7 +397,7 @@ class RateLimiterTest {
         Bandwidth bandwidth = warmingUpBandwidth(
                 Double.POSITIVE_INFINITY, 10, SECONDS, 3.0, ticker);
 
-        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
+        RateLimiter limiter = RateLimiters.of(Bandwidths.of(bandwidth), ticker);
         limiter.acquire(Integer.MAX_VALUE / 4);
         limiter.acquire(Integer.MAX_VALUE / 2);
         limiter.acquire(Integer.MAX_VALUE);
@@ -420,7 +421,7 @@ class RateLimiterTest {
         Bandwidth bandwidth = warmingUpBandwidth(
                 Double.POSITIVE_INFINITY, 10, SECONDS, 3.0, ticker);
 
-        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
+        RateLimiter limiter = RateLimiters.of(Bandwidths.of(bandwidth), ticker);
         ticker.instant += 1000000;
         setRate(bandwidth, 1.0);
         for (int i = 0; i < 5; i++) {
@@ -436,7 +437,7 @@ class RateLimiterTest {
     @Test
     public void testWeNeverGetABurstMoreThanOneSec() {
         Bandwidth bandwidth = burstyBandwidth(1.0, ticker);
-        RateLimiter limiter = RateLimiter.of(Bandwidths.of(bandwidth), ticker);
+        RateLimiter limiter = RateLimiters.of(Bandwidths.of(bandwidth), ticker);
         int[] rates = {1000, 1, 10, 1000000, 10, 1};
         for (int rate : rates) {
             int oneSecWorthOfWork = rate;
@@ -496,16 +497,16 @@ class RateLimiterTest {
     }
 
     private static RateLimiter create(double permitsPerSecond) {
-        return create(permitsPerSecond, Ticker.ofDefaults());
+        return create(permitsPerSecond, Tickers.ofDefaults());
     }
 
     private static RateLimiter create(double permitsPerSecond, Ticker ticker) {
         Bandwidth bandwidth = burstyBandwidth(permitsPerSecond, ticker);
-        return RateLimiter.of(Bandwidths.of(bandwidth), ticker);
+        return RateLimiters.of(Bandwidths.of(bandwidth), ticker);
     }
 
     private static RateLimiter create(double permitsPerSecond, long warmupPeriod, TimeUnit unit) {
-        Ticker ticker = Ticker.ofDefaults();
+        Ticker ticker = Tickers.ofDefaults();
         return create(permitsPerSecond, warmupPeriod, unit, 3.0, ticker);
     }
 
@@ -513,17 +514,17 @@ class RateLimiterTest {
                                       double coldFactor, Ticker ticker) {
         Bandwidth bandwidth = warmingUpBandwidth(
                 permitsPerSecond, warmupPeriod, unit, coldFactor, ticker);
-        return RateLimiter.of(Bandwidths.of(bandwidth), ticker);
+        return RateLimiters.of(Bandwidths.of(bandwidth), ticker);
     }
     private static Bandwidth burstyBandwidth(double permitsPerSecond, Ticker ticker) {
         return Bandwidths.bursty(permitsPerSecond, ticker.elapsedMicros());
     }
     private static Bandwidth warmingUpBandwidth(double permitsPerSecond, long warmupPeriod) {
-        Ticker ticker = Ticker.ofDefaults();
+        Ticker ticker = Tickers.ofDefaults();
         return warmingUpBandwidth(permitsPerSecond, warmupPeriod, SECONDS, 3.0, ticker);
     }
     private static Bandwidth warmingUpBandwidth(double permitsPerSecond, long warmupPeriod, TimeUnit unit) {
-        Ticker ticker = Ticker.ofDefaults();
+        Ticker ticker = Tickers.ofDefaults();
         return warmingUpBandwidth(permitsPerSecond, warmupPeriod, unit, 3.0, ticker);
     }
     private static Bandwidth warmingUpBandwidth(

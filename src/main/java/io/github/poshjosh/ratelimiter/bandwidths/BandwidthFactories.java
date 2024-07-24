@@ -54,7 +54,7 @@ public final class BandwidthFactories {
         }
     }
 
-    public static BandwidthFactory getDefault() {
+    public static BandwidthFactory ofDefaults() {
         return getOrCreateBandwidthFactory(getDefaultClass());
     }
 
@@ -62,22 +62,22 @@ public final class BandwidthFactories {
         return BandwidthFactories.Default.class;
     }
 
-    public static BandwidthFactory bursty() {
+    public static BandwidthFactory ofBursty() {
         return getOrCreateBandwidthFactory(SmoothBursty.class);
     }
 
-    public static BandwidthFactory bursty(double maxBurstsSeconds) {
+    public static BandwidthFactory ofBursty(double maxBurstsSeconds) {
         return new SmoothBursty(maxBurstsSeconds);
     }
 
-    public static BandwidthFactory warmingUp() { return getOrCreateBandwidthFactory(SmoothWarmingUp.class); }
+    public static BandwidthFactory ofWarmingUp() { return getOrCreateBandwidthFactory(SmoothWarmingUp.class); }
 
-    public static BandwidthFactory warmingUp(long warmupPeriod, TimeUnit timeUnit,
+    public static BandwidthFactory ofWarmingUp(long warmupPeriod, TimeUnit timeUnit,
             double coldFactor) {
         return new SmoothWarmingUp(warmupPeriod, timeUnit, coldFactor);
     }
 
-    public static BandwidthFactory allOrNothing() {
+    public static BandwidthFactory ofAllOrNothing() {
         return getOrCreateBandwidthFactory(AllOrNothing.class);
     }
 

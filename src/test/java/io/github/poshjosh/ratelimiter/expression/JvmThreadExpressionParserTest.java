@@ -15,12 +15,12 @@ class JvmThreadExpressionParserTest {
             JvmThreadExpressionParser.CURRENT_STATE+"=",
     })
     void shouldSupport(String expression) {
-        assertTrue(ExpressionParser.ofJvmThread().isSupported(expression));
+        assertTrue(ExpressionParsers.ofJvmThread().isSupported(expression));
     }
 
     @Test
     void shouldNotSupport() {
-        assertFalse(ExpressionParser.ofJvmThread().isSupported("invalid="));
+        assertFalse(ExpressionParsers.ofJvmThread().isSupported("invalid="));
     }
 
     @ParameterizedTest
@@ -41,13 +41,13 @@ class JvmThreadExpressionParserTest {
             JvmThreadExpressionParser.CURRENT_TIME_WAITED + ">PT0S",
     })
     void shouldSucceed_givenValidExpression(String value) {
-        ExpressionParser.ofJvmThread().parse("", Expression.of(value));
+        ExpressionParsers.ofJvmThread().parse("", Expression.ofDefault(value));
     }
 
     @ParameterizedTest
     @ArgumentsSource(InvalidExpressionArgumentsProvider.class)
     void shouldFail_givenInvalidExpression(String value) {
       assertThrows(RuntimeException.class, () -> 
-              ExpressionParser.ofJvmThread().parse("", Expression.of(value)));
+              ExpressionParsers.ofJvmThread().parse("", Expression.ofDefault(value)));
     }
 }

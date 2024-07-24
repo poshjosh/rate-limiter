@@ -1,6 +1,7 @@
 package io.github.poshjosh.ratelimiter.performance;
 
 import io.github.poshjosh.ratelimiter.RateLimiter;
+import io.github.poshjosh.ratelimiter.RateLimiters;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 import org.junit.jupiter.api.Test;
@@ -66,6 +67,6 @@ class RateLimiterPerformanceIT {
     }
 
     public RateLimiter getRateLimiter(Bandwidth bandwidth) {
-        return RateLimiter.of(bandwidth);
+        return RateLimiters.of(bandwidth);
     }
 }

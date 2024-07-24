@@ -1,27 +1,10 @@
 package io.github.poshjosh.ratelimiter.util;
 
-import io.github.poshjosh.ratelimiter.expression.ExpressionMatcher;
-
 @FunctionalInterface
 public interface Matcher<INPUT> {
 
-    String NO_MATCH = "";
-
-    Matcher<Object> MATCH_NONE = new Matcher<Object>() {
-        @Override public String match(Object input) { return Matcher.NO_MATCH; }
-        @Override public String toString() { return Matcher.class.getSimpleName() + "$MATCH_NONE"; }
-    };
-
-    @SuppressWarnings("unchecked")
     static <T> Matcher<T> matchNone() {
-        return (Matcher<T>)MATCH_NONE;
-    }
-
-    static <T> Matcher<T> ofExpression(String expression) {
-        return ExpressionMatcher.<T>ofDefault().matcher(expression)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Not a valid expression: " + expression +
-                                ". For valid expressions see: https://github.com/poshjosh/rate-limiter/blob/master/docs/RATE-CONDITION-EXPRESSION-LANGUAGE.md"));
+        return Matchers.matchNone();
     }
 
     static String composeResults(String first, String second) {

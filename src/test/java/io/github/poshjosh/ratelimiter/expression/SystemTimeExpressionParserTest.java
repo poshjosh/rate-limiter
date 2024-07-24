@@ -11,13 +11,13 @@ class SystemTimeExpressionParserTest {
 
     @Test
     void shouldSupport() {
-        assertTrue(ExpressionParser.ofSystemTime().isSupported(
+        assertTrue(ExpressionParsers.ofSystemTime().isSupported(
                 SystemTimeExpressionParser.TIME+"="));
     }
 
     @Test
     void shouldNotSupport() {
-        assertFalse(ExpressionParser.ofSystemTime().isSupported("sys.memory="));
+        assertFalse(ExpressionParsers.ofSystemTime().isSupported("sys.memory="));
     }
 
     @ParameterizedTest
@@ -27,13 +27,13 @@ class SystemTimeExpressionParserTest {
             SystemTimeExpressionParser.TIME+"<=2023-01-18T20:14",
     })
     void shouldSucceed_givenValidExpression(String value) {
-        ExpressionParser.ofSystemTime().parse(this, Expression.of(value));
+        ExpressionParsers.ofSystemTime().parse(this, Expression.ofDefault(value));
     }
 
     @ParameterizedTest
     @ArgumentsSource(InvalidExpressionArgumentsProvider.class)
     void shouldFail_givenInvalidExpression(String value) {
       assertThrows(RuntimeException.class, () -> 
-              ExpressionParser.ofSystemTime().parse(this, Expression.of(value)));
+              ExpressionParsers.ofSystemTime().parse(this, Expression.ofDefault(value)));
     }
 }

@@ -5,7 +5,7 @@ import java.util.Objects;
 final class JvmThreadExpressionResolver extends AbstractExpressionResolver<Object> {
     private final ExpressionResolver<Long> longExpressionResolver;
     JvmThreadExpressionResolver() {
-        this.longExpressionResolver = ExpressionResolver.ofLong();
+        this.longExpressionResolver = ExpressionResolvers.ofLong();
     }
     @Override
     public boolean resolvePositive(Object left, Operator operator, Object right) {

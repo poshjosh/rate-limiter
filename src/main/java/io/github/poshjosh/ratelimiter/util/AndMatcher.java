@@ -17,11 +17,11 @@ final class AndMatcher<INPUT> implements Matcher<INPUT> {
         final String result = left.match(input);
         // If there was no match, do not continue
         if(!Matcher.isMatch(result)) {
-            return NO_MATCH;
+            return Matchers.NO_MATCH;
         }
         final String afterResult = right.match(input);
         if(!Matcher.isMatch(afterResult)) {
-            return NO_MATCH;
+            return Matchers.NO_MATCH;
         }
         return Matcher.composeResults(result, afterResult);
     }

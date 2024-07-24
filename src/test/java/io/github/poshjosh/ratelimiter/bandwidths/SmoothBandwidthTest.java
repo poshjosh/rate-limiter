@@ -1,6 +1,7 @@
 package io.github.poshjosh.ratelimiter.bandwidths;
 
 import io.github.poshjosh.ratelimiter.util.Ticker;
+import io.github.poshjosh.ratelimiter.util.Tickers;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -10,7 +11,7 @@ abstract class SmoothBandwidthTest {
 
     double permitsPerSeconds = 1;
 
-    final Ticker ticker = Ticker.ofDefaults();
+    final Ticker ticker = Tickers.ofDefaults();
 
     protected SmoothBandwidth getBandwidth() {
         return getBandwidth(permitsPerSeconds);

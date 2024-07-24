@@ -29,12 +29,13 @@ We want rate limiting to be adjusted dynamically based on specific conditions. [
 ```java
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 import io.github.poshjosh.ratelimiter.util.Matcher;
+import io.github.poshjosh.ratelimiter.util.Matchers;
 
 class DynamicRateLimiting {
 
     static RateLimiter rateLimiter = RateLimiter.of(Bandwidths.ofSeconds(1));
 
-    static Matcher matchAfter2Seconds = Matcher.ofExpression("sys.time.elapsed>PT2S");
+    static Matcher matchAfter2Seconds = Matchers.ofExpression("sys.time.elapsed>PT2S");
 
     public static void main(String[] args) throws Exception {
 

@@ -2,9 +2,6 @@ package io.github.poshjosh.ratelimiter;
 
 import io.github.poshjosh.ratelimiter.annotations.Beta;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
-import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
-import io.github.poshjosh.ratelimiter.util.Operator;
-import io.github.poshjosh.ratelimiter.util.Ticker;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -67,22 +64,8 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
  */
 public interface RateLimiter {
 
-    RateLimiter NO_LIMIT = RateLimiter.of(Bandwidths.UNLIMITED);
-
-    static RateLimiter of(Bandwidth... bandwidths) {
-        return of(Bandwidths.of(bandwidths));
-    }
-
-    static RateLimiter of(Operator operator, Bandwidth... bandwidths) {
-        return of(Bandwidths.of(operator, bandwidths));
-    }
-
-    static RateLimiter of(Bandwidth bandwidth) {
-        return of(bandwidth, Ticker.ofDefaults());
-    }
-
-    static RateLimiter of(Bandwidth bandwidth, Ticker ticker) {
-        return new DefaultRateLimiter(bandwidth, ticker);
+    static RateLimiter noLimit() {
+        return RateLimiters.NO_LIMIT;
     }
 
     /**

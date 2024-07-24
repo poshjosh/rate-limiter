@@ -28,7 +28,7 @@ final class OrMatcher<INPUT> implements Matcher<INPUT> {
             if (rightIsMatch) {
                 return rightMatch;
             } else {
-                return Matcher.NO_MATCH;
+                return Matchers.NO_MATCH;
             }
         }
     }

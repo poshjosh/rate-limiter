@@ -1,6 +1,7 @@
 package io.github.poshjosh.ratelimiter.expression;
 
 import io.github.poshjosh.ratelimiter.util.Matcher;
+import io.github.poshjosh.ratelimiter.util.Matchers;
 
 import java.util.Arrays;
 
@@ -21,7 +22,7 @@ final class AnyExpressionMatcher<TARGET> implements ExpressionMatcher<TARGET>{
                 return match;
             }
         }
-        return Matcher.NO_MATCH;
+        return Matchers.NO_MATCH;
     }
 
     @Override

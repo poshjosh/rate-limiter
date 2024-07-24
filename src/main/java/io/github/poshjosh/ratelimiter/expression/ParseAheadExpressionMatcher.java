@@ -1,6 +1,6 @@
 package io.github.poshjosh.ratelimiter.expression;
 
-import io.github.poshjosh.ratelimiter.util.Matcher;
+import io.github.poshjosh.ratelimiter.util.Matchers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +43,7 @@ final class ParseAheadExpressionMatcher<INPUT, EXPRESSION_TYPE> implements Expre
             LOG.trace("Result: {}, expression: typed {}, text {}",
                     success, StringExprUtil.buildId(lhs, operator, rhs), expression);
         }
-        return success ? StringExprUtil.determineResult(expression, lhs, rhs) : Matcher.NO_MATCH;
+        return success ? StringExprUtil.determineResult(expression, lhs, rhs) : Matchers.NO_MATCH;
     }
 
 
