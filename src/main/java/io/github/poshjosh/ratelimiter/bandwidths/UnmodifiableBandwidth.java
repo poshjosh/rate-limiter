@@ -14,12 +14,6 @@ final class UnmodifiableBandwidth implements Bandwidth {
     }
 
     @Override
-    @Deprecated
-    public boolean canAcquire(long nowMicros, long timeoutMicros) {
-        return delegate.canAcquire(nowMicros, timeoutMicros);
-    }
-
-    @Override
     public boolean isAvailable(long nowMicros, long timeoutMicros) {
         return delegate.isAvailable(nowMicros, timeoutMicros);
     }

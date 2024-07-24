@@ -2,6 +2,7 @@ package io.github.poshjosh.ratelimiter.performance;
 
 import io.github.poshjosh.ratelimiter.RateLimiter;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
+import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -17,31 +18,31 @@ class RateLimiterPerformanceIT {
     @Test
     void tryAcquire_givenAllOrNothingBandwidth_shouldConsumeLimitedTimeAndMemory() {
         recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
-                Bandwidth.allOrNothing(PERMITS_PER_SECOND), 10_000, Usage.of(10, 3000));
+                Bandwidths.allOrNothing(PERMITS_PER_SECOND), 10_000, Usage.of(10, 3000));
         recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
-                Bandwidth.allOrNothing(PERMITS_PER_SECOND), 100_000, Usage.of(20, 3_000_000));
+                Bandwidths.allOrNothing(PERMITS_PER_SECOND), 100_000, Usage.of(20, 3_000_000));
         recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
-                Bandwidth.allOrNothing(PERMITS_PER_SECOND), 1_000_000, Usage.of(100, 30_000_000));
+                Bandwidths.allOrNothing(PERMITS_PER_SECOND), 1_000_000, Usage.of(100, 30_000_000));
     }
 
     @Test
     void tryAcquire_givenBurstyBandwidth_shouldConsumeLimitedTimeAndMemory() {
         recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
-                Bandwidth.bursty(PERMITS_PER_SECOND), 10_000, Usage.of(10, 3000));
+                Bandwidths.bursty(PERMITS_PER_SECOND), 10_000, Usage.of(10, 3000));
         recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
-                Bandwidth.bursty(PERMITS_PER_SECOND), 100_000, Usage.of(20, 3000));
+                Bandwidths.bursty(PERMITS_PER_SECOND), 100_000, Usage.of(20, 3000));
         recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
-                Bandwidth.bursty(PERMITS_PER_SECOND), 1_000_000, Usage.of(50, 3000));
+                Bandwidths.bursty(PERMITS_PER_SECOND), 1_000_000, Usage.of(50, 3000));
     }
 
     @Test
     void tryAcquire_givenWarmingUpBandwidth_shouldConsumeLimitedTimeAndMemory() {
         recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
-                Bandwidth.warmingUp(PERMITS_PER_SECOND), 10_000, Usage.of(10, 3000));
+                Bandwidths.warmingUp(PERMITS_PER_SECOND), 10_000, Usage.of(10, 3000));
         recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
-                Bandwidth.warmingUp(PERMITS_PER_SECOND), 100_000, Usage.of(20, 3000));
+                Bandwidths.warmingUp(PERMITS_PER_SECOND), 100_000, Usage.of(20, 3000));
         recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(
-                Bandwidth.warmingUp(PERMITS_PER_SECOND), 1_000_000, Usage.of(50, 3000));
+                Bandwidths.warmingUp(PERMITS_PER_SECOND), 1_000_000, Usage.of(50, 3000));
     }
 
     void recordMethodInvocationsShouldConsumeLimitedTimeAndMemory(

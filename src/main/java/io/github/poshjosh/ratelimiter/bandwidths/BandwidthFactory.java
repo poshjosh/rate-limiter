@@ -41,7 +41,7 @@ public interface BandwidthFactory {
             return createNew(SmoothWarmingUp.toPermitsPerSecond(permits, duration, timeUnit), nowMicros);
         }
         private Bandwidth createNew(double permitsPerSecond, long nowMicros) {
-            return Bandwidth.bursty(permitsPerSecond, nowMicros, maxBurstsSeconds);
+            return Bandwidths.bursty(permitsPerSecond, nowMicros, maxBurstsSeconds);
         }
         @Override
         public String toString() { return "BandwidthFactory$SmoothBursty{maxBurstsSeconds=" + maxBurstsSeconds + '}'; }
@@ -64,7 +64,7 @@ public interface BandwidthFactory {
             return createNew(toPermitsPerSecond(permits, duration, timeUnit), nowMicros);
         }
         private Bandwidth createNew(double permitsPerSecond, long nowMicros) {
-            return Bandwidth.warmingUp(permitsPerSecond, nowMicros, warmupPeriod, timeUnit, coldFactor);
+            return Bandwidths.warmingUp(permitsPerSecond, nowMicros, warmupPeriod, timeUnit, coldFactor);
         }
         private static double toPermitsPerSecond(final long permits, final long duration, final TimeUnit timeUnit) {
             // We use the highest precision
@@ -84,7 +84,7 @@ public interface BandwidthFactory {
     final class AllOrNothing implements BandwidthFactory {
         @Override
         public Bandwidth createNew(long permits, long duration, TimeUnit timeUnit, long nowMicros) {
-            return Bandwidth.allOrNothing(permits, duration, timeUnit, nowMicros);
+            return Bandwidths.allOrNothing(permits, duration, timeUnit, nowMicros);
         }
         @Override
         public String toString() {

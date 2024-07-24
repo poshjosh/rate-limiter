@@ -76,7 +76,7 @@ We have a list of tasks to execute, but we don't want to submit more than 2 per 
 
 ```java
 class Throttling {
-  final RateLimiter rateLimiter = RateLimiter.of(Bandwidth.bursty(2.0)); // 2 permits per second
+  final RateLimiter rateLimiter = RateLimiter.of(Bandwidths.bursty(2.0)); // 2 permits per second
   void submitTasks(List<Runnable> tasks, Executor executor) {
     for (Runnable task : tasks) {
       rateLimiter.acquire(); // may wait
@@ -91,7 +91,7 @@ by requiring a permit per byte, and specifying a rate of 5000 permits per second
 
 ```java
 class DataCap {
-  final RateLimiter rateLimiter = RateLimiter.of(Bandwidth.bursty(5000.0)); // 5000 permits per second
+  final RateLimiter rateLimiter = RateLimiter.of(Bandwidths.bursty(5000.0)); // 5000 permits per second
   void submitPacket(byte[] packet) {
     rateLimiter.acquire(packet.length);
     networkService.send(packet);

@@ -17,7 +17,7 @@ public interface RateToBandwidthConverter {
     Bandwidth convert(Rate rate);
 
     default Bandwidth convert(Rates rates) {
-        return convert(rates, Bandwidth.UNLIMITED);
+        return convert(rates, Bandwidths.UNLIMITED);
     }
 
     Bandwidth convert(Rates rates, Bandwidth resultIfNone);

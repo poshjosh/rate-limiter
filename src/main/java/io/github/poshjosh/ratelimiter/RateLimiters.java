@@ -6,10 +6,8 @@ import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 import io.github.poshjosh.ratelimiter.util.Operator;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 final class RateLimiters implements RateLimiter {
 
@@ -28,7 +26,7 @@ final class RateLimiters implements RateLimiter {
     public Bandwidth getBandwidth() {
         if (rateLimiters.length == 0) {
             // We have unlimited bandwidth if there is no rate limiting
-            return Bandwidth.UNLIMITED;
+            return Bandwidths.UNLIMITED;
         }
         if (rateLimiters.length == 1) {
             return rateLimiters[0].getBandwidth();

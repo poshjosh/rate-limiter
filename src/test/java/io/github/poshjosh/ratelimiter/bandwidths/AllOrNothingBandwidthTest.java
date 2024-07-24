@@ -8,6 +8,6 @@ public class AllOrNothingBandwidthTest extends AbstractBandwidthTest{
         if (permitsPerSeconds != (long)permitsPerSeconds) {
             throw new UnsupportedOperationException("Floating point not supported by this implementation");
         }
-        return Bandwidth.allOrNothing((long)permitsPerSeconds, Duration.ofSeconds(1), nowMicros);
+        return Bandwidths.allOrNothing((long)permitsPerSeconds, Duration.ofSeconds(1), nowMicros);
     }
 }

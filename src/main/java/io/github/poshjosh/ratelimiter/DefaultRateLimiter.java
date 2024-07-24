@@ -108,7 +108,7 @@ final class DefaultRateLimiter implements RateLimiter {
     public String toString() {
         final StringBuilder builder = new StringBuilder(256);
         builder.append("DefaultRateLimiter{");
-        if (!Bandwidth.UNLIMITED.equals(bandwidth)) {
+        if (!Bandwidths.UNLIMITED.equals(bandwidth)) {
             builder.append("rate=");
             builder.append(String.format(Locale.ROOT, "%3.1f", bandwidth.getPermitsPerSecond()));
             builder.append("/sec, ");

@@ -21,17 +21,17 @@ final class BandwidthArray implements Bandwidth, Serializable {
     static Bandwidth of(Operator operator, Bandwidth... bandwidths) {
 
         if (bandwidths.length == 0) {
-            return Bandwidth.UNLIMITED;
+            return Bandwidths.UNLIMITED;
         }
 
-        if (bandwidths.length == 1 && Bandwidth.UNLIMITED.equals(bandwidths[0])) {
-            return Bandwidth.UNLIMITED;
+        if (bandwidths.length == 1 && Bandwidths.UNLIMITED.equals(bandwidths[0])) {
+            return Bandwidths.UNLIMITED;
         }
 
         bandwidths = copyWithoutUnlimitedInstances(bandwidths);
 
         if (bandwidths.length == 0) {
-            return Bandwidth.UNLIMITED;
+            return Bandwidths.UNLIMITED;
         }
 
         if (bandwidths.length == 1) {
@@ -49,7 +49,7 @@ final class BandwidthArray implements Bandwidth, Serializable {
         final Bandwidth[] result = new Bandwidth[bandwidths.length - numOfUnlimited];
         int skipped = 0;
         for(int i = 0; i < bandwidths.length; i++) {
-            if (Bandwidth.UNLIMITED.equals(bandwidths[i])) {
+            if (Bandwidths.UNLIMITED.equals(bandwidths[i])) {
                 ++skipped;
                 continue;
             }
@@ -64,7 +64,7 @@ final class BandwidthArray implements Bandwidth, Serializable {
         }
         int count = 0;
         for(Bandwidth bandwidth : bandwidths) {
-            if (Bandwidth.UNLIMITED.equals(bandwidth)) {
+            if (Bandwidths.UNLIMITED.equals(bandwidth)) {
                 ++count;
             }
         }

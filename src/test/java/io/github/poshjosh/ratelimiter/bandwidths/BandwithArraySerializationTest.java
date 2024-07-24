@@ -12,8 +12,8 @@ class BandwithArraySerializationTest extends SerializationTest<BandwidthArray> {
     }
 
     void testSerialization(double permitsPerSecond, long nowMicros, long warmUpPeriodSeconds) {
-        Bandwidth a = Bandwidth.bursty(permitsPerSecond, nowMicros);
-        Bandwidth b = Bandwidth.warmingUp(permitsPerSecond, nowMicros, warmUpPeriodSeconds);
+        Bandwidth a = Bandwidths.bursty(permitsPerSecond, nowMicros);
+        Bandwidth b = Bandwidths.warmingUp(permitsPerSecond, nowMicros, warmUpPeriodSeconds);
         super.testSerialization((BandwidthArray)Bandwidths.and(a, b));
         super.testSerialization((BandwidthArray)Bandwidths.or(a, b));
     }

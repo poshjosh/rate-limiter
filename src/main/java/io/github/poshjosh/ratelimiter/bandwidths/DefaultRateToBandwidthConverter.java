@@ -22,7 +22,7 @@ final class DefaultRateToBandwidthConverter implements RateToBandwidthConverter 
     @Override
     public Bandwidth convert(Rate rate) {
         if (!rate.isSet()) {
-            return Bandwidth.UNLIMITED;
+            return Bandwidths.UNLIMITED;
         }
         final BandwidthFactory factory = BandwidthFactories
                 .getOrCreateBandwidthFactory(rate.getFactoryClass());

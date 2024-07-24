@@ -71,7 +71,7 @@ class BandwidthTest {
 
     @Test
     void testAllOrNothing() {
-        BandwidthFactory bandwidthFactory = Bandwidth::allOrNothing;
+        BandwidthFactory bandwidthFactory = Bandwidths::allOrNothing;
         // This fails because by the time we get to 2, we would have entered the 2nd millisecond
         //testAllOrNothing(bandwidthFactory, 2, 1, MILLISECONDS);
         testAllOrNothing(bandwidthFactory, 1, 10, SECONDS);
@@ -104,7 +104,7 @@ class BandwidthTest {
 
     private BandwidthFactory burstyBandwidthFactory() {
         return (permits, duration, unit, now) ->
-                Bandwidth.bursty(toPermitsPerSecond(permits, duration, unit), now);
+                Bandwidths.bursty(toPermitsPerSecond(permits, duration, unit), now);
     }
 
     @ParameterizedTest
@@ -116,7 +116,7 @@ class BandwidthTest {
     private BandwidthFactory warmingUpBandwidthFactory() {
         // Note the behaviour differs for different values of: warmupPeriod and coldFactor.
         return (permits, duration, unit, now) ->
-                Bandwidth.warmingUp(toPermitsPerSecond(permits, duration, unit), now, 1, SECONDS, 1);
+                Bandwidths.warmingUp(toPermitsPerSecond(permits, duration, unit), now, 1, SECONDS, 1);
     }
 
     private double toPermitsPerSecond(final long amount, final long duration, final TimeUnit timeUnit) {
@@ -131,7 +131,7 @@ class BandwidthTest {
     @ParameterizedTest
     @EnumSource(Operator.class)
     void testAllOrNothingBandwidths(Operator operator) {
-        testBandwidths(Bandwidth::allOrNothing, operator, false);
+        testBandwidths(Bandwidths::allOrNothing, operator, false);
     }
 
     private void testBandwidths(BandwidthFactory bandwidthFactory, Operator operator, boolean useInterval) {

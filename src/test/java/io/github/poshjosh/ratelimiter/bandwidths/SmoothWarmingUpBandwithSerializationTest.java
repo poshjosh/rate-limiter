@@ -13,6 +13,6 @@ class SmoothWarmingUpBandwithSerializationTest extends SerializationTest<SmoothW
 
     void testSerialization(double permitsPerSecond, long nowMicros, long warmupPeriodSeconds) {
         super.testSerialization((SmoothWarmingUpBandwidth)
-                Bandwidth.warmingUp(permitsPerSecond, nowMicros, warmupPeriodSeconds));
+                Bandwidths.warmingUp(permitsPerSecond, nowMicros, warmupPeriodSeconds));
     }
 }

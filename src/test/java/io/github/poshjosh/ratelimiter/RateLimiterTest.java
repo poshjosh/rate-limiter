@@ -516,7 +516,7 @@ class RateLimiterTest {
         return RateLimiter.of(Bandwidths.of(bandwidth), ticker);
     }
     private static Bandwidth burstyBandwidth(double permitsPerSecond, Ticker ticker) {
-        return Bandwidth.bursty(permitsPerSecond, ticker.elapsedMicros());
+        return Bandwidths.bursty(permitsPerSecond, ticker.elapsedMicros());
     }
     private static Bandwidth warmingUpBandwidth(double permitsPerSecond, long warmupPeriod) {
         Ticker ticker = Ticker.ofDefaults();
@@ -529,7 +529,7 @@ class RateLimiterTest {
     private static Bandwidth warmingUpBandwidth(
             double permitsPerSecond, long warmupPeriod, TimeUnit unit,
             double coldFactor, Ticker ticker) {
-        return Bandwidth
+        return Bandwidths
                 .warmingUp(permitsPerSecond, ticker.elapsedMicros(), warmupPeriod, unit, coldFactor);
     }
 
