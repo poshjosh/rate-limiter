@@ -1,6 +1,6 @@
 package io.github.poshjosh.ratelimiter.expression;
 
-abstract class AbstractStringMappingExpressionParser<S> implements ExpressionParser<S, String> {
+abstract class AbstractStringMappingExpressionParser<CONTEXT> implements ExpressionParser<CONTEXT, String> {
 
     AbstractStringMappingExpressionParser() { }
 
@@ -14,7 +14,7 @@ abstract class AbstractStringMappingExpressionParser<S> implements ExpressionPar
     }
 
     @Override
-    public String parseLeft(S context, Expression<String> expression) {
+    public String parseLeft(CONTEXT context, Expression<String> expression) {
         Expression<String> rhs = expression.requireRightAsExpression();
         String name = rhs.requireLeft();
         return getValue(name);

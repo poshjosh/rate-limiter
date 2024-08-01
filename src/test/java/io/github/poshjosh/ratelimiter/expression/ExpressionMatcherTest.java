@@ -4,6 +4,7 @@ import io.github.poshjosh.ratelimiter.util.Matcher;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,7 +17,7 @@ class ExpressionMatcherTest {
                 .orElseThrow(matcherCreationShouldBeSuccessful());
         assertFalse(matcher.matches(0));
         assertFalse(matcher.matches(1000));
-        assertFalse(matcher.matches(System.currentTimeMillis()));
+        assertFalse(matcher.matches(null));
     }
 
     @Test void matchNone_shouldNotMatchInvalidExpression() {
@@ -25,7 +26,7 @@ class ExpressionMatcherTest {
                 .orElseThrow(matcherCreationShouldBeSuccessful());
         assertFalse(matcher.matches(0));
         assertFalse(matcher.matches(1000));
-        assertFalse(matcher.matches(System.currentTimeMillis()));
+        assertFalse(matcher.matches(null));
     }
 
     @Test void ofDefault() {
@@ -47,9 +48,30 @@ class ExpressionMatcherTest {
         assertFalse(matcher.matches(System.currentTimeMillis()));
     }
 
+    @Test void ofSystemTimeElapsed_givenCustomStartTime() {
+        Matcher<Object> matcher = ExpressionMatchers.ofSystemTimeElapsed()
+                .matcher("sys.time.elapsed>PT1H")
+                .orElseThrow(matcherCreationShouldBeSuccessful());
+        assertTrue(matcher.matches(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3)));
+    }
+
+    @Test void ofSystemTimeElapsed_givenNullStartTime() {
+        Matcher<Object> matcher = ExpressionMatchers.ofSystemTimeElapsed()
+                .matcher("sys.time.elapsed>PT0S")
+                .orElseThrow(matcherCreationShouldBeSuccessful());
+        assertTrue(matcher.matches(null));
+    }
+
     @Test void ofSystemTimeElapsed_compositeOr() {
         Matcher<Object> matcher = ExpressionMatchers.ofSystemTimeElapsed()
                 .matcher("sys.time.elapsed>=PT0S|sys.time.elapsed<PT1M")
+                .orElseThrow(matcherCreationShouldBeSuccessful());
+        assertTrue(matcher.matches(System.currentTimeMillis()));
+    }
+
+    @Test void ofDefaults_compositeAnd() {
+        Matcher<Object> matcher = ExpressionMatchers.ofDefaults()
+                .matcher("sys.time.elapsed>=PT0S&jvm.thread.count<1000")
                 .orElseThrow(matcherCreationShouldBeSuccessful());
         assertTrue(matcher.matches(System.currentTimeMillis()));
     }

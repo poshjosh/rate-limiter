@@ -7,7 +7,7 @@ import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.time.Duration;
 
-final class JvmThreadExpressionParser<S> implements ExpressionParser<S, Object> {
+final class JvmThreadExpressionParser<CONTEXT> implements ExpressionParser<CONTEXT, Object> {
 
     public static final String COUNT = "jvm.thread.count";
     public static final String COUNT_DAEMON = "jvm.thread.count.daemon";
@@ -56,7 +56,7 @@ final class JvmThreadExpressionParser<S> implements ExpressionParser<S, Object> 
     }
 
     @Override
-    public Object parseLeft(S context, Expression<String> expression) {
+    public Object parseLeft(CONTEXT context, Expression<String> expression) {
         final String lhs = expression.requireLeft();
         switch (lhs) {
             case COUNT:
@@ -98,11 +98,11 @@ final class JvmThreadExpressionParser<S> implements ExpressionParser<S, Object> 
         return array == null ? 0 : array.length;
     }
 
-    private ThreadInfo threadInfo(S source) {
+    private ThreadInfo threadInfo(CONTEXT source) {
         return threadMXBean.getThreadInfo(getThreadId(source));
     }
 
-    private long getThreadId(S source) {
+    private long getThreadId(CONTEXT source) {
         if (source instanceof Long) {
             return (Long)source;
         }

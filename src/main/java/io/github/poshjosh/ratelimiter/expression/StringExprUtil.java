@@ -73,7 +73,7 @@ final class StringExprUtil {
         return "{" + left + operator.getSymbol() + right + "}";
     }
 
-    public static Expression<String> splitIntoExpression(String value) {
+    public static Expression<String> toExpression(String value) {
         Matcher m = operatorPattern.matcher(value);
         final String lhs;
         final String operator;
@@ -148,16 +148,16 @@ final class StringExprUtil {
     }
 
     // Stats
-    // splitIntoExpression(String)
+    // toExpression(String)
     // Spent memory: 8084KB, time: 25mils
     // Spent memory: 8084KB, time: 23mils
     // Spent memory: 8084KB, time: 23mils
-    // splitIntoExpression(String)
+    // toExpression(String)
     // Spent memory: 8084KB, time: 19mils
     // Spent memory: 8084KB, time: 19mils
     // Spent memory: 8084KB, time: 19mils
     @Experimental
-    static Expression<String> splitIntoExpression2(String expression) {
+    static Expression<String> toExpression2(String expression) {
         final int rightExprStart = indexOfRightExpression(expression);
         final String rightExpression = rightExprStart == -1
                 ? null : expression.substring(rightExprStart);

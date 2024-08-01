@@ -1,6 +1,7 @@
 package io.github.poshjosh.ratelimiter.expression;
 
-final class SystemEnvironmentExpressionParser<S> extends AbstractStringMappingExpressionParser<S> {
+final class SystemEnvironmentExpressionParser<CONTEXT>
+        extends AbstractStringMappingExpressionParser<CONTEXT> {
 
     static final String LHS = "sys.environment";
 

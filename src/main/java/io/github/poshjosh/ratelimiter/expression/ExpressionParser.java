@@ -1,13 +1,11 @@
 package io.github.poshjosh.ratelimiter.expression;
 
-import io.github.poshjosh.ratelimiter.util.StringUtils;
-
 /**
  * Parses expression of one type to another type
- * @param <C> The type of the context e.g a web request (web) or a system (sys) etc
- * @param <T> The type of the resulting expression
+ * @param <CONTEXT> The type of the context e.g a web request (web) or a system (sys) etc
+ * @param <OPERAND_TYPE> The type of the resulting expression
  */
-public interface ExpressionParser<C, T> {
+public interface ExpressionParser<CONTEXT, OPERAND_TYPE> {
 
     /**
      * @param expression the expression to check if supported
@@ -28,12 +26,12 @@ public interface ExpressionParser<C, T> {
      * Parse a string expression into another type of expression
      * @return the result of parsing a string expression into another type
      */
-    default Expression<T> parse(C context, Expression<String> expression) {
+    default Expression<OPERAND_TYPE> parse(CONTEXT context, Expression<String> expression) {
         return Expression.ofDefault(
                 parseLeft(context, expression), parseOperator(expression), parseRight(expression));
     }
 
-    T parseLeft(C context, Expression<String> expression);
+    OPERAND_TYPE parseLeft(CONTEXT context, Expression<String> expression);
 
     /**
      * Parse the operator from the expression
@@ -43,28 +41,12 @@ public interface ExpressionParser<C, T> {
      */
     default Operator parseOperator(Expression<String> expression) {
         final String rhsText = expression.getRightOrDefault("");
-        if (StringUtils.hasText(rhsText)) {
-            final Operator [] operators = Operator.valuesInMatchSuitableOrder();
-            for(Operator operator : operators) {
-                if (rhsText.contains(operator.getSymbol())) {
-                    return operator;
-                }
-            }
-        }
-        return expression.getOperator();
+        return Operator.getOperatorIn(rhsText, expression.getOperator());
     }
     default boolean isRightAnExpression(Expression<String> expression) {
         final String rhsText = expression.getRightOrDefault("");
-        if (StringUtils.hasText(rhsText)) {
-            final Operator [] operators = Operator.valuesInMatchSuitableOrder();
-            for(Operator operator : operators) {
-                if (rhsText.contains(operator.getSymbol())) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return Operator.getOperatorIn(rhsText, null) != null;
     }
 
-    T parseRight(Expression<String> expression);
+    OPERAND_TYPE parseRight(Expression<String> expression);
 }

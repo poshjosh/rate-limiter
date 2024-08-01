@@ -21,7 +21,7 @@ class StringExprUtilTest {
             "something,=,{key=[a&b]}"
     })
     void testValidExpressions(String lhs, String operator, String rhs) {
-        Expression<String> expression = StringExprUtil.splitIntoExpression(lhs + operator + rhs);
+        Expression<String> expression = StringExprUtil.toExpression(lhs + operator + rhs);
         assertEquals(lhs, expression.getLeftOrDefault(null));
         assertEquals(operator, expression.getOperator().getSymbol());
         assertEquals(rhs, expression.getRightOrDefault(null));
@@ -34,7 +34,7 @@ class StringExprUtilTest {
             "1_000"
     })
     void testInValidExpressions(String expression) {
-        assertThrows(RuntimeException.class, () -> StringExprUtil.splitIntoExpression(expression));
+        assertThrows(RuntimeException.class, () -> StringExprUtil.toExpression(expression));
     }
 
 

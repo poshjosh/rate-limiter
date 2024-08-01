@@ -4,7 +4,7 @@ import io.github.poshjosh.ratelimiter.util.StringUtils;
 
 import java.time.LocalDateTime;
 
-final class SystemTimeExpressionParser<S> implements ExpressionParser<S, LocalDateTime> {
+final class SystemTimeExpressionParser<CONTEXT> implements ExpressionParser<CONTEXT, LocalDateTime> {
 
     public static final String TIME = "sys.time";
 
@@ -20,7 +20,7 @@ final class SystemTimeExpressionParser<S> implements ExpressionParser<S, LocalDa
     }
 
     @Override
-    public LocalDateTime parseLeft(S context, Expression<String> expression) {
+    public LocalDateTime parseLeft(CONTEXT context, Expression<String> expression) {
         final String lhs = expression.requireLeft();
         if (TIME.equals(lhs)) {
             return LocalDateTime.now();

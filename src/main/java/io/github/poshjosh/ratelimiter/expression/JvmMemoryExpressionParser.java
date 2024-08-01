@@ -4,7 +4,7 @@ import io.github.poshjosh.ratelimiter.util.StringUtils;
 
 import java.util.Locale;
 
-final class JvmMemoryExpressionParser<S> implements ExpressionParser<S, Long> {
+final class JvmMemoryExpressionParser<CONTEXT> implements ExpressionParser<CONTEXT, Long> {
 
     public static final String MEMORY_AVAILABLE = "jvm.memory.available";
     public static final String MEMORY_FREE = "jvm.memory.free";
@@ -33,7 +33,7 @@ final class JvmMemoryExpressionParser<S> implements ExpressionParser<S, Long> {
     }
 
     @Override
-    public Long parseLeft(S context, Expression<String> expression) {
+    public Long parseLeft(CONTEXT context, Expression<String> expression) {
         final String lhs = expression.requireLeft();
         switch (lhs) {
             case MEMORY_AVAILABLE:

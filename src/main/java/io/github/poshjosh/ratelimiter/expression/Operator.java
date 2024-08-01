@@ -1,5 +1,7 @@
 package io.github.poshjosh.ratelimiter.expression;
 
+import io.github.poshjosh.ratelimiter.util.StringUtils;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -21,6 +23,15 @@ public final class Operator {
     public static final Operator NOT_LIKE = new Operator("!%", Type.STRING);
     public static final Operator NOT_STARTS_WITH = new Operator("!^", Type.STRING);
     public static final Operator NOT_ENDS_WITH = new Operator("!$", Type.STRING);
+
+    /**
+     * We want to match in this order.
+     * In this order:
+     * <ul>
+     *     <li>The negations come first: e.g "!>=" comes before ">="</li>
+     *     <li>The compound form comes first: e.g: "<=" comes before "="</li>
+     * </ul>
+     */
     private static final Operator [] VALUES_IN_MATCH_SUITABLE_ORDER = new Operator[]{
             NOT_GREATER_OR_EQUALS, NOT_LESS_OR_EQUALS, NOT_EQUALS, NOT_GREATER, NOT_LESS,
             NOT_LIKE, NOT_STARTS_WITH, NOT_ENDS_WITH,
@@ -32,13 +43,8 @@ public final class Operator {
     }
 
     /**
-     * We want to match in this order.
-     * In this order:
-     * <ul>
-     *     <li>The negations come first: e.g "!>=" comes before ">="</li>
-     *     <li>The compound form comes first: e.g: "<=" comes before "="</li>
-     * </ul>
-     * @return
+     * @see #VALUES_IN_MATCH_SUITABLE_ORDER
+     * @return An array of the values in the order they should be matched
      */
     static Operator[] valuesInMatchSuitableOrder() {
         return VALUES_IN_MATCH_SUITABLE_ORDER;
@@ -58,6 +64,17 @@ public final class Operator {
             case "$": return ENDS_WITH;
             default: throw Checks.notSupported(Operator.class, symbol);
         }
+    }
+    static Operator getOperatorIn(String expression, Operator resultIfNone) {
+        if (StringUtils.hasText(expression)) {
+            final Operator [] operators = valuesInMatchSuitableOrder();
+            for(Operator operator : operators) {
+                if (expression.contains(operator.getSymbol())) {
+                    return operator;
+                }
+            }
+        }
+        return resultIfNone;
     }
     private final String symbol;
     private final Type [] types;

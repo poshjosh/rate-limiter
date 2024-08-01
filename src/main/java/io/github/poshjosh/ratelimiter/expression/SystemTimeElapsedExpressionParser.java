@@ -4,7 +4,7 @@ import io.github.poshjosh.ratelimiter.util.StringUtils;
 
 import java.time.Duration;
 
-final class SystemTimeElapsedExpressionParser<S> implements ExpressionParser<S, Long> {
+final class SystemTimeElapsedExpressionParser<CONTEXT> implements ExpressionParser<CONTEXT, Long> {
 
     private static long TIME_AT_STARTUP = System.currentTimeMillis();
     public static final String TIME_ELAPSED = "sys.time.elapsed";
@@ -21,7 +21,7 @@ final class SystemTimeElapsedExpressionParser<S> implements ExpressionParser<S, 
     }
 
     @Override
-    public Long parseLeft(S context, Expression<String> expression) {
+    public Long parseLeft(CONTEXT context, Expression<String> expression) {
         final String lhs = expression.requireLeft();
         if (TIME_ELAPSED.equals(lhs)) {
             return System.currentTimeMillis() - getStartTime(context);
@@ -29,7 +29,7 @@ final class SystemTimeElapsedExpressionParser<S> implements ExpressionParser<S, 
         throw Checks.notSupported(this, lhs);
     }
 
-    private long getStartTime(S context) {
+    private long getStartTime(CONTEXT context) {
         if (context instanceof Long) {
             return (Long)context;
         }

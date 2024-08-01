@@ -2,12 +2,12 @@ package io.github.poshjosh.ratelimiter.expression;
 
 import java.util.Objects;
 
-public interface Expression<T> {
+public interface Expression<OPERAND_TYPE> {
     Expression<Object> TRUE = ofDefault(null, Operator.EQUALS, null);
     Expression<Object> FALSE = TRUE.flipOperator();
 
     static Expression<String> ofDefault(String expression) {
-        return StringExprUtil.splitIntoExpression(expression);
+        return StringExprUtil.toExpression(expression);
     }
     static <T> Expression<T> ofDefault(T left, String operator, T right) {
         return ofDefault(left, Operator.of(operator), right);
@@ -22,16 +22,16 @@ public interface Expression<T> {
     default <U> Expression<U> with(U left, U right) {
         return Expression.ofDefault(left, getOperator(), right);
     }
-    default Expression<T> flipOperator() {
+    default Expression<OPERAND_TYPE> flipOperator() {
         return Expression.ofDefault(
                 getLeftOrDefault(null),
                 getOperator().flip(),
                 getRightOrDefault(null));
     }
-    default T requireLeft() { return Objects.requireNonNull(getLeftOrDefault(null)); }
-    default T requireRight() { return Objects.requireNonNull(getRightOrDefault(null)); }
+    default OPERAND_TYPE requireLeft() { return Objects.requireNonNull(getLeftOrDefault(null)); }
+    default OPERAND_TYPE requireRight() { return Objects.requireNonNull(getRightOrDefault(null)); }
     String getId();
-    T getLeftOrDefault(T resultIfNone);
+    OPERAND_TYPE getLeftOrDefault(OPERAND_TYPE resultIfNone);
     Operator getOperator();
-    T getRightOrDefault(T resultIfNone);
+    OPERAND_TYPE getRightOrDefault(OPERAND_TYPE resultIfNone);
 }
