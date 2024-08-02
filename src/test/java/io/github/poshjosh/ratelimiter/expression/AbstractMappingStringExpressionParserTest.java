@@ -52,7 +52,7 @@ abstract class AbstractMappingStringExpressionParserTest {
     }
 
     private boolean isSupported(Operator operator) {
-        return getExpressionParser().isSupported(getLHS() + operator.getSymbol());
+        return getExpressionParser().isSupported(getLHS() + " " + operator.getSymbol());
     }
 
     private static Stream<Operator> supportedOperators() {
@@ -87,7 +87,7 @@ abstract class AbstractMappingStringExpressionParserTest {
                 final String rhs = value == null ? "" : value;
                 for (Operator mainOptr : mainOptrs) {
                     for (Operator operator : subOptrs) {
-                        String arg0 = lhs + mainOptr.getSymbol() + "{" + name + operator.getSymbol() + rhs + "}";
+                        String arg0 = lhs + " " + mainOptr.getSymbol() + " {" + name + " " + operator.getSymbol() + " " + rhs + "}";
                         args.add(Arguments.of(arg0, Expressions.of(value, operator, rhs)));
                     }
                 }

@@ -10,9 +10,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class StringExprUtilTest {
     @ParameterizedTest
     @ValueSource(strings = {
-            "sys.time.elapsed>PT1S|sys.time.elapsed>PT0S,sys.time.elapsed>PT1S,|,sys.time.elapsed>PT0S",
-            "name_0={key=value}|name_1=value_1,name_0={key=value},|,name_1=value_1",
-            "name_0!={key=[value_0|value_1]}|name_1!={key=[value_0&value_1]},name_0!={key=[value_0|value_1]},|,name_1!={key=[value_0&value_1]}"
+            "sys.time.elapsed > PT1S | sys.time.elapsed > PT0S,sys.time.elapsed > PT1S,|,sys.time.elapsed > PT0S",
+            "name_0 = {key = value} | name_1 = value_1,name_0 = {key = value},|,name_1 = value_1",
+            "name_0 != {key = [value_0 | value_1]} | name_1 != {key = [value_0 & value_1]},name_0 != {key = [value_0 | value_1]},|,name_1 != {key = [value_0 & value_1]}"
     })
     void splitIntoExpressionsAndConjunctors(String s) {
         String [] arr = s.split(",");

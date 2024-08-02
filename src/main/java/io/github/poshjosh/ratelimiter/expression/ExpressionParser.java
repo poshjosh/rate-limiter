@@ -35,7 +35,7 @@ public interface ExpressionParser<CONTEXT, OPERAND_TYPE> {
 
     /**
      * Parse the operator from the expression
-     * For input: "sys.environment={service.instances>1}", output operator is ">" not "="
+     * For input: "sys.environment = {service.instances>1}", output operator is ">" not "="
      * @param expression The expression whose operator will be returned
      * @return The operator of the expression
      */

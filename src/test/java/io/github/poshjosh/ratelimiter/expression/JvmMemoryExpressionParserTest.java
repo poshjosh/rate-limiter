@@ -13,26 +13,26 @@ class JvmMemoryExpressionParserTest {
     @Test
     void shouldSupport() {
         assertTrue(ExpressionParsers.ofJvmMemory().isSupported(
-                JvmMemoryExpressionParser.MEMORY_AVAILABLE+"="));
+                JvmMemoryExpressionParser.MEMORY_AVAILABLE+" = "));
     }
 
     @Test
     void shouldNotSupport() {
-        assertFalse(ExpressionParsers.ofJvmMemory().isSupported("sys.time="));
+        assertFalse(ExpressionParsers.ofJvmMemory().isSupported("sys.time = "));
     }
 
     @ParameterizedTest
     @CsvSource({
-            "jvm.memory.free=1,0",
-            "jvm.memory.free>1b,0",
-            "jvm.memory.free>=1Kb,1",
-            "jvm.memory.free<1MB,2",
-            "jvm.memory.free<=1GB,3",
-            "jvm.memory.free!=1TB,4",
-            "jvm.memory.free=1PB,5",
-            "jvm.memory.free=1EB,6",
-            "jvm.memory.free=1ZB,7",
-            "jvm.memory.free=1YB,8"
+            "jvm.memory.free = 1,0",
+            "jvm.memory.free > 1b,0",
+            "jvm.memory.free >= 1Kb,1",
+            "jvm.memory.free < 1MB,2",
+            "jvm.memory.free <= 1GB,3",
+            "jvm.memory.free != 1TB,4",
+            "jvm.memory.free = 1PB,5",
+            "jvm.memory.free = 1EB,6",
+            "jvm.memory.free = 1ZB,7",
+            "jvm.memory.free = 1YB,8"
     })
     void shouldSucceed_givenValidExpression(String value, String power) {
         final long expected = (long)Math.pow(1000, Long.parseLong(power));

@@ -35,7 +35,7 @@ class DynamicRateLimiting {
 
     static RateLimiter rateLimiter = RateLimiter.of(Bandwidths.ofSeconds(1));
 
-    static Matcher matchAfter2Seconds = Matchers.ofExpression("sys.time.elapsed>PT2S");
+    static Matcher matchAfter2Seconds = Matchers.ofExpression("sys.time.elapsed > PT2S");
 
     public static void main(String[] args) throws Exception {
 
@@ -70,7 +70,7 @@ class DynamicRateLimiting {
 We have a flexible [expression language](docs/RATE-CONDITION-EXPRESSION-LANGUAGE.md) for example:
 
 ```
-jvm.memory.available<500MB && sys.time.elapsed>PT1S
+jvm.memory.available < 500MB && sys.time.elapsed > PT1S
 ```
 
 We have a list of tasks to execute, but we don't want to submit more than 2 per second.

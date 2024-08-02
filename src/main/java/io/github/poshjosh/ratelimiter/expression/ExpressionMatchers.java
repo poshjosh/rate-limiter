@@ -44,37 +44,37 @@ public interface ExpressionMatchers {
     static <R> ExpressionMatcher<R> ofSystemMemory() {
         return ofDefaults(ExpressionParsers.ofJvmMemory(),
                 ExpressionResolvers.ofLong(),
-                JvmMemoryExpressionParser.MEMORY_MAX+"=");
+                JvmMemoryExpressionParser.MEMORY_MAX+" = ");
     }
 
     static <R> ExpressionMatcher<R> ofSystemTime() {
         return ofDefaults(ExpressionParsers.ofSystemTime(),
                 ExpressionResolvers.ofDateTime(),
-                SystemTimeExpressionParser.TIME+"=");
+                SystemTimeExpressionParser.TIME+" = ");
     }
 
     static <R> ExpressionMatcher<R> ofSystemTimeElapsed() {
         return ofDefaults(ExpressionParsers.ofSystemTimeElapsed(),
                 ExpressionResolvers.ofLong(),
-                SystemTimeElapsedExpressionParser.TIME_ELAPSED+"=");
+                SystemTimeElapsedExpressionParser.TIME_ELAPSED+" = ");
     }
 
     static <R> ExpressionMatcher<R> ofSystemProperty() {
         return ofDefaults(ExpressionParsers.ofSystemProperty(),
                 ExpressionResolvers.ofString(),
-                SystemPropertyExpressionParser.LHS+"=");
+                SystemPropertyExpressionParser.LHS+" = ");
     }
 
     static <R> ExpressionMatcher<R> ofSystemEnvironment() {
         return ofDefaults(ExpressionParsers.ofSystemEnvironment(),
                 ExpressionResolvers.ofString(),
-                SystemEnvironmentExpressionParser.LHS+"=");
+                SystemEnvironmentExpressionParser.LHS+" = ");
     }
 
     static <R> ExpressionMatcher<R> ofJvmThread() {
         return ofDefaults(ExpressionParsers.ofJvmThread(),
                 ExpressionResolvers.ofJvmThread(),
-                JvmThreadExpressionParser.COUNT+"=");
+                JvmThreadExpressionParser.COUNT+" = ");
     }
 
     static <R, T> ExpressionMatcher<R> ofDefaults(ExpressionParser<R, T> expressionParser,

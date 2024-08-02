@@ -4,30 +4,30 @@ A language for expressing the condition for rate limiting.
 
 ### Format
 
-An expression is of format `LHS` `OPERATOR` `RHS` e.g `jvm.thread.count.started>99`
+An expression is of format `LHS` `OPERATOR` `RHS` e.g `jvm.thread.count.started > 99`
 
 `LHS` = `jvm.thread.count`,  `OPERATOR` = `>`,  `RHS` = `99`
 
-| format                | example                                          | description                                                         |  
-|-----------------------|--------------------------------------------------|---------------------------------------------------------------------|
-| LHS=RHS               | jvm.thread.count=22                              | true, when the jvm.thread.count is equal to 22                      |  
-| LHS={key=val}         | sys.environment={limited=true}                   | true, when system environment named limited equals true             |  
-| LHS=[A&#9122;B]       | jvm.current.thread.state=[BLOCKED&#9122;WAITING] | true, when the current thread state is either BLOCKED or WAITING    |
-| LHS={key=[A&#9122;B]} | sys.property={key_0=[val_0&#9122;val_1]}         | true, when either val_0 or val_1 is value of system property key_0  |  
-| LHS={key=[A&B]}       | sys.property={key_1=[val_0&val_1]}               | true, when both val_0 and val_1 are values of system property key_1 |  
+| format                      | example                                              | description                                                         |  
+|-----------------------------|------------------------------------------------------|---------------------------------------------------------------------|
+| LHS = RHS                   | jvm.thread.count = 22                                | true, when the jvm.thread.count is equal to 22                      |  
+| LHS = {key = val}           | sys.environment = {limited = true}                   | true, when system environment named limited equals true             |  
+| LHS = [A &#9122; B]         | jvm.current.thread.state = [BLOCKED &#9122; WAITING] | true, when the current thread state is either BLOCKED or WAITING    |
+| LHS = {key = [A &#9122; B]} | sys.property = {key_0 = [val_0 &#9122; val_1]}       | true, when either val_0 or val_1 is value of system property key_0  |  
+| LHS = {key = [A & B]}       | sys.property = {key_1 = [val_0 & val_1]}             | true, when both val_0 and val_1 are values of system property key_1 |  
 
 ### Examples ###
 
 ```java
 class MatchExamples {
     
-    Matcher matchMemoryLessThan1g = Matcher.of("jvm.memory.available<1G");
+    Matcher matchMemoryLessThan1g = Matchers.ofExpression("jvm.memory.available < 1GB");
     
-    Matcher matchMemoryLt9gAndTimeElapsedGt2s = Matcher.of("jvm.memory.available<9G & sys.time.elapsed>PT2S");
+    Matcher matchMemoryLt9gAndTimeElapsedGt2s = Matchers.ofExpression("jvm.memory.available < 9GB & sys.time.elapsed > PT2S");
     
-    Matcher matchDeadlockedThreadsGt30 = Matcher.of("jvm.thread.count.deadlocked>30");
+    Matcher matchDeadlockedThreadsGt30 = Matchers.ofExpression("jvm.thread.count.deadlocked > 30");
     
-    Matcher matchSysUserNotGuest = Matcher.of("sys.property={user.name!=guest}");
+    Matcher matchSysUserNotGuest = Matchers.ofExpression("sys.property = {user.name != guest}");
 }
 ```
 
@@ -38,7 +38,7 @@ class Resource {
 
     // 5 permits per second when available system memory is less than 1 GB
     RateLimiter rateLimiter = RateLimiter.of(Bandwidths.ofSeconds(5));
-    Matcher matchMemoryLessThanOneG = Matcher.of("jvm.memory.available<1G");
+    Matcher matchMemoryLessThanOneG = Matcher.of("jvm.memory.available < 1GB");
     long startTime = System.currentTimeMillis();
     
     String greet(String who) {
@@ -93,9 +93,9 @@ examples of this format
 
 ### sys.environment
 
-| name              | description                                                    |  
-|-------------------|----------------------------------------------------------------|
-| `sys.environment` | Use environment key-value pairs e.g `sys.environment={LANG=C}` |
+| name              | description                                                         |  
+|-------------------|---------------------------------------------------------------------|
+| `sys.environment` | Use environment key-value pairs e.g `sys.environment = { LANG = C}` |
 
 
 ### jvm.memory
@@ -115,9 +115,9 @@ e.g `1000000`, `1_000_000`, `1GB`, `1gb`
 
 ### sys.property
 
-| name           | description                                                        |  
-|----------------|--------------------------------------------------------------------|
-| `sys.property` | Use property key-value pairs e.g `sys.property={user.name!=guest}` |
+| name           | description                                                            |  
+|----------------|------------------------------------------------------------------------|
+| `sys.property` | Use property key-value pairs e.g `sys.property = {user.name != guest}` |
 
 ### sys.time
 

@@ -10,12 +10,12 @@ public class InvalidExpressionArgumentsProvider implements ArgumentsProvider {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext){
         return Stream.of(
-                "a.,b,<1,1",
+                "a.,b, < 1,1",
                 "sys,ss",
                 ",",
                 "",
-                "invalid=<",
-                "sys.memory=<1"
+                "invalid =< ",
+                "sys.memory =< 1"
 
         ).map(Arguments::of);
     }

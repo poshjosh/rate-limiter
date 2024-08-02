@@ -1,19 +1,12 @@
 package io.github.poshjosh.ratelimiter.expression;
 
-import io.github.poshjosh.ratelimiter.annotations.Experimental;
 import io.github.poshjosh.ratelimiter.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 final class StringExprUtil {
-
-    // Max length of operator is 3 for now e.g !<= or !>=
-    private static final Pattern operatorPattern =
-            Pattern.compile("[" + Pattern.quote("=><^$%!") + "]{1,3}");
 
     private StringExprUtil() { }
 
@@ -47,14 +40,14 @@ final class StringExprUtil {
      * In certain cases, the ID of the typed expression, rather than the ID of the raw
      * (i.e string) expression, could be used as an identifier. For example:
      * <p>
-     * Expression: web.session.id!= results to typed expression: <SESSION_ID_VALUE>!=
+     * Expression: web.session.id !=  results to typed expression: <SESSION_ID_VALUE>!=
      * </p>
      * Here, the typed expression is a more suitable identifier because it contains the actual
      * value of the session ID.
      * <br/><br/>
      * However, there are cases when the typed expression changes with time. For example:
      * <p>
-     * Expression: sys.time.elapsed>100, results to typed expression: <TIME_ELAPSED_MILLIS>!=100
+     * Expression: sys.time.elapsed > 100, results to typed expression: <TIME_ELAPSED_MILLIS>!=100
      * </p>
      * Here, the time elapsed in millis changes with time, hence it is not a suitable identifier.
      *
@@ -73,50 +66,49 @@ final class StringExprUtil {
         return "{" + left + operator.getSymbol() + right + "}";
     }
 
-    static Expression<String> toExpression(String value) {
-        Matcher m = operatorPattern.matcher(value);
-        final String lhs;
-        final String operator;
-        final String rhs;
-        if (m.find()) {
-            lhs = value.substring(0, m.start()).trim();
-            operator = value.substring(m.start(), m.end()).trim();
-            rhs = value.substring(m.end()).trim();
-        } else {
-            throw Checks.notSupported(Expression.class, value);
-        }
-        if (operator.isEmpty()) {
-            throw Checks.notSupported(Expression.class, value);
-        }
-        return Expressions.of(lhs, operator, rhs);
-    }
-
-    private static int indexOfRightExpression(String expression) {
-        int rightExpressionStart = expression.indexOf('{');
-        if (rightExpressionStart == -1) {
-            rightExpressionStart = expression.indexOf('[');
-        }
-        return rightExpressionStart;
-    }
-
-    // Given input: lhs>>>rhs
-    // After parsing we get operator = ">". With this method we check that the char after
-    // the operator is not also an operator.
-    private static void validateRhs(String rhs, Operator[] operators, String value) {
-        if (!StringUtils.hasText(rhs)) {
-            return;
-        }
-        final char ch = rhs.charAt(0);
-        for(Operator op: operators) {
-            if(op.getSymbol().charAt(0) == ch) {
-                throw Checks.notSupported(Expression.class, value);
+    static Expression<String> toExpression(String expression) {
+        int idxOfFirstNonSpaceChar = -1;
+        for (int i = 0; i < expression.length(); i++) {
+            if (!Character.isSpaceChar(expression.charAt(i))) {
+                idxOfFirstNonSpaceChar = i;
+                break;
             }
         }
+        if (idxOfFirstNonSpaceChar == -1) {
+            throw Checks.notSupported(Expression.class, expression);
+        }
+        final int idxOfSpaceBeforeOptr = expression.indexOf(' ', idxOfFirstNonSpaceChar);
+        if (idxOfSpaceBeforeOptr == -1) {
+            throw Checks.notSupported(Expression.class, expression);
+        }
+        final String left = expression.substring(0, idxOfSpaceBeforeOptr).trim();
+        int operatorStart = -1;
+        for (int i = idxOfSpaceBeforeOptr + 1; i < expression.length(); i++) {
+            int ch = expression.charAt(i);
+            if (!Character.isSpaceChar(ch)) {
+                operatorStart = i;
+                break;
+            }
+        }
+        if (operatorStart == -1) {
+            throw Checks.notSupported(Expression.class, expression);
+        }
+        final int idxOfSpaceAfterOptr = expression.indexOf(' ', operatorStart);
+        final String operator;
+        final String right;
+        if (idxOfSpaceAfterOptr == -1) {
+            operator = expression.substring(operatorStart).trim();
+            right = null;
+        } else {
+            operator = expression.substring(operatorStart, idxOfSpaceAfterOptr).trim();
+            right = expression.substring(idxOfSpaceAfterOptr + 1).trim();
+        }
+        return Expressions.of(left, operator, right);
     }
 
     /**
-     * Input: <code>"jvm.memory.free=2G|sys.time.elapsed=PT9M"</code>
-     * Output: <code>["jvm.memory.free=2G", "|", "sys.time.elapsed=PT9M"]</code>
+     * Input: <code>"jvm.memory.free = 2G|sys.time.elapsed = PT9M"</code>
+     * Output: <code>["jvm.memory.free = 2G", "|", "sys.time.elapsed = PT9M"]</code>
      * @param text The text to split
      * @return The result of splitting the value into expressions and conjunctors.
      */
@@ -145,40 +137,5 @@ final class StringExprUtil {
             result.add(text.substring(pivot + 1).trim());
         }
         return result.isEmpty() ? new String[]{text} : result.toArray(new String[0]);
-    }
-
-    // Stats
-    // toExpression(String)
-    // Spent memory: 8084KB, time: 25mils
-    // Spent memory: 8084KB, time: 23mils
-    // Spent memory: 8084KB, time: 23mils
-    // toExpression(String)
-    // Spent memory: 8084KB, time: 19mils
-    // Spent memory: 8084KB, time: 19mils
-    // Spent memory: 8084KB, time: 19mils
-    @Experimental
-    static Expression<String> toExpression2(String expression) {
-        final int rightExprStart = indexOfRightExpression(expression);
-        final String rightExpression = rightExprStart == -1
-                ? null : expression.substring(rightExprStart);
-        final String partToCheckForOperator = rightExprStart != -1
-                ? expression.substring(0, rightExprStart) : expression;
-
-        final Operator [] operators = Operator.valuesInMatchSuitableOrder();
-        for(Operator operator: operators) {
-
-            final String symbol = operator.getSymbol();
-            final int operatorStart = partToCheckForOperator.indexOf(symbol);
-            if (operatorStart == -1) {
-                continue;
-            }
-            final int operatorEnd = operatorStart + symbol.length();
-            final String rhs = rightExpression != null
-                    ? rightExpression.trim() : expression.substring(operatorEnd).trim();
-            validateRhs(rhs, operators, expression);
-            final String lhs = expression.substring(0, operatorStart).trim();
-            return Expressions.of(lhs, operator, rhs);
-        }
-        throw Checks.notSupported(Expression.class, expression);
     }
 }

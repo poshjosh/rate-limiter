@@ -12,19 +12,19 @@ class SystemTimeExpressionParserTest {
     @Test
     void shouldSupport() {
         assertTrue(ExpressionParsers.ofSystemTime().isSupported(
-                SystemTimeExpressionParser.TIME+"="));
+                SystemTimeExpressionParser.TIME+" = "));
     }
 
     @Test
     void shouldNotSupport() {
-        assertFalse(ExpressionParsers.ofSystemTime().isSupported("sys.memory="));
+        assertFalse(ExpressionParsers.ofSystemTime().isSupported("sys.memory = "));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
-            SystemTimeExpressionParser.TIME+"=2023-01-18T20:14:32.846",
-            SystemTimeExpressionParser.TIME+"<2023-01-18T20:14:32",
-            SystemTimeExpressionParser.TIME+"<=2023-01-18T20:14",
+            SystemTimeExpressionParser.TIME+" = 2023-01-18T20:14:32.846",
+            SystemTimeExpressionParser.TIME+" < 2023-01-18T20:14:32",
+            SystemTimeExpressionParser.TIME+" <= 2023-01-18T20:14",
     })
     void shouldSucceed_givenValidExpression(String value) {
         ExpressionParsers.ofSystemTime().parse(this, Expressions.of(value));
