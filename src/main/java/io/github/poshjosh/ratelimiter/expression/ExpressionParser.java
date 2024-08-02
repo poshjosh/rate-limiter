@@ -13,7 +13,7 @@ public interface ExpressionParser<CONTEXT, OPERAND_TYPE> {
      * @see #isSupported(Expression java.lang.String)
      */
     default boolean isSupported(String expression) {
-        return isSupported(Expression.ofDefault(expression));
+        return isSupported(Expressions.of(expression));
     }
 
     /**
@@ -27,7 +27,7 @@ public interface ExpressionParser<CONTEXT, OPERAND_TYPE> {
      * @return the result of parsing a string expression into another type
      */
     default Expression<OPERAND_TYPE> parse(CONTEXT context, Expression<String> expression) {
-        return Expression.ofDefault(
+        return Expressions.of(
                 parseLeft(context, expression), parseOperator(expression), parseRight(expression));
     }
 

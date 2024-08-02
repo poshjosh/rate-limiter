@@ -73,7 +73,7 @@ final class StringExprUtil {
         return "{" + left + operator.getSymbol() + right + "}";
     }
 
-    public static Expression<String> toExpression(String value) {
+    static Expression<String> toExpression(String value) {
         Matcher m = operatorPattern.matcher(value);
         final String lhs;
         final String operator;
@@ -88,7 +88,7 @@ final class StringExprUtil {
         if (operator.isEmpty()) {
             throw Checks.notSupported(Expression.class, value);
         }
-        return Expression.ofDefault(lhs, operator, rhs);
+        return Expressions.of(lhs, operator, rhs);
     }
 
     private static int indexOfRightExpression(String expression) {
@@ -177,7 +177,7 @@ final class StringExprUtil {
                     ? rightExpression.trim() : expression.substring(operatorEnd).trim();
             validateRhs(rhs, operators, expression);
             final String lhs = expression.substring(0, operatorStart).trim();
-            return Expression.ofDefault(lhs, operator, rhs);
+            return Expressions.of(lhs, operator, rhs);
         }
         throw Checks.notSupported(Expression.class, expression);
     }

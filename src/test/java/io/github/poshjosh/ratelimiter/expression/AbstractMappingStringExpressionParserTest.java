@@ -41,11 +41,11 @@ abstract class AbstractMappingStringExpressionParserTest {
     @ArgumentsSource(InvalidExpressionArgumentsProvider.class)
     void shouldFail_givenInvalidExpression(String value) {
         assertThrows(RuntimeException.class, () ->
-                getExpressionParser().parse("", Expression.ofDefault(value)));
+                getExpressionParser().parse("", Expressions.of(value)));
     }
 
     void parse_shouldSucceed_givenValidExpression(String expressionStr, Expression<String> expected) {
-        Expression<String> expression = Expression.ofDefault(expressionStr);
+        Expression<String> expression = Expressions.of(expressionStr);
         Expression<String> actual = getExpressionParser().parse(this, expression);
 //        System.out.println("Input: " + expressionStr + ", expected: " + expected + ", actual: " + actual);
         assertEquals(expected, actual);
@@ -88,7 +88,7 @@ abstract class AbstractMappingStringExpressionParserTest {
                 for (Operator mainOptr : mainOptrs) {
                     for (Operator operator : subOptrs) {
                         String arg0 = lhs + mainOptr.getSymbol() + "{" + name + operator.getSymbol() + rhs + "}";
-                        args.add(Arguments.of(arg0, Expression.ofDefault(value, operator, rhs)));
+                        args.add(Arguments.of(arg0, Expressions.of(value, operator, rhs)));
                     }
                 }
             }

@@ -28,13 +28,13 @@ class SystemTimeElapsedExpressionParserTest {
             SystemTimeElapsedExpressionParser.TIME_ELAPSED+"<PT24H",
     })
     void shouldSucceed_givenValidExpression(String value) {
-        expressionParser.parse(System.currentTimeMillis(), Expression.ofDefault(value));
+        expressionParser.parse(System.currentTimeMillis(), Expressions.of(value));
     }
 
     @ParameterizedTest
     @ArgumentsSource(InvalidExpressionArgumentsProvider.class)
     void shouldFail_givenInvalidExpression(String value) {
       assertThrows(RuntimeException.class, () -> 
-              expressionParser.parse(System.currentTimeMillis(), Expression.ofDefault(value)));
+              expressionParser.parse(System.currentTimeMillis(), Expressions.of(value)));
     }
 }

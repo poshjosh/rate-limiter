@@ -36,7 +36,7 @@ class JvmMemoryExpressionParserTest {
     })
     void shouldSucceed_givenValidExpression(String value, String power) {
         final long expected = (long)Math.pow(1000, Long.parseLong(power));
-        Expression<Long> result = ExpressionParsers.ofJvmMemory().parse(this, Expression.ofDefault(value));
+        Expression<Long> result = ExpressionParsers.ofJvmMemory().parse(this, Expressions.of(value));
         assertEquals(expected, result.requireRight());
     }
 
@@ -44,6 +44,6 @@ class JvmMemoryExpressionParserTest {
     @ArgumentsSource(InvalidExpressionArgumentsProvider.class)
     void shouldFail_givenInvalidExpression(String value) {
         assertThrows(RuntimeException.class, () ->
-                ExpressionParsers.ofJvmMemory().parse(this, Expression.ofDefault(value)));
+                ExpressionParsers.ofJvmMemory().parse(this, Expressions.of(value)));
     }
 }

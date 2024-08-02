@@ -79,7 +79,7 @@ public interface ExpressionMatchers {
 
     static <R, T> ExpressionMatcher<R> ofDefaults(ExpressionParser<R, T> expressionParser,
             ExpressionResolver<T> expressionResolver, String sampleExpression) {
-        return ofParseAhead(expressionParser, expressionResolver, Expression.ofDefault(sampleExpression));
+        return ofParseAhead(expressionParser, expressionResolver, Expressions.of(sampleExpression));
     }
 
     static <R, T> ExpressionMatcher<R> ofParseAhead(ExpressionParser<R, T> expressionParser,

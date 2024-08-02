@@ -38,7 +38,7 @@ public interface ExpressionMatcher<INPUT> extends Matcher<INPUT> {
                 if (!StringUtils.hasText(part)) {
                     matcher = null;
                 } else {
-                    Expression<String> expression = Expression.ofDefault(part);
+                    Expression<String> expression = Expressions.of(part);
                     if (isSupported(expression)) {
                         matcher = matcher(expression);
                     } else {

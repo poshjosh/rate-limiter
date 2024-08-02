@@ -27,7 +27,7 @@ class ExpressionResolverTest {
     })
     void testJvmThreadExpression(String expressionString, String expectedResult) {
         Expression<Object> expression = ExpressionParsers.ofJvmThread()
-                .parse(this, Expression.ofDefault(expressionString));
+                .parse(this, Expressions.of(expressionString));
         //System.out.println(expression);
         testExpression(ExpressionResolvers.ofJvmThread(), expression, expectedResult);
     }
@@ -62,7 +62,7 @@ class ExpressionResolverTest {
 
     void testExpression(ExpressionResolver<?> resolver,
             Object l, String operator, Object r, String expectedResult) {
-        Expression<?> expression = Expression.ofDefault(l, operator, r);
+        Expression<?> expression = Expressions.of(l, operator, r);
         testExpression(resolver, expression, expectedResult);
     }
 
