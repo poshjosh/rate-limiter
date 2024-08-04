@@ -15,7 +15,8 @@ final class SystemTimeElapsedExpressionParser<CONTEXT> implements ExpressionPars
     public boolean isSupported(Expression<String> expression) {
         final String lhs = expression.requireLeft();
         if (TIME_ELAPSED.equals(lhs)) {
-            return expression.getOperator().isType(Operator.Type.COMPARISON);
+            return Operators.isGloballySupported(expression.getOperator()) ||
+                    expression.getOperator().isType(Operator.Type.COMPARISON);
         }
         return false;
     }

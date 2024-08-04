@@ -46,10 +46,12 @@ final class JvmThreadExpressionParser<CONTEXT> implements ExpressionParser<CONTE
             case CURRENT_TIME_CPU:
             case CURRENT_TIME_USER:
             case CURRENT_TIME_WAITED:
-                return expression.getOperator().isType(Operator.Type.COMPARISON);
+                return Operators.isGloballySupported(expression.getOperator()) ||
+                        expression.getOperator().isType(Operator.Type.COMPARISON);
             case CURRENT_STATE:
             case CURRENT_SUSPENDED:
-                return expression.getOperator().equalsIgnoreNegation(Operator.EQUALS);
+                return Operators.isGloballySupported(expression.getOperator()) ||
+                        expression.getOperator().equalsIgnoreNegation(Operator.EQUALS);
             default:
                 return false;
         }

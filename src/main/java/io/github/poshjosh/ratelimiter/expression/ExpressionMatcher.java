@@ -7,14 +7,6 @@ import io.github.poshjosh.ratelimiter.util.StringUtils;
 import java.util.Optional;
 
 public interface ExpressionMatcher<INPUT> extends Matcher<INPUT> {
-    static <T> ExpressionMatcher<T> matchNone() {
-        return ExpressionMatchers.matchNone();
-    }
-
-    static <R> ExpressionMatcher<R> ofDefault() {
-        return ExpressionMatchers.ofDefaults();
-    }
-
     @Override String match(INPUT toMatch);
 
     ExpressionMatcher<INPUT> matcher(Expression<String> expression);

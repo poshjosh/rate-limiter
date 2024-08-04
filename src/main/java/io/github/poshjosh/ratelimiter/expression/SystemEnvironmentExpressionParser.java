@@ -5,9 +5,9 @@ final class SystemEnvironmentExpressionParser<CONTEXT>
 
     static final String LHS = "sys.environment";
 
-    SystemEnvironmentExpressionParser() { }
-
-    @Override String getLHS() { return LHS; }
+    SystemEnvironmentExpressionParser() {
+        super(LHS);
+    }
 
     @Override String getValue(String name) { return System.getenv(name); }
 }

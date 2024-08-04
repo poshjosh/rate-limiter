@@ -10,7 +10,7 @@ public interface Expressions {
     }
 
     static <T> Expression<T> of(T left, String operator, T right) {
-        return of(left, Operator.of(operator), right);
+        return of(left, Operators.ofSymbol(operator), right);
     }
 
     static <T> Expression<T> of(T left, Operator operator, T right) {

@@ -2,23 +2,97 @@ package io.github.poshjosh.ratelimiter.expression;
 
 import io.github.poshjosh.ratelimiter.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 final class StringExprUtil {
+    private static final char OPEN_SQUARE_BRACKET = '[';
+    private static final char CLOSE_SQUARE_BRACKET = ']';
+    private static final char OPEN_BRACKET = '{';
+    private static final char CLOSE_BRACKET = '}';
+    private static final char OR = '|';
+    private static final char AND = '&';
 
     private StringExprUtil() { }
 
-    static String without(String value, String prefix, String suffix) {
+    static String getTextInSquareBracketsOrDefault(String text, String defaultValue) {
+        if (text == null || text.isEmpty()) {
+            return defaultValue;
+        }
+        if (text.charAt(text.length() - 1) != CLOSE_SQUARE_BRACKET) {
+            return defaultValue;
+        }
+        final int indexOfOpenSquareBracket = text.indexOf(OPEN_SQUARE_BRACKET);
+        if (indexOfOpenSquareBracket == -1) {
+            return defaultValue;
+        }
+        return text.substring(indexOfOpenSquareBracket + 1, text.length() - 1);
+    }
+
+    /**
+     * Determine a value from specified method or field.
+     * Supports only:
+     * <ul>
+     *     <li>public static methods or fields</li>
+     *     <li>methods with no arguments</li>
+     * </ul>
+     * Expected input format:
+     * <code>
+     *     [class]#[field|method()]
+     * </code>
+     * <p>Examples for:</p>
+     * <ul>
+     *     <li>methods: "io.github.ratelimiter.StringExprUtil#getGreetings()"</li>
+     *     <li>fields: "io.github.ratelimiter.StringExprUtil#greeting"</li>
+     * </ul>
+     * @param text The text to parse
+     * @return The value from the determined method or field
+     */
+    static <T> T tryValueFromJavaType(String text, Class<T> type) {
+        if (!StringUtils.hasText(text)) {
+            throw invalidTextException(text, null);
+        }
+        final int classEnd = text.indexOf("#");
+        if (classEnd == -1) {
+            if (type.isAssignableFrom(String.class)) {
+                return (T)text;
+            }
+            throw invalidTextException(text, null);
+        }
+        final String className = text.substring(0, classEnd).trim();
+        try {
+            final Class<?> clazz = Class.forName(className);
+            final String name = text.substring(classEnd + 1).trim();
+            final boolean isMethod = name.endsWith("()");
+            if (isMethod) {
+                final Method method = clazz.getMethod(name.substring(0, name.length() - 2));
+                return type.cast(method.invoke(null));
+            }
+            return type.cast(clazz.getField(name).get(null));
+        } catch (ClassNotFoundException | NoSuchMethodException | SecurityException |
+                 IllegalAccessException | InvocationTargetException | NoSuchFieldException e) {
+            if (type.isAssignableFrom(String.class)) {
+                return (T)text;
+            }
+            throw invalidTextException(text, e);
+        }
+    }
+
+    private static RuntimeException invalidTextException(String text, Throwable cause) {
+        return new IllegalArgumentException("Invalid: " + text
+                + ". Expected format: <class>#<field|method()> e.g org.spaces.Me#getName()", cause);
+    }
+
+    static String withoutBraces(String value) {
         if (!StringUtils.hasText(value)) {
             return value;
         }
-        if (value.startsWith(prefix)) {
-            value = value.substring(prefix.length());
+        if (value.charAt(0) == OPEN_BRACKET) {
+            value = value.substring(1);
         }
-        if (value.endsWith(suffix)) {
-            value = value.substring(0, value.length() - suffix.length());
+        if (value.charAt(value.length() - 1) == CLOSE_BRACKET) {
+            value = value.substring(0, value.length() - 1);
         }
         return value;
     }
@@ -63,47 +137,55 @@ final class StringExprUtil {
 
     static <T> String buildId(T left, Operator operator, T right) {
         // TODO - What if right is null, do we want to have null text as part of the id?
-        return "{" + left + operator.getSymbol() + right + "}";
+        return "" + OPEN_BRACKET + left + ' ' + operator.getSymbol() + ' ' + right + CLOSE_BRACKET;
     }
 
     static Expression<String> toExpression(String expression) {
-        int idxOfFirstNonSpaceChar = -1;
-        for (int i = 0; i < expression.length(); i++) {
-            if (!Character.isSpaceChar(expression.charAt(i))) {
-                idxOfFirstNonSpaceChar = i;
-                break;
-            }
-        }
-        if (idxOfFirstNonSpaceChar == -1) {
-            throw Checks.notSupported(Expression.class, expression);
-        }
+        final int idxOfFirstNonSpaceChar = indexOfFirstNonSpaceChar(expression, 0);
         final int idxOfSpaceBeforeOptr = expression.indexOf(' ', idxOfFirstNonSpaceChar);
         if (idxOfSpaceBeforeOptr == -1) {
             throw Checks.notSupported(Expression.class, expression);
         }
         final String left = expression.substring(0, idxOfSpaceBeforeOptr).trim();
-        int operatorStart = -1;
-        for (int i = idxOfSpaceBeforeOptr + 1; i < expression.length(); i++) {
-            int ch = expression.charAt(i);
-            if (!Character.isSpaceChar(ch)) {
-                operatorStart = i;
-                break;
+        final int operatorStart = indexOfFirstNonSpaceChar(expression, idxOfSpaceBeforeOptr + 1);
+        final int idxOfSpaceAfterOptr = expression.indexOf(' ', operatorStart);
+        final String operatorStr = parseOperator(expression, operatorStart, idxOfSpaceAfterOptr);
+        final Operator operator = Operators.ofSymbol(operatorStr); // Ensure operator is valid
+        final String right = parseRight(expression, idxOfSpaceAfterOptr);
+        return Expressions.of(left, operator, right);
+    }
+
+    private static int indexOfFirstNonSpaceChar(String expression, int offset) {
+        for (int i = offset; i < expression.length(); i++) {
+            if (!Character.isSpaceChar(expression.charAt(i))) {
+                return i;
             }
         }
-        if (operatorStart == -1) {
-            throw Checks.notSupported(Expression.class, expression);
-        }
-        final int idxOfSpaceAfterOptr = expression.indexOf(' ', operatorStart);
-        final String operator;
-        final String right;
+        throw Checks.notSupported(Expression.class, expression);
+    }
+
+    private static boolean isConjunctor(String operator) {
+        return operator.length() == 1 && (OR == operator.charAt(0) || AND == operator.charAt(0));
+    }
+
+    private static String parseOperator(String expression, int operatorStart, int idxOfSpaceAfterOptr) {
         if (idxOfSpaceAfterOptr == -1) {
-            operator = expression.substring(operatorStart).trim();
-            right = null;
+            return expression.substring(operatorStart).trim();
         } else {
-            operator = expression.substring(operatorStart, idxOfSpaceAfterOptr).trim();
-            right = expression.substring(idxOfSpaceAfterOptr + 1).trim();
+            return expression.substring(operatorStart, idxOfSpaceAfterOptr).trim();
         }
-        return Expressions.of(left, operator, right);
+    }
+
+    private static String parseRight(String expression, int idxOfSpaceAfterOptr) {
+        if (idxOfSpaceAfterOptr == -1) {
+            return null;
+        } else {
+            final int next = idxOfSpaceAfterOptr + 1;
+            if (expression.length() < next) {
+                throw Checks.notSupported(Expression.class, expression);
+            }
+            return expression.substring(next).trim();
+        }
     }
 
     /**
@@ -122,12 +204,12 @@ final class StringExprUtil {
         List<String> result = new ArrayList<>();
         for (int i = 0; i < text.length(); i++) {
             char ch = text.charAt(i);
-            if ('[' == ch || '{' == ch) {
+            if (OPEN_SQUARE_BRACKET == ch || OPEN_BRACKET == ch) {
                 opened = true;
-            } else if (']' == ch || '}' == ch) { // TODO - Support nesting
+            } else if (CLOSE_SQUARE_BRACKET == ch || CLOSE_BRACKET == ch) { // TODO - Support nesting
                 opened = false;
             }
-            if (!opened && ('|' == ch || '&' == ch)) { // TODO - support || and &&
+            if (!opened && (OR == ch || AND == ch)) { // TODO - support || and &&
                 result.add(text.substring(pivot + 1, i).trim());
                 result.add(Character.toString(ch));
                 pivot = i;

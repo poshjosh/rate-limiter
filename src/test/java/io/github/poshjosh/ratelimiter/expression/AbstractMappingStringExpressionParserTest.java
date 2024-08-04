@@ -56,11 +56,18 @@ abstract class AbstractMappingStringExpressionParserTest {
     }
 
     private static Stream<Operator> supportedOperators() {
-        return Arrays.stream(Operator.values()).filter(operator -> operator.equalsIgnoreNegation(Operator.EQUALS));
+        return Arrays.stream(Operator.values())
+                .filter(AbstractMappingStringExpressionParserTest::isSupportedOperator);
     }
 
     private static Stream<Operator> unsupportedOperators() {
-        return Arrays.stream(Operator.values()).filter(operator -> !operator.equalsIgnoreNegation(Operator.EQUALS));
+        return Arrays.stream(Operator.values())
+                .filter(operator -> !isSupportedOperator(operator));
+    }
+
+    private static boolean isSupportedOperator(Operator operator) {
+        return Operators.isGloballySupported(operator) ||
+                operator.equalsIgnoreNegation(Operator.EQUALS);
     }
 
     static class ValidParseArgumentsProvider implements ArgumentsProvider {

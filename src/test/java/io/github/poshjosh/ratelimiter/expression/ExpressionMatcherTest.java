@@ -110,6 +110,9 @@ class ExpressionMatcherTest {
         assertFalse(matcher.matches(222));
     }
 
+    @Test void ofContainer() { }
+
+
     private Supplier<AssertionError> matcherCreationShouldBeSuccessful() {
         return () -> new AssertionError("Matcher creation should be successful, but was not.");
     }

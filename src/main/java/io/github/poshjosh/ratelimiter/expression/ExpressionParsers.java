@@ -2,28 +2,56 @@ package io.github.poshjosh.ratelimiter.expression;
 
 import java.time.LocalDateTime;
 
-public interface ExpressionParsers {
-    static <C> ExpressionParser<C, Long> ofJvmMemory() {
-        return new JvmMemoryExpressionParser<>();
+public final class ExpressionParsers {
+    private ExpressionParsers() { }
+    @SafeVarargs
+    @SuppressWarnings("unchecked")
+    public static <C> ExpressionParser<C, Object> any(ExpressionParser<C, ?>... parsers) {
+        if (parsers.length == 1) {
+            return (ExpressionParser<C, Object>)parsers[0];
+        }
+        return new AnyExpressionParser(parsers);
     }
 
-    static <C> ExpressionParser<C, LocalDateTime> ofSystemTime() {
-        return new SystemTimeExpressionParser<>();
+    static final ExpressionParser<?, Long> JVM_MEMORY = new JvmMemoryExpressionParser<>();
+    @SuppressWarnings("unchecked")
+    public static <C> ExpressionParser<C, Long> ofJvmMemory() {
+        return (ExpressionParser<C, Long>)JVM_MEMORY;
     }
 
-    static <C> ExpressionParser<C, Long> ofSystemTimeElapsed() {
-        return new SystemTimeElapsedExpressionParser<>();
+    static final ExpressionParser<?, LocalDateTime> TIME = new SystemTimeExpressionParser<>();
+    @SuppressWarnings("unchecked")
+    public static <C> ExpressionParser<C, LocalDateTime> ofSystemTime() {
+        return (ExpressionParser<C, LocalDateTime>)TIME;
     }
 
-    static <C> ExpressionParser<C, String> ofSystemProperty() {
-        return new SystemPropertyExpressionParser<>();
+    static final ExpressionParser<?, Long> TIME_ELAPSED = new SystemTimeElapsedExpressionParser<>();
+    @SuppressWarnings("unchecked")
+    public static <C> ExpressionParser<C, Long> ofSystemTimeElapsed() {
+        return (ExpressionParser<C, Long>)TIME_ELAPSED;
     }
 
-    static <C> ExpressionParser<C, String> ofSystemEnvironment() {
-        return new SystemEnvironmentExpressionParser<>();
+    static final ExpressionParser<?, String> SYS_PROP = new SystemPropertyExpressionParser<>();
+    @SuppressWarnings("unchecked")
+    public static <C> ExpressionParser<C, String> ofSystemProperty() {
+        return (ExpressionParser<C, String>)SYS_PROP;
     }
 
-    static <C> ExpressionParser<C, Object> ofJvmThread() {
-        return new JvmThreadExpressionParser<>();
+    static final ExpressionParser<?, String> SYS_ENV = new SystemEnvironmentExpressionParser<>();
+    @SuppressWarnings("unchecked")
+    public static <C> ExpressionParser<C, String> ofSystemEnvironment() {
+        return (ExpressionParser<C, String>)SYS_ENV;
+    }
+
+    static final ExpressionParser<?, Object> JVM_THREAD = new JvmThreadExpressionParser<>();
+    @SuppressWarnings("unchecked")
+    public static <C> ExpressionParser<C, Object> ofJvmThread() {
+        return (ExpressionParser<C, Object>)JVM_THREAD;
+    }
+
+    static final ExpressionParser<?, Object> CONTAINER = new ContainerExpressionParser<>();
+    @SuppressWarnings("unchecked")
+    public static <C> ExpressionParser<C, Object> ofContainer() {
+        return (ExpressionParser<C, Object>)CONTAINER;
     }
 }

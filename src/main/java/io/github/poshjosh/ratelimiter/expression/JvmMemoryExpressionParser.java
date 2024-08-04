@@ -26,7 +26,8 @@ final class JvmMemoryExpressionParser<CONTEXT> implements ExpressionParser<CONTE
             case MEMORY_MAX:
             case MEMORY_TOTAL:
             case MEMORY_USED:
-                return expression.getOperator().isType(Operator.Type.COMPARISON);
+                return Operators.isGloballySupported(expression.getOperator()) ||
+                        expression.getOperator().isType(Operator.Type.COMPARISON);
             default:
                 return false;
         }
@@ -39,11 +40,11 @@ final class JvmMemoryExpressionParser<CONTEXT> implements ExpressionParser<CONTE
             case MEMORY_AVAILABLE:
                 return MemoryUtil.availableMemory();
             case MEMORY_FREE:
-                return Runtime.getRuntime().freeMemory();
+                return MemoryUtil.freeMemory();
             case MEMORY_MAX:
-                return Runtime.getRuntime().maxMemory();
+                return MemoryUtil.maxMemory();
             case MEMORY_TOTAL:
-                return Runtime.getRuntime().totalMemory();
+                return MemoryUtil.totalMemory();
             case MEMORY_USED:
                 return MemoryUtil.usedMemory();
             default:

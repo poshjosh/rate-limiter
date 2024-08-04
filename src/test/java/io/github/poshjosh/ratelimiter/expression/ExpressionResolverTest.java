@@ -1,7 +1,12 @@
 package io.github.poshjosh.ratelimiter.expression;
 
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,7 +30,7 @@ class ExpressionResolverTest {
             JvmThreadExpressionParser.CURRENT_TIME_USER + " >= PT0S,true",
             JvmThreadExpressionParser.CURRENT_TIME_WAITED + " <= PT0S,true",
     })
-    void testJvmThreadExpression(String expressionString, String expectedResult) {
+    void testJvmThreadExpression(String expressionString, boolean expectedResult) {
         Expression<Object> expression = ExpressionParsers.ofJvmThread()
                 .parse(this, Expressions.of(expressionString));
         //System.out.println(expression);
@@ -40,10 +45,8 @@ class ExpressionResolverTest {
             "1,<,1,false",
             "1,<=,1,true"
     })
-    void testValidLongExpression(String lhs, String operator, String rhs, String expectedResult) {
-        Long l = Long.parseLong(lhs);
-        Long r = Long.parseLong(rhs);
-        testExpression(ExpressionResolvers.ofLong(), l, operator, r, expectedResult);
+    void testValidLongExpression(Long lhs, String operator, Long rhs, boolean expectedResult) {
+        testExpression(ExpressionResolvers.ofLong(), lhs, operator, rhs, expectedResult);
     }
 
     @ParameterizedTest
@@ -54,20 +57,60 @@ class ExpressionResolverTest {
             "1,<,1,false",
             "1,<=,1,true"
     })
-    void testValidDecimalExpression(String lhs, String operator, String rhs, String expectedResult) {
-        Double l = Double.parseDouble(lhs);
-        Double r = Double.parseDouble(rhs);
-        testExpression(ExpressionResolvers.ofDecimal(), l, operator, r, expectedResult);
+    void testValidDecimalExpression(Double lhs, String operator, Double rhs, boolean expectedResult) {
+        testExpression(ExpressionResolvers.ofDecimal(), lhs, operator, rhs, expectedResult);
+    }
+
+    private static final Integer [] DIGITS = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    private static Stream<Arguments> containerExpressionArgsFor(Object digitsContainer) {
+        return Stream.of(
+                Arguments.of(0, Operator.IN, digitsContainer, true),
+                Arguments.of(-1, Operator.IN, digitsContainer, false),
+                Arguments.of(10, Operator.IN, digitsContainer, false),
+                Arguments.of(1, Operator.IN, "[0, 1, 2]", true),
+                Arguments.of(0, Operator.NOT_IN, digitsContainer, false),
+                Arguments.of(-1, Operator.NOT_IN, digitsContainer, true),
+                Arguments.of(10, Operator.NOT_IN, digitsContainer, true),
+                Arguments.of(1, Operator.NOT_IN, "[0, 1, 2]", false)
+        );
+    }
+    private static Stream<Arguments> containerExpressionArgsArray() {
+        return containerExpressionArgsFor(DIGITS);
+    }
+    private static Stream<Arguments> containerExpressionArgsCollection() {
+        return containerExpressionArgsFor(Arrays.asList(DIGITS));
+    }
+    private static Stream<Arguments> containerExpressionArgsString() {
+        return containerExpressionArgsFor(Arrays.toString(DIGITS));
+    }
+    @ParameterizedTest
+    @MethodSource("containerExpressionArgsArray")
+    void testValidArrayExpression(Integer lhs, Operator operator, Object rhs, boolean expectedResult) {
+        testExpression(ExpressionResolvers.ofContainer(), lhs, operator, rhs, expectedResult);
+    }
+    @ParameterizedTest
+    @MethodSource("containerExpressionArgsCollection")
+    void testValidCollectionExpression(Integer lhs, Operator operator, Object rhs, boolean expectedResult) {
+        testExpression(ExpressionResolvers.ofContainer(), lhs, operator, rhs, expectedResult);
+    }
+    @ParameterizedTest
+    @MethodSource("containerExpressionArgsString")
+    void testValidStringContainerExpression(Integer lhs, Operator operator, Object rhs, boolean expectedResult) {
+        testExpression(ExpressionResolvers.ofContainer(), lhs, operator, rhs, expectedResult);
     }
 
     void testExpression(ExpressionResolver<?> resolver,
-            Object l, String operator, Object r, String expectedResult) {
+            Object l, String operator, Object r, boolean expectedResult) {
+        testExpression(resolver, l, Operators.ofSymbol(operator), r, expectedResult);
+    }
+
+    void testExpression(ExpressionResolver<?> resolver,
+            Object l, Operator operator, Object r, boolean expectedResult) {
         Expression<?> expression = Expressions.of(l, operator, r);
         testExpression(resolver, expression, expectedResult);
     }
 
-    void testExpression(ExpressionResolver<?> resolver, Expression expression, String expectedResult) {
-        boolean expected = Boolean.parseBoolean(expectedResult);
+    void testExpression(ExpressionResolver<?> resolver, Expression expression, boolean expected) {
         boolean result = resolver.resolve(expression);
         assertEquals(expected, result);
         result = resolver.resolve(expression.flipOperator());

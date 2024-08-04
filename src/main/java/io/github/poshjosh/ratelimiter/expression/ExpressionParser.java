@@ -3,9 +3,9 @@ package io.github.poshjosh.ratelimiter.expression;
 /**
  * Parses expression of one type to another type
  * @param <CONTEXT> The type of the context e.g a web request (web) or a system (sys) etc
- * @param <OPERAND_TYPE> The type of the resulting expression
+ * @param <OPERAND> The type of the operands in the resulting expression
  */
-public interface ExpressionParser<CONTEXT, OPERAND_TYPE> {
+public interface ExpressionParser<CONTEXT, OPERAND> {
 
     /**
      * @param expression the expression to check if supported
@@ -26,12 +26,12 @@ public interface ExpressionParser<CONTEXT, OPERAND_TYPE> {
      * Parse a string expression into another type of expression
      * @return the result of parsing a string expression into another type
      */
-    default Expression<OPERAND_TYPE> parse(CONTEXT context, Expression<String> expression) {
+    default Expression<OPERAND> parse(CONTEXT context, Expression<String> expression) {
         return Expressions.of(
                 parseLeft(context, expression), parseOperator(expression), parseRight(expression));
     }
 
-    OPERAND_TYPE parseLeft(CONTEXT context, Expression<String> expression);
+    OPERAND parseLeft(CONTEXT context, Expression<String> expression);
 
     /**
      * Parse the operator from the expression
@@ -41,12 +41,8 @@ public interface ExpressionParser<CONTEXT, OPERAND_TYPE> {
      */
     default Operator parseOperator(Expression<String> expression) {
         final String rhsText = expression.getRightOrDefault("");
-        return Operator.getOperatorIn(rhsText, expression.getOperator());
-    }
-    default boolean isRightAnExpression(Expression<String> expression) {
-        final String rhsText = expression.getRightOrDefault("");
-        return Operator.getOperatorIn(rhsText, null) != null;
+        return Operators.ofExpression(rhsText, expression.getOperator());
     }
 
-    OPERAND_TYPE parseRight(Expression<String> expression);
+    OPERAND parseRight(Expression<String> expression);
 }

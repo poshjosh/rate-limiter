@@ -28,9 +28,14 @@ public interface ExpressionMatchers {
                                 ". For valid expressions see: https://github.com/poshjosh/rate-limiter/blob/master/docs/RATE-CONDITION-EXPRESSION-LANGUAGE.md"));
     }
 
+    ExpressionMatcher<Object> DEFAULT = any(
+            ofJvmMemory(), ofSystemTime(), ofSystemTimeElapsed(),
+            ofJvmThread(), ofSystemProperty(), ofSystemEnvironment(),
+            ofContainer());
+
+    @SuppressWarnings("unchecked")
     static <R> ExpressionMatcher<R> ofDefaults() {
-        return any(ofSystemMemory(), ofSystemTime(), ofSystemTimeElapsed(),
-                ofJvmThread(), ofSystemProperty(), ofSystemEnvironment());
+        return (ExpressionMatcher<R>)DEFAULT;
     }
 
     @SafeVarargs
@@ -41,7 +46,7 @@ public interface ExpressionMatchers {
         return new AnyExpressionMatcher<>(matchers);
     }
 
-    static <R> ExpressionMatcher<R> ofSystemMemory() {
+    static <R> ExpressionMatcher<R> ofJvmMemory() {
         return ofDefaults(ExpressionParsers.ofJvmMemory(),
                 ExpressionResolvers.ofLong(),
                 JvmMemoryExpressionParser.MEMORY_MAX+" = ");
@@ -75,6 +80,12 @@ public interface ExpressionMatchers {
         return ofDefaults(ExpressionParsers.ofJvmThread(),
                 ExpressionResolvers.ofJvmThread(),
                 JvmThreadExpressionParser.COUNT+" = ");
+    }
+
+    static ExpressionMatcher<Object> ofContainer() {
+        return ofDefaults(ExpressionParsers.ofContainer(),
+                ExpressionResolvers.ofContainer(),
+                JvmThreadExpressionParser.COUNT+" in ");
     }
 
     static <R, T> ExpressionMatcher<R> ofDefaults(ExpressionParser<R, T> expressionParser,

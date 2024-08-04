@@ -5,9 +5,9 @@ final class SystemPropertyExpressionParser<CONTEXT>
 
     static final String LHS = "sys.property";
 
-    SystemPropertyExpressionParser() { }
-
-    @Override String getLHS() { return LHS; }
+    SystemPropertyExpressionParser() {
+        super(LHS);
+    }
 
     @Override String getValue(String name) { return System.getProperty(name, null); }
 }

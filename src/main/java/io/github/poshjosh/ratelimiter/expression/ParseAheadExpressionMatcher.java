@@ -6,20 +6,20 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
-final class ParseAheadExpressionMatcher<INPUT, OPERAND_TYPE> implements ExpressionMatcher<INPUT> {
+final class ParseAheadExpressionMatcher<INPUT, OPERAND> implements ExpressionMatcher<INPUT> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ParseAheadExpressionMatcher.class);
 
-    private final ExpressionParser<INPUT, OPERAND_TYPE> expressionParser;
+    private final ExpressionParser<INPUT, OPERAND> expressionParser;
 
-    private final ExpressionResolver<OPERAND_TYPE> expressionResolver;
+    private final ExpressionResolver<OPERAND> expressionResolver;
 
     private final Expression<String> expression;
-    private final OPERAND_TYPE rhs;
+    private final OPERAND rhs;
 
     ParseAheadExpressionMatcher(
-            ExpressionParser<INPUT, OPERAND_TYPE> expressionParser,
-            ExpressionResolver<OPERAND_TYPE> expressionResolver,
+            ExpressionParser<INPUT, OPERAND> expressionParser,
+            ExpressionResolver<OPERAND> expressionResolver,
             Expression<String> expression) {
         if (!expressionResolver.isSupported(expression.getOperator())) {
             throw Checks.notSupported(expressionResolver,
@@ -36,7 +36,7 @@ final class ParseAheadExpressionMatcher<INPUT, OPERAND_TYPE> implements Expressi
 
     @Override
     public String match(INPUT toMatch) {
-        final OPERAND_TYPE lhs = expressionParser.parseLeft(toMatch, expression);
+        final OPERAND lhs = expressionParser.parseLeft(toMatch, expression);
         final Operator operator = expression.getOperator();
         final boolean success = expressionResolver.resolve(lhs, operator, rhs);
         if (LOG.isTraceEnabled()) {
@@ -48,7 +48,7 @@ final class ParseAheadExpressionMatcher<INPUT, OPERAND_TYPE> implements Expressi
 
 
     @Override
-    public ParseAheadExpressionMatcher<INPUT, OPERAND_TYPE> matcher(Expression<String> expression) {
+    public ParseAheadExpressionMatcher<INPUT, OPERAND> matcher(Expression<String> expression) {
         return new ParseAheadExpressionMatcher<>(expressionParser, expressionResolver, expression);
     }
 

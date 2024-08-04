@@ -14,7 +14,8 @@ final class SystemTimeExpressionParser<CONTEXT> implements ExpressionParser<CONT
     public boolean isSupported(Expression<String> expression) {
         final String lhs = expression.requireLeft();
         if (TIME.equals(lhs)) {
-            return expression.getOperator().isType(Operator.Type.COMPARISON);
+            return Operators.isGloballySupported(expression.getOperator()) ||
+                    expression.getOperator().isType(Operator.Type.COMPARISON);
         }
         return false;
     }

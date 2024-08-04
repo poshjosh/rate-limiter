@@ -4,14 +4,14 @@ import io.github.poshjosh.ratelimiter.util.Matcher;
 import io.github.poshjosh.ratelimiter.util.Matchers;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 final class AnyExpressionMatcher<INPUT> implements ExpressionMatcher<INPUT>{
 
     private final ExpressionMatcher<INPUT>[] expressionMatchers;
 
-    AnyExpressionMatcher(ExpressionMatcher<INPUT>[] matchers) {
-        this.expressionMatchers = new ExpressionMatcher[matchers.length];
-        System.arraycopy(matchers, 0, this.expressionMatchers, 0, matchers.length);
+    AnyExpressionMatcher(ExpressionMatcher<INPUT>[] expressionMatchers) {
+        this.expressionMatchers = Objects.requireNonNull(expressionMatchers);
     }
 
     @Override
