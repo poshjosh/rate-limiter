@@ -18,7 +18,7 @@ To add a dependency on `rate-limiter` using Maven, use the following:
         <dependency>
             <groupId>io.github.poshjosh</groupId>
             <artifactId>rate-limiter</artifactId>
-            <version>0.7.0</version>
+            <version>0.8.0</version>
         </dependency>
 ```
 
