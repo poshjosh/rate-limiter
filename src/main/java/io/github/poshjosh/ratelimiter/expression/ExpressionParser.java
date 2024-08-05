@@ -28,21 +28,10 @@ public interface ExpressionParser<CONTEXT, OPERAND> {
      */
     default Expression<OPERAND> parse(CONTEXT context, Expression<String> expression) {
         return Expressions.of(
-                parseLeft(context, expression), parseOperator(expression), parseRight(expression));
+                parseLeft(context, expression), expression.getOperator(), parseRight(expression));
     }
 
     OPERAND parseLeft(CONTEXT context, Expression<String> expression);
-
-    /**
-     * Parse the operator from the expression
-     * For input: "sys.environment = {service.instances>1}", output operator is ">" not "="
-     * @param expression The expression whose operator will be returned
-     * @return The operator of the expression
-     */
-    default Operator parseOperator(Expression<String> expression) {
-        final String rhsText = expression.getRightOrDefault("");
-        return Operators.ofExpression(rhsText, expression.getOperator());
-    }
 
     OPERAND parseRight(Expression<String> expression);
 }

@@ -16,4 +16,15 @@ public interface Expressions {
     static <T> Expression<T> of(T left, Operator operator, T right) {
         return new DefaultExpression<>(left, operator, right);
     }
+
+    /**
+     * Get the text in square brackets (at the end of the provide text).
+     * Input: <code>"abc.def.ghi[some-name]"</code>
+     * Output: <code>"some-name"</code>
+     * @param text The text to parse.
+     * @return The text in square brackets or <code>null</code> if none.
+     */
+    static String getTextInSquareBracketsOrNull(String text) {
+        return StringExprUtil.getTextInSquareBracketsOrNull(text);
+    }
 }

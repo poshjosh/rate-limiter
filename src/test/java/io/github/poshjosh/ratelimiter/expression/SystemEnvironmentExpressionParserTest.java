@@ -32,7 +32,7 @@ class SystemEnvironmentExpressionParserTest extends AbstractMappingStringExpress
 // TODO - Make the above tests and others like it clear
     @Test
     void parse_shouldSucceed_givenValidExpression() {
-        final String expressionStr = "sys.environment = {LANG !<= C}";
+        final String expressionStr = "sys.environment[LANG] !<= C";
         final Expression<String> expected = Expressions.of("C", "!<=", "C");
         super.parse_shouldSucceed_givenValidExpression(expressionStr, expected);
     }

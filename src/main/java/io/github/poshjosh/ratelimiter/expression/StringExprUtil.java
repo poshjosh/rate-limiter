@@ -16,16 +16,23 @@ final class StringExprUtil {
 
     private StringExprUtil() { }
 
-    static String getTextInSquareBracketsOrDefault(String text, String defaultValue) {
+    /**
+     * Get the text in square brackets (at the end of the provide text).
+     * Input: <code>"abc.def.ghi[some-name]"</code>
+     * Output: <code>"some-name"</code>
+     * @param text The text to parse.
+     * @return The text in square brackets or <code>null</code> if none.
+     */
+    static String getTextInSquareBracketsOrNull(String text) {
         if (text == null || text.isEmpty()) {
-            return defaultValue;
+            return null;
         }
         if (text.charAt(text.length() - 1) != CLOSE_SQUARE_BRACKET) {
-            return defaultValue;
+            return null;
         }
         final int indexOfOpenSquareBracket = text.indexOf(OPEN_SQUARE_BRACKET);
         if (indexOfOpenSquareBracket == -1) {
-            return defaultValue;
+            return null;
         }
         return text.substring(indexOfOpenSquareBracket + 1, text.length() - 1);
     }
@@ -82,19 +89,6 @@ final class StringExprUtil {
     private static RuntimeException invalidTextException(String text, Throwable cause) {
         return new IllegalArgumentException("Invalid: " + text
                 + ". Expected format: <class>#<field|method()> e.g org.spaces.Me#getName()", cause);
-    }
-
-    static String withoutBraces(String value) {
-        if (!StringUtils.hasText(value)) {
-            return value;
-        }
-        if (value.charAt(0) == OPEN_BRACKET) {
-            value = value.substring(1);
-        }
-        if (value.charAt(value.length() - 1) == CLOSE_BRACKET) {
-            value = value.substring(0, value.length() - 1);
-        }
-        return value;
     }
 
     /**
@@ -162,10 +156,6 @@ final class StringExprUtil {
             }
         }
         throw Checks.notSupported(Expression.class, expression);
-    }
-
-    private static boolean isConjunctor(String operator) {
-        return operator.length() == 1 && (OR == operator.charAt(0) || AND == operator.charAt(0));
     }
 
     private static String parseOperator(String expression, int operatorStart, int idxOfSpaceAfterOptr) {

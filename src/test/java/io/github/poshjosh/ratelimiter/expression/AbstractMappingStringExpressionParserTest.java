@@ -83,20 +83,14 @@ abstract class AbstractMappingStringExpressionParserTest {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             final String [] names = {validName, "fake-name"};
-            //final String [] names = {"fake-name"};
-            final List<Operator> mainOptrs = AbstractMappingStringExpressionParserTest
-                    .supportedOperators().collect(Collectors.toList());
-            final Operator[] subOptrs = Operator.values();
-            //final Operator [] subOptrs = {Operator.EQUALS};
+            final Operator[] operators = Operator.values();
             List<Arguments> args = new ArrayList<>();
             for (String name : names) {
                 final String value = valueProvider.apply(name);
                 final String rhs = value == null ? "" : value;
-                for (Operator mainOptr : mainOptrs) {
-                    for (Operator operator : subOptrs) {
-                        String arg0 = lhs + " " + mainOptr.getSymbol() + " {" + name + " " + operator.getSymbol() + " " + rhs + "}";
-                        args.add(Arguments.of(arg0, Expressions.of(value, operator, rhs)));
-                    }
+                for (Operator operator : operators) {
+                    String arg0 = lhs + '[' + name + "] " + operator.getSymbol() + " " + rhs;
+                    args.add(Arguments.of(arg0, Expressions.of(value, operator, value)));
                 }
             }
             return args.stream();

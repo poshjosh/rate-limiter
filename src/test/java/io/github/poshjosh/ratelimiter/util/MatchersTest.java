@@ -26,7 +26,7 @@ class MatchersTest {
         "jvm.memory.available < 999GB & sys.time.elapsed >= PT0S, true",
         "jvm.memory.available < 999GB & sys.time.elapsed > PT1H, false",
         "jvm.thread.count.deadlocked > 30, false",
-        "sys.property = {test.property = test.property.value}, true"
+        "sys.property[test.property] = test.property.value, true"
     })
     void matches(String expression, boolean expected) {
         Matcher<Object> matcher = Matchers.ofExpression(expression);

@@ -87,8 +87,8 @@ class ExpressionMatcherTest {
         String name0 = UUID.randomUUID().toString() + "0";
         String name1 = UUID.randomUUID().toString() + "1";
         Matcher<Object> matcher = ExpressionMatchers.ofSystemProperty()
-                .matcher("sys.property = {user.name = " + name0 +
-                        "} | sys.property = {user.name = " + name1 + "}")
+                .matcher("sys.property[user.name] = " + name0 +
+                        " | sys.property[user.name] = " + name1)
                 .orElseThrow(matcherCreationShouldBeSuccessful());
     }
 

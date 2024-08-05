@@ -13,7 +13,7 @@ abstract class AbstractStringMappingExpressionParser<CONTEXT> implements Express
 
     @Override
     public boolean isSupported(Expression<String> expression) {
-        return lhs.equals(expression.requireLeft()) &&
+        return expression.requireLeft().startsWith(lhs) &&
                 (Operators.isGloballySupported(expression.getOperator()) ||
                 expression.getOperator().equalsIgnoreNegation(Operator.EQUALS));
     }
@@ -21,20 +21,19 @@ abstract class AbstractStringMappingExpressionParser<CONTEXT> implements Express
     @Override
     public String parseLeft(CONTEXT context, Expression<String> expression) {
         final String left = expression.requireLeft();
-        if (!lhs.equals(left)) {
+        if (!left.startsWith(lhs)) {
             throw Checks.notSupported(this, left);
         }
-        Expression<String> rhs = expression.requireRightAsExpression();
-        String name = rhs.requireLeft();
+        final String name = Expressions.getTextInSquareBracketsOrNull(left);
+        if (name == null) {
+            throw Checks.notSupported(this, left);
+        }
         return getValue(name);
     }
 
     @Override
     public String parseRight(Expression<String> expression) {
-        if(expression.getRightOrDefault("").isEmpty()) {
-            return null;
-        }
-        Expression<String> rhs = expression.requireRightAsExpression();
-        return rhs.getRightOrDefault(null);
+        final String right = expression.getRightOrDefault(null);
+        return right == null || right.isEmpty() ? null : right;
     }
 }
