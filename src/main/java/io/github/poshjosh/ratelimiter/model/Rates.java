@@ -105,6 +105,9 @@ public class Rates {
         if (limit != null && limit.isSet()) {
             return true;
         }
+        if (limits == null) {
+            return false;
+        }
         for(Rate rate : limits) {
             if (rate.isSet()) {
                 return true;
@@ -121,24 +124,6 @@ public class Rates {
             }
         }
         return false;
-    }
-
-    public boolean hasLimitsSet() {
-        final int mainSize = limit == null || !limit.isSet() ? 0 : 1;
-        if (mainSize > 0) {
-            return true;
-        }
-        return hasSubLimitsSet();
-    }
-
-    public boolean hasSubLimitsSet() {
-        if (limits == null || limits.isEmpty()) {
-            return false;
-        }
-        if (limits.size() == 1) {
-            return limits.get(0).isSet();
-        }
-        return limits.stream().anyMatch(Rate::isSet);
     }
 
     public int subLimitSize() {
@@ -289,7 +274,6 @@ public class Rates {
     private static final Rates NONE = new Rates(){
         @Override public boolean isSet() { return false; }
         @Override public boolean hasSubConditions() { return false; }
-        @Override public boolean hasLimitsSet() { return false; }
         @Override public int subLimitSize() { return 0; }
         @Override public int totalSize() { return 0; }
         @Override public void setLimit(Rate limit) { throw new UnsupportedOperationException(); }

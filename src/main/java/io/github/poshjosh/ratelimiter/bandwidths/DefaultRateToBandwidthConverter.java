@@ -31,7 +31,7 @@ final class DefaultRateToBandwidthConverter implements RateToBandwidthConverter 
 
     @Override
     public Bandwidth convert(Rates rates, Bandwidth resultIfNone) {
-        if (!rates.hasLimitsSet()) {
+        if (!rates.isSet()) {
             log(rates, resultIfNone);
             return resultIfNone;
         }

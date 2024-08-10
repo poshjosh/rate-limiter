@@ -68,7 +68,7 @@ public final class RateConfig {
     }
 
     public boolean shouldDelegateToParent() {
-        return !rates.hasLimitsSet() && (parent != null && parent.isGroupType());
+        return !rates.isSet() && (parent != null && parent.isGroupType());
     }
 
     @Override public boolean equals(Object o) {
