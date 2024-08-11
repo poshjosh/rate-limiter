@@ -4,6 +4,10 @@ import static java.lang.Math.max;
 
 public interface Bandwidth {
 
+    default boolean isAvailable(long nowMicros) {
+        return isAvailable(nowMicros, 0);
+    }
+
     default boolean isAvailable(long nowMicros, long timeoutMicros) {
         final long nextFreeTicketAvailableAt = queryEarliestAvailable(nowMicros);
         return nextFreeTicketAvailableAt - timeoutMicros <= nowMicros;

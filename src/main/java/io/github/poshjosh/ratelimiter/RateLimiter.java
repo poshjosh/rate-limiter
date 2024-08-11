@@ -64,10 +64,6 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
  */
 public interface RateLimiter {
 
-    static RateLimiter noLimit() {
-        return RateLimiters.NO_LIMIT;
-    }
-
     /**
      * Get this RateLimiter's bandwidth.
      * Meant for introspection and monitoring purposes.
