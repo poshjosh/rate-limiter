@@ -200,19 +200,50 @@ public final class Rate {
         this.factoryClass = factoryClass;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Rate)) return false;
-        Rate that = (Rate) o;
-        return permits == that.permits && duration.equals(that.duration)
-                && rateCondition.equals(that.rateCondition) && factoryClass.equals(that.factoryClass);
+    @Override public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        Rate rate = (Rate) o;
+
+        if (getPermits() != rate.getPermits())
+            return false;
+        if (getDuration() != null ?
+                !getDuration().equals(rate.getDuration()) :
+                rate.getDuration() != null)
+            return false;
+        if (getRateCondition() != null ?
+                !getRateCondition().equals(rate.getRateCondition()) :
+                rate.getRateCondition() != null)
+            return false;
+        return getFactoryClass() != null ?
+                getFactoryClass().equals(rate.getFactoryClass()) :
+                rate.getFactoryClass() == null;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(permits, duration, rateCondition, factoryClass);
+    @Override public int hashCode() {
+        int result = (int) (getPermits() ^ (getPermits() >>> 32));
+        result = 31 * result + (getDuration() != null ? getDuration().hashCode() : 0);
+        result = 31 * result + (getRateCondition() != null ? getRateCondition().hashCode() : 0);
+        result = 31 * result + (getFactoryClass() != null ? getFactoryClass().hashCode() : 0);
+        return result;
     }
+
+    //    @Override
+//    public boolean equals(Object o) {
+//        if (this == o) return true;
+//        if (!(o instanceof Rate)) return false;
+//        Rate that = (Rate) o;
+//        return permits == that.permits && duration.equals(that.duration)
+//                && rateCondition.equals(that.rateCondition) && factoryClass.equals(that.factoryClass);
+//    }
+
+//    @Override
+//    public int hashCode() {
+//        return Objects.hash(permits, duration, rateCondition, factoryClass);
+//    }
 
     @Override
     public String toString() {

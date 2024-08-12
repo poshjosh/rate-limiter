@@ -247,24 +247,48 @@ public class Rates {
         limit.setFactoryClass(factoryClass);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
+    @Override public boolean equals(Object o) {
+        if (this == o)
             return true;
-        }
-        if (!(o instanceof Rates)) {
+        if (o == null || getClass() != o.getClass())
             return false;
-        }
+
         Rates rates = (Rates) o;
-        return operator == rates.operator
-                && Objects.equals(limit, rates.limit)
-                && Objects.equals(limits, rates.limits);
+
+        if (getOperator() != rates.getOperator())
+            return false;
+        if (getLimits() != null ?
+                !getLimits().equals(rates.getLimits()) :
+                rates.getLimits() != null)
+            return false;
+        return getLimit() != null ? getLimit().equals(rates.getLimit()) : rates.getLimit() == null;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(operator, limit, limits);
+    @Override public int hashCode() {
+        int result = getOperator() != null ? getOperator().hashCode() : 0;
+        result = 31 * result + (getLimits() != null ? getLimits().hashCode() : 0);
+        result = 31 * result + (getLimit() != null ? getLimit().hashCode() : 0);
+        return result;
     }
+
+    //    @Override
+//    public boolean equals(Object o) {
+//        if (this == o) {
+//            return true;
+//        }
+//        if (!(o instanceof Rates)) {
+//            return false;
+//        }
+//        Rates rates = (Rates) o;
+//        return operator == rates.operator
+//                && Objects.equals(limit, rates.limit)
+//                && Objects.equals(limits, rates.limits);
+//    }
+//
+//    @Override
+//    public int hashCode() {
+//        return Objects.hash(operator, limit, limits);
+//    }
 
     @Override
     public String toString() {
