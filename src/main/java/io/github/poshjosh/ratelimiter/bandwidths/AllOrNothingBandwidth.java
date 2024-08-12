@@ -90,9 +90,9 @@ final class AllOrNothingBandwidth implements Bandwidth, Serializable {
     }
 
     @Override
-    public double getPermitsPerSecond() {
+    public double getPermitsPer(TimeUnit timeUnit) {
         double permitsPerMicro = (double)(limit.permits) / limit.durationMicros;
-        return permitsPerMicro * TimeUnit.SECONDS.toMicros(1);
+        return permitsPerMicro * timeUnit.toMicros(1);
     }
 
     @Override

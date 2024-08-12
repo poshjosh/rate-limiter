@@ -1,5 +1,7 @@
 package io.github.poshjosh.ratelimiter.bandwidths;
 
+import java.util.concurrent.TimeUnit;
+
 import static java.lang.Math.max;
 
 public interface Bandwidth {
@@ -23,7 +25,11 @@ public interface Bandwidth {
      * configured with. The initial value of this is the same as the {@code permitsPerSecond} argument
      * passed in the factory method that produced this {@code Bandwidth}.
      */
-    double getPermitsPerSecond();
+    default double getPermitsPerSecond() {
+        return getPermitsPer(TimeUnit.SECONDS);
+    }
+
+    double getPermitsPer(TimeUnit timeUnit);
 
     /**
      * Returns the earliest time that permits are available (with one caveat).

@@ -1,6 +1,7 @@
 package io.github.poshjosh.ratelimiter.bandwidths;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 final class UnmodifiableBandwidth implements Bandwidth {
     private final Bandwidth delegate;
@@ -29,8 +30,8 @@ final class UnmodifiableBandwidth implements Bandwidth {
     }
 
     @Override
-    public double getPermitsPerSecond() {
-        return delegate.getPermitsPerSecond();
+    public double getPermitsPer(TimeUnit timeUnit) {
+        return delegate.getPermitsPer(timeUnit);
     }
 
     @Override

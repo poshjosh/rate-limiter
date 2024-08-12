@@ -8,6 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Compose a {@code Bandwidth} from multiple {@code Bandwidth}s.
@@ -156,31 +157,17 @@ final class BandwidthArray implements Bandwidth, Serializable {
      * Returns the stable rate (as {@code permits per seconds}) with which an eligible
      * {@code Bandwidth} in this {@code Bandwidths} is configured with.
      * For AND we return the largest value, for OR we return the smallest value.
-     * @see #getAllPermitsPerSecond()
      */
     @Beta
     @Override
-    public double getPermitsPerSecond() {
+    public double getPermitsPer(TimeUnit timeUnit) {
         final boolean AND = Operator.AND.equals(operator);
-        double [] arr = getAllPermitsPerSecond();
         double result = -1;
-        for(double e : arr) {
+        for(Bandwidth bandwidth : bandwidths) {
+            double e = bandwidth.getPermitsPer(timeUnit);
             result = result == - 1 ? e : (AND ? Math.max(e, result) : Math.min(e, result));
         }
         return result;
-    }
-
-    /**
-     * Returns the stable rates (as {@code permits per seconds}) with which each {@code Bandwidth} in this
-     * {@code Bandwidths} is configured with. The initial value of each, is the same as the {@code permitsPerSecond}
-     * argument passed in the factory method that produced each {@code Bandwidth}.
-     */
-    private double [] getAllPermitsPerSecond() {
-        final double [] permitsPerSecond = new double[bandwidths.length];
-        for(int i = 0; i < bandwidths.length; i++) {
-            permitsPerSecond[i] = bandwidths[i].getPermitsPerSecond();
-        }
-        return permitsPerSecond;
     }
 
     @Override

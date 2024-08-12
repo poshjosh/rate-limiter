@@ -219,22 +219,17 @@ public abstract class SmoothBandwidth implements Bandwidth {
         Checks.requireTrue(permitsPerSecond > 0.0
                 && !Double.isNaN(permitsPerSecond), "Must be positive, rate: " + permitsPerSecond);
         resync(nowMicros);
-        this.stableIntervalMicros = convert(permitsPerSecond);
+        this.stableIntervalMicros = convert(permitsPerSecond, SECONDS);
         doSetRate(permitsPerSecond, stableIntervalMicros);
     }
 
-    /**
-     * Returns the stable rate (as {@code permits per seconds}) with which this {@code Rate} is
-     * configured with. The initial value of this is the same as the {@code permitsPerSecond} argument
-     * passed in the factory method that produced this {@code Rate}.
-     */
     @Override
-    public final double getPermitsPerSecond() {
-        return convert(stableIntervalMicros);
+    public double getPermitsPer(TimeUnit timeUnit) {
+        return convert(stableIntervalMicros, timeUnit);
     }
 
-    private double convert(double rate) {
-        return SECONDS.toMicros(1L) / rate;
+    private double convert(double rate, TimeUnit timeUnit) {
+        return timeUnit.toMicros(1L) / rate;
     }
 
     @Override

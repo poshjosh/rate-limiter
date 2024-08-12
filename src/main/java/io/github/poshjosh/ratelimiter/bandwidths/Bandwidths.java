@@ -15,7 +15,7 @@ public interface Bandwidths {
 
     Bandwidth UNLIMITED = new Bandwidth() {
         @Override public Bandwidth with(long nowMicros) { return this; }
-        @Override public double getPermitsPerSecond() { return Double.MAX_VALUE; }
+        @Override public double getPermitsPer(TimeUnit timeUnit) { return Double.MAX_VALUE; }
         @Override public long queryEarliestAvailable(long now) { return now; }
         @Override public long reserveEarliestAvailable(int permits, long now) { return now; }
 
