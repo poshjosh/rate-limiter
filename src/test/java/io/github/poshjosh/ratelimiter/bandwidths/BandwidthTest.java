@@ -2,6 +2,7 @@ package io.github.poshjosh.ratelimiter.bandwidths;
 
 import io.github.poshjosh.ratelimiter.RateLimiter;
 import io.github.poshjosh.ratelimiter.RateLimiters;
+import io.github.poshjosh.ratelimiter.model.Rate;
 import io.github.poshjosh.ratelimiter.util.Operator;
 import io.github.poshjosh.ratelimiter.util.Ticker;
 import io.github.poshjosh.ratelimiter.util.Tickers;
@@ -10,9 +11,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BandwidthTest {
 
@@ -165,6 +168,24 @@ class BandwidthTest {
         //System.out.println(i);
         //System.out.println(i + ", " + limiter);
         assertFalse("Capable of acquiring permit: " + i + ", " + limiter, limiter.tryAcquire());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 9, 350_009_999})
+    void givenAllOrNothingBandwidth_getPermitsPerSecond(int permits) {
+        Bandwidth bandwidth = Bandwidths.allOrNothing(permits, Duration.ofMinutes(1));
+        assertEquals((double)permits/60_000, bandwidth.getPermitsPer(MILLISECONDS), 0.0000000001);
+        assertEquals((double)permits/60, bandwidth.getPermitsPer(SECONDS));
+        assertEquals(permits, bandwidth.getPermitsPer(MINUTES));
+    }
+
+    @ParameterizedTest
+    @ValueSource(doubles = {1.0, 9.099, 350_009_999.112546998})
+    void givenBurstyBandwidth_getPermitsPerSecond(double permits) {
+        Bandwidth bandwidth = Bandwidths.bursty(permits);
+        assertEquals(permits/1000, bandwidth.getPermitsPer(MILLISECONDS), 0.0000001);
+        assertEquals(permits, bandwidth.getPermitsPer(SECONDS));
+        assertEquals(permits * 60, bandwidth.getPermitsPer(MINUTES));
     }
 
     private RateLimiter createRateLimiter(Bandwidth bandwidth, Ticker ticker) {
