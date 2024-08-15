@@ -5,20 +5,22 @@ import java.util.Objects;
 import java.util.Optional;
 
 final class SimpleRateSource implements RateSource {
-    private final String id;
-    private final boolean isRateLimited;
+    private final Rates rates;
 
-    SimpleRateSource(String id, boolean isRateLimited) {
-        this.id = Objects.requireNonNull(id);
-        this.isRateLimited = isRateLimited;
+    SimpleRateSource(Rates rates) {
+        this.rates = Objects.requireNonNull(rates);
     }
 
     @Override public String getId() {
-        return id;
+        return rates.getId();
     }
 
     @Override public Object getSource() {
-        return this;
+        return RateSources.NONE;
+    }
+
+    @Override public Rates getRates() {
+        return rates;
     }
 
     @Override public <T extends Annotation> Optional<T> getAnnotation(Class<T> annotationClass) {
@@ -26,7 +28,7 @@ final class SimpleRateSource implements RateSource {
     }
 
     @Override public boolean isRateLimited() {
-        return isRateLimited;
+        return this.rates.isSet();
     }
 
     @Override public int hashCode() {

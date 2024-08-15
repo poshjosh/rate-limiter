@@ -22,11 +22,18 @@ To add a dependency on `rate-limiter` using Maven, use the following:
         </dependency>
 ```
 
+### RateLimiter
+
+```java
+RateLimiter rateLimiter = RateLimiter.of(Bandwidths.ofSeconds(1));
+```
+
 ### Usage
 
 We want rate limiting to be adjusted dynamically based on specific conditions. [See rate condition expression language](docs/RATE-CONDITION-EXPRESSION-LANGUAGE.md)
 
 ```java
+import io.github.poshjosh.ratelimiter.RateLimiter;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
 import io.github.poshjosh.ratelimiter.util.Matcher;
 import io.github.poshjosh.ratelimiter.util.Matchers;

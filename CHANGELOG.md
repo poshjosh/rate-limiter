@@ -15,10 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `.expression.Operator#IN`. Example use: `web.request.remote.address in io.github.ratelimiter.Bots.getBotIps()`.
 - `Bandwidths#getPermitsPer(TimeUnit)`.
+- Method `RateSource#getRates` to get rates defined at the respective source.
 
 ### Removed
 
 - `RateLimiterFactory`. Rather use `RateLimiterRegistry` directly.
+- `AnnotationConverter` and its implementations. Rather use `JavaRateSources.of()`.
 
 ### Changed
 

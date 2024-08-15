@@ -4,7 +4,7 @@ import java.util.Objects;
 
 public final class RateConfig {
 
-    public static final RateConfig NONE = RateConfig.of(RateSource.NONE, Rates.none(), null);
+    public static final RateConfig NONE = RateConfig.of(RateSources.NONE, Rates.none(), null);
 
     public static RateConfig of(long permitsPerSecond) {
         return of(permitsPerSecond, "");
@@ -15,7 +15,7 @@ public final class RateConfig {
     }
 
     public static RateConfig of(Rates value) {
-        return new RateConfig(RateSource.NONE, value, NONE);
+        return new RateConfig(RateSources.NONE, value, NONE);
     }
 
     public static RateConfig of(RateSource source, Rates value) {
