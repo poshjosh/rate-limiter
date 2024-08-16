@@ -23,14 +23,10 @@ public class Rates implements java.io.Serializable {
     }
 
     public static Rates of(String id, Rate rate) {
-        return new Rates(id, Operator.NONE, rate, null);
+        return new Rates(id, null, rate, null);
     }
 
     public static Rates empty() { return new Rates(); }
-
-    public static Rates of(Rates rates) {
-        return new Rates(rates);
-    }
 
     public static Rates or(Rate... rates) {
         return of(Operator.OR, rates);
@@ -39,21 +35,20 @@ public class Rates implements java.io.Serializable {
     public static Rates and(Rate... rates) { return of(Operator.AND, rates); }
 
     public static Rates of(Operator operator, Rate... rates) {
-        return of(operator, "", rates);
+        return of(operator, null, rates);
     }
 
     public static Rates of(String rateCondition, Rate... rates) {
-        return of(Operator.NONE, rateCondition, rates);
+        return of(null, rateCondition, rates);
     }
 
     public static Rates ofCondition(String rateCondition) {
-        final Rate rate = StringUtils.hasText(rateCondition)
-                ? Rate.of(rateCondition) : null;
+        final Rate rate = StringUtils.hasText(rateCondition) ? Rate.of(rateCondition) : null;
         return of(rate);
     }
 
     public static Rates of(Operator operator, String rateCondition, Rate... rates) {
-        return of(randomId(), operator, rateCondition, rates);
+        return of(null, operator, rateCondition, rates);
     }
 
     public static Rates of(String id, Operator operator, String rateCondition, Rate... rates) {
@@ -63,16 +58,15 @@ public class Rates implements java.io.Serializable {
     }
 
     public static Rates of(List<Rate> rates) {
-        return of(Operator.NONE, "", rates);
+        return of(null, null, rates);
     }
 
     public static Rates of(Operator operator, String rateCondition, List<Rate> rates) {
-        return of(randomId(), operator, rateCondition, rates);
+        return of(null, operator, rateCondition, rates);
     }
 
     public static Rates of(String id, Operator operator, String rateCondition, List<Rate> rates) {
-        final Rate rate = StringUtils.hasText(rateCondition)
-                ? Rate.of(rateCondition) : null;
+        final Rate rate = StringUtils.hasText(rateCondition) ? Rate.of(rateCondition) : null;
         return new Rates(id, operator, rate, rates);
     }
 
@@ -80,9 +74,11 @@ public class Rates implements java.io.Serializable {
         return UUID.randomUUID().toString();
     }
 
+    private String parentId;
+
     private String id;
 
-    private Operator operator = Operator.NONE;
+    private Operator operator;
 
     /**
      * Multiple limits. Either set this or {@link #limit} but not both.
@@ -93,7 +89,7 @@ public class Rates implements java.io.Serializable {
     // Always access this through its getter. A small inconvenience
     // to pay for an additional single limit field.
     //
-    private List<Rate> limits = Collections.emptyList();
+    private List<Rate> limits;
 
     /**
      * A single limit. Added for convenience. Either set this or {@link #limits} but not both.
@@ -105,26 +101,26 @@ public class Rates implements java.io.Serializable {
 
     // A public no-argument constructor is required
     public Rates() {
-        this((Rate)null);
+        this(null);
     }
 
     protected Rates(Rate limit) {
-        this(randomId(), Operator.NONE, limit, null);
-    }
-
-    protected Rates(Rates rates) {
-        this(randomId(), rates.operator, rates.limit, rates.limits);
+        this(null, null, limit, null);
     }
 
     protected Rates(String id, Operator operator, Rate limit, List<Rate> limits) {
-        this.id = Objects.requireNonNull(id);
-        this.operator = Objects.requireNonNull(operator);
+        this.id = id == null ? randomId() : id;
+        this.operator = operator == null ? Operator.NONE : operator;
         this.limit = limit;
         this.limits = limits == null || limits.isEmpty()
                 ? Collections.emptyList() : limits.stream()
                 .filter(Objects::nonNull)
                 .filter(Rate::isSet)
                 .map(Rate::new).collect(Collectors.toList());
+    }
+
+    public Rates copy() {
+        return new Rates(id, operator, limit, limits);
     }
 
     public boolean isSet() {
@@ -159,6 +155,19 @@ public class Rates implements java.io.Serializable {
     public int totalSize() {
         final int mainSize = limit == null ? 0 : 1;
         return mainSize + subLimitSize();
+    }
+
+    public Rates parentId(String parentId) {
+        setParentId(parentId);
+        return this;
+    }
+
+    public String getParentId() {
+        return this.parentId;
+    }
+
+    public void setParentId(String parentId) {
+        this.parentId = parentId;
     }
 
     public Rates id(String id) {
@@ -307,12 +316,13 @@ public class Rates implements java.io.Serializable {
                 + ", operator=" + operator + ", sub=" + limits + '}';
     }
 
-    private static final Rates NONE = new Rates(){
+    private static final Rates NONE = new Rates("", null, null, null){
         @Override public boolean isSet() { return false; }
         @Override public boolean hasSubConditions() { return false; }
         @Override public int subLimitSize() { return 0; }
         @Override public int totalSize() { return 0; }
         @Override public void setId(String id) { throw new UnsupportedOperationException(); }
+        @Override public void setParentId(String parentId) { throw new UnsupportedOperationException(); }
         @Override public void setLimit(Rate limit) { throw new UnsupportedOperationException(); }
         @Override public void setOperator(Operator optr) { throw new UnsupportedOperationException(); }
         @Override public void setLimits(List<Rate> limits) { throw new UnsupportedOperationException(); }
