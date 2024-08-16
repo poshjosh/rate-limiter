@@ -8,7 +8,9 @@ import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Rates {
+public class Rates implements java.io.Serializable {
+
+    private static final long serialVersionUID = 110L;
 
     public static Rates none() { return NONE; }
 

@@ -7,7 +7,9 @@ import io.github.poshjosh.ratelimiter.bandwidths.BandwidthFactory;
 import java.time.Duration;
 import java.util.Objects;
 
-public final class Rate {
+public class Rate implements java.io.Serializable {
+
+    private static final long serialVersionUID = 100L;
 
     public static Rate ofNanos(long permits) {
         return of(permits, Duration.ofNanos(1));
