@@ -7,6 +7,12 @@ import io.github.poshjosh.ratelimiter.bandwidths.BandwidthFactory;
 import java.time.Duration;
 import java.util.Objects;
 
+/**
+ * A Rate is a configuration for a rate limit/scope.
+ * Rates are used to create Bandwidths. Rates specify the scope/limit of each bandwidth.
+ * @see Bandwidth
+ */
+
 public class Rate implements java.io.Serializable {
 
     private static final long serialVersionUID = 100L;

@@ -4,6 +4,12 @@ import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.max;
 
+/**
+ * A Bandwidth is quantity that can be used over a period of time.
+ * Bandwidths change with use and are created from rates.
+ * Rates on the other hand specify the scope/limit of each bandwidth.
+ * @see io.github.poshjosh.ratelimiter.model.Rate
+ */
 public interface Bandwidth {
 
     default boolean isAvailable(long nowMicros) {

@@ -56,7 +56,7 @@ public final class RateConfig {
         return rates;
     }
 
-    public Rates getRatesWithParentRatesAsFallback() {
+    public Rates getRatesOrParentRates() {
         if (shouldDelegateToParent()) {
             return parent == null ? rates : parent.getRates();
         }
