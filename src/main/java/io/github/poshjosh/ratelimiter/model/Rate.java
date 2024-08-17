@@ -1,21 +1,35 @@
 package io.github.poshjosh.ratelimiter.model;
 
-import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
-import io.github.poshjosh.ratelimiter.bandwidths.BandwidthFactories;
-import io.github.poshjosh.ratelimiter.bandwidths.BandwidthFactory;
-
 import java.time.Duration;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A Rate is a configuration for a rate limit/scope.
  * Rates are used to create Bandwidths. Rates specify the scope/limit of each bandwidth.
- * @see Bandwidth
+ * @see io.github.poshjosh.ratelimiter.bandwidths.Bandwidth
  */
-
 public class Rate implements java.io.Serializable {
 
     private static final long serialVersionUID = 100L;
+
+    /**
+     * Returns a string representation of the rate.
+     * 99/m = 99 permits per minute
+     * 1    = 1 permit per millisecond
+     * Supported characters : '' = milli, 's' = second, 'm' = minute, 'h' = hour, 'd' = day
+     *
+     * @param permits The number of permits per time unit.
+     * @param timeUnit The time unit.
+     * @return A string representation of the rate.
+     */
+    public static String rate(long permits, TimeUnit timeUnit) {
+        if (timeUnit == TimeUnit.MILLISECONDS) {
+            return "" + permits;
+        } else {
+            return permits + "/" + toChar(timeUnit);
+        }
+    }
 
     public static Rate ofNanos(long permits) {
         return of(permits, Duration.ofNanos(1));
@@ -41,34 +55,52 @@ public class Rate implements java.io.Serializable {
         return of(permits, Duration.ofDays(1));
     }
 
-    public static Rate of(String rateCondition) {
-        return of(0, Duration.ZERO, rateCondition);
+    public static Rate ofCondition(String condition) {
+        return of(0, Duration.ZERO, condition);
     }
 
-    public static Rate of(long permitsPerSecond, String rateCondition) {
-        return of(permitsPerSecond, Duration.ofSeconds(1), rateCondition);
+    public static Rate of(long permitsPerSecond, String condition) {
+        return of(permitsPerSecond, Duration.ofSeconds(1), condition);
+    }
+
+    public static Rate parse(String text) {
+        return of(text);
+    }
+
+    public static Rate of(String rate) {
+        final long permits = parsePermits(rate);
+        final long durationMillis = parseDurationMillis(rate);
+        return of(permits, Duration.ofMillis(durationMillis));
     }
 
     public static Rate of(long permits, Duration duration) {
         return of(permits, duration, "");
     }
 
-    public static Rate of(long permits, Duration duration, String rateCondition) {
-        return of(permits, duration, rateCondition, BandwidthFactories.Default.class);
+    public static Rate of(String rate, String condition) {
+        final long permits = parsePermits(rate);
+        final long durationMillis = parseDurationMillis(rate);
+        return of(permits, Duration.ofMillis(durationMillis), condition);
     }
 
-    public static Rate of(long permits, Duration duration,
-            String rateCondition, Class<? extends BandwidthFactory> factoryClass) {
-        return new Rate(permits, duration, rateCondition, factoryClass);
+    public static Rate of(long permits, Duration duration, String condition) {
+        return of(permits, duration, condition, "");
+    }
+
+    public static Rate of(long permits, Duration duration, String condition, String factoryClass) {
+        return new Rate("", permits, duration, condition, factoryClass);
     }
 
     public static Rate of(Rate rate) {
         return new Rate(rate);
     }
 
-    private long permits;
-    private Duration duration = Duration.ofSeconds(1);
+    private static final Duration DEFAULT_DURATION = Duration.ofSeconds(1);
 
+    private String rate = "";
+
+    private long permits;
+    private Duration duration = DEFAULT_DURATION;
 
     /**
      * An expression which specifies the condition for rate limiting.
@@ -116,35 +148,30 @@ public class Rate implements java.io.Serializable {
      * %  contains
      * !  not (e.g !=, !>, !$ etc)
      * </pre>
-     *
      * @see Rates#getRateCondition()
      */
-    private String rateCondition = "";
+    private String condition = "";
 
     /**
-     * A {@link BandwidthFactory} that will be dynamically instantiated and used to create
-     * {@link Bandwidth}s from this rate limit.
-     * The class must have a zero-argument constructor.
+     * A class name of a BandwidthFactory that will be dynamically instantiated and used to
+     * create Bandwidths from this rate limit. The class must have a zero-argument constructor.
      */
-    private Class<? extends BandwidthFactory> factoryClass = BandwidthFactories.getDefaultClass();
+    private String factoryClass = "";
 
     public Rate() { }
 
     Rate(Rate rate) {
-        this(rate.permits, rate.duration, rate.rateCondition, rate.factoryClass);
+        this(rate.rate, rate.permits, rate.duration, rate.condition, rate.factoryClass);
     }
 
-    Rate(long permits, Duration duration, String rateCondition,
-            Class<? extends BandwidthFactory> factoryClass) {
-        requireNotNegative(permits, "permits");
+    Rate(String rate, long permits, Duration duration, String condition, String factoryClass) {
+        this.rate = Objects.requireNonNull(rate);
+        requireFalse(permits < 0, "Must not be negative, permits: %d", permits);
         requireFalse(duration.isNegative(), "Duration must be withPositiveOperator, duration: " + duration);
         this.permits = permits;
         this.duration = Objects.requireNonNull(duration);
-        this.rateCondition = Objects.requireNonNull(rateCondition);
+        this.condition = Objects.requireNonNull(condition);
         this.factoryClass = Objects.requireNonNull(factoryClass);
-    }
-    private void requireNotNegative(double amount, String what) {
-        requireFalse(amount < 0, "Must not be negative, %s: %d", what, amount);
     }
     private void requireFalse(boolean expression, String errorMessageFormat, Object... args) {
         if (expression) {
@@ -154,6 +181,19 @@ public class Rate implements java.io.Serializable {
 
     public boolean isSet() {
         return !Duration.ZERO.equals(duration);
+    }
+
+    public Rate text(String permits) {
+        this.setRate(permits);
+        return this;
+    }
+
+    public String getRate() {
+        return rate;
+    }
+
+    public void setRate(String rate) {
+        this.rate = rate;
     }
 
     public Rate permits(long permits) {
@@ -182,30 +222,64 @@ public class Rate implements java.io.Serializable {
         this.duration = duration;
     }
 
-    public Rate rateCondition(String rateCondition) {
-        setRateCondition(rateCondition);
+    public Rate condition(String condition) {
+        setCondition(condition);
         return this;
     }
 
-    public String getRateCondition() {
-        return rateCondition;
+    public String getCondition() {
+        return condition;
     }
 
-    public void setRateCondition(String rateCondition) {
-        this.rateCondition = rateCondition;
+    public void setCondition(String condition) {
+        this.condition = condition;
     }
 
-    public Rate factoryClass(Class<? extends BandwidthFactory> factoryClass) {
+    public Rate factoryClass(String factoryClass) {
         setFactoryClass(factoryClass);
         return this;
     }
 
-    public Class<? extends BandwidthFactory> getFactoryClass() {
+    public String getFactoryClass() {
         return factoryClass;
     }
 
-    public void setFactoryClass(Class<? extends BandwidthFactory> factoryClass) {
+    public void setFactoryClass(String factoryClass) {
         this.factoryClass = factoryClass;
+    }
+
+    private static long parseDurationMillis(String rate) {
+        final int pivot = rate.indexOf('/');
+        return toDurationMillis(pivot == -1 ? '\u0000' : rate.charAt(pivot + 1));
+    }
+
+    private static long parsePermits(String rate) {
+        final int pivot = rate.indexOf('/');
+        return Long.parseLong(pivot == -1 ? rate : rate.substring(0, pivot));
+    }
+
+    private static long toDurationMillis(char ch) {
+        switch (ch) {
+        case '\u0000': return 1;
+        case 's': return 1000;
+        case 'm': return (60 * 1000);
+        case 'h': return (60 * 60 * 1000);
+        case 'd': return (24 * 60 * 60 * 1000);
+        default: throw new IllegalArgumentException("Invalid duration character: " + ch +
+                ", supported characters: '', 's', 'm', 'h', 'd'");
+        }
+    }
+
+    private static char toChar(TimeUnit ch) {
+        switch (ch) {
+        case MILLISECONDS: return '\u0000';
+        case SECONDS: return 's';
+        case MINUTES: return 'm';
+        case HOURS: return 'h';
+        case DAYS: return 'd';
+        default: throw new IllegalArgumentException("Invalid TimeUnit: " + ch +
+                ", supported are: MILLISECONDS, SECONDS,  MINUTES, HOURS, DAYS");
+        }
     }
 
     @Override public boolean equals(Object o) {
@@ -214,52 +288,42 @@ public class Rate implements java.io.Serializable {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        Rate rate = (Rate) o;
+        Rate rate1 = (Rate) o;
 
-        if (getPermits() != rate.getPermits())
+        if (getPermits() != rate1.getPermits())
+            return false;
+        if (getRate() != null ? !getRate().equals(rate1.getRate()) : rate1.getRate() != null)
             return false;
         if (getDuration() != null ?
-                !getDuration().equals(rate.getDuration()) :
-                rate.getDuration() != null)
+                !getDuration().equals(rate1.getDuration()) :
+                rate1.getDuration() != null)
             return false;
-        if (getRateCondition() != null ?
-                !getRateCondition().equals(rate.getRateCondition()) :
-                rate.getRateCondition() != null)
+        if (getCondition() != null ?
+                !getCondition().equals(rate1.getCondition()) :
+                rate1.getCondition() != null)
             return false;
         return getFactoryClass() != null ?
-                getFactoryClass().equals(rate.getFactoryClass()) :
-                rate.getFactoryClass() == null;
+                getFactoryClass().equals(rate1.getFactoryClass()) :
+                rate1.getFactoryClass() == null;
     }
 
     @Override public int hashCode() {
-        int result = (int) (getPermits() ^ (getPermits() >>> 32));
+        int result = getRate() != null ? getRate().hashCode() : 0;
+        result = 31 * result + (int) (getPermits() ^ (getPermits() >>> 32));
         result = 31 * result + (getDuration() != null ? getDuration().hashCode() : 0);
-        result = 31 * result + (getRateCondition() != null ? getRateCondition().hashCode() : 0);
+        result = 31 * result + (getCondition() != null ? getCondition().hashCode() : 0);
         result = 31 * result + (getFactoryClass() != null ? getFactoryClass().hashCode() : 0);
         return result;
     }
 
-    //    @Override
-//    public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (!(o instanceof Rate)) return false;
-//        Rate that = (Rate) o;
-//        return permits == that.permits && duration.equals(that.duration)
-//                && rateCondition.equals(that.rateCondition) && factoryClass.equals(that.factoryClass);
-//    }
-
-//    @Override
-//    public int hashCode() {
-//        return Objects.hash(permits, duration, rateCondition, factoryClass);
-//    }
-
     @Override
     public String toString() {
         return "Rate{" +
+                "rate=" + rate +
                 "permits=" + permits +
                 ", duration=" + duration +
-                ", condition=" + rateCondition +
-                ", factoryClass=" + (factoryClass == null ? null : factoryClass.getSimpleName()) +
+                ", condition=" + condition +
+                ", factoryClass=" + (factoryClass == null ? null : factoryClass) +
                 '}';
     }
 }

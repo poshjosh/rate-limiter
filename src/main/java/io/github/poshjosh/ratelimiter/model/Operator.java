@@ -1,4 +1,4 @@
-package io.github.poshjosh.ratelimiter.util;
+package io.github.poshjosh.ratelimiter.model;
 
 import java.util.Objects;
 
@@ -34,7 +34,7 @@ public enum Operator {
             case "&": return AND;
             case "|": return OR;
             case "": return NONE;
-            default: throw Checks.notSupported(Operator.class, "symbol: " + symbol);
+            default: throw new UnsupportedOperationException("Operator does not support: " + symbol);
         }
     }
 }

@@ -3,7 +3,7 @@ package io.github.poshjosh.ratelimiter;
 import io.github.poshjosh.ratelimiter.annotations.Beta;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidth;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
-import io.github.poshjosh.ratelimiter.util.Operator;
+import io.github.poshjosh.ratelimiter.model.Operator;
 
 import java.util.Arrays;
 import java.util.Objects;

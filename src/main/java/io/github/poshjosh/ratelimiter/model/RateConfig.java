@@ -10,8 +10,8 @@ public final class RateConfig {
         return of(permitsPerSecond, "");
     }
 
-    public static RateConfig of(long permitsPerSecond, String rateCondition) {
-        return of(Rates.of(Rate.of(permitsPerSecond, rateCondition)));
+    public static RateConfig of(long permitsPerSecond, String condition) {
+        return of(Rates.of(Rate.of(permitsPerSecond, condition)));
     }
 
     public static RateConfig of(Rates value) {

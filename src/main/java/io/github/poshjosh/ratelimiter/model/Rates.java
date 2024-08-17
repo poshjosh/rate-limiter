@@ -1,9 +1,5 @@
 package io.github.poshjosh.ratelimiter.model;
 
-import io.github.poshjosh.ratelimiter.bandwidths.BandwidthFactory;
-import io.github.poshjosh.ratelimiter.util.Operator;
-import io.github.poshjosh.ratelimiter.util.StringUtils;
-
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,35 +34,34 @@ public class Rates implements java.io.Serializable {
         return of(operator, null, rates);
     }
 
-    public static Rates of(String rateCondition, Rate... rates) {
-        return of(null, rateCondition, rates);
+    public static Rates of(String condition, Rate... rates) {
+        return of(null, condition, rates);
     }
 
-    public static Rates ofCondition(String rateCondition) {
-        final Rate rate = StringUtils.hasText(rateCondition) ? Rate.of(rateCondition) : null;
-        return of(rate);
+    public static Rates ofCondition(String condition) {
+        return of(condition == null || condition.isEmpty() ? null : Rate.ofCondition(condition));
     }
 
-    public static Rates of(Operator operator, String rateCondition, Rate... rates) {
-        return of(null, operator, rateCondition, rates);
+    public static Rates of(Operator operator, String condition, Rate... rates) {
+        return of(null, operator, condition, rates);
     }
 
-    public static Rates of(String id, Operator operator, String rateCondition, Rate... rates) {
+    public static Rates of(String id, Operator operator, String condition, Rate... rates) {
         List<Rate> list = rates == null || rates.length == 0
                 ? Collections.emptyList() : Arrays.asList(rates);
-        return of(id, operator, rateCondition, list);
+        return of(id, operator, condition, list);
     }
 
     public static Rates of(List<Rate> rates) {
         return of(null, null, rates);
     }
 
-    public static Rates of(Operator operator, String rateCondition, List<Rate> rates) {
-        return of(null, operator, rateCondition, rates);
+    public static Rates of(Operator operator, String condition, List<Rate> rates) {
+        return of(null, operator, condition, rates);
     }
 
-    public static Rates of(String id, Operator operator, String rateCondition, List<Rate> rates) {
-        final Rate rate = StringUtils.hasText(rateCondition) ? Rate.of(rateCondition) : null;
+    public static Rates of(String id, Operator operator, String condition, List<Rate> rates) {
+        final Rate rate = condition == null || condition.isEmpty() ? null : Rate.ofCondition(condition);
         return new Rates(id, operator, rate, rates);
     }
 
@@ -140,8 +135,8 @@ public class Rates implements java.io.Serializable {
 
     public boolean hasSubConditions() {
         for(Rate rate : limits) {
-            String condition = rate.getRateCondition();
-            if (StringUtils.hasText(condition)) {
+            String condition = rate.getCondition();
+            if (condition != null && !condition.isEmpty()) {
                 return true;
             }
         }
@@ -248,15 +243,15 @@ public class Rates implements java.io.Serializable {
     //
 
     public String getRateCondition() {
-        return this.limit == null ? null : this.limit.getRateCondition();
+        return this.limit == null ? null : this.limit.getCondition();
     }
 
-    public void setRateCondition(String rateCondition) {
+    public void setRateCondition(String condition) {
         if (this.limit == null) {
-            this.limit = Rate.of(rateCondition);
+            this.limit = Rate.ofCondition(condition);
             return;
         }
-        this.limit.setRateCondition(rateCondition);
+        this.limit.setCondition(condition);
     }
 
     public long getPermits() {
@@ -283,11 +278,11 @@ public class Rates implements java.io.Serializable {
         limit.setDuration(duration);
     }
 
-    public Class<? extends BandwidthFactory> getFactoryClass() {
+    public String getFactoryClass() {
         return limit == null ? null : limit.getFactoryClass();
     }
 
-    public void setFactoryClass(Class<? extends BandwidthFactory> factoryClass) {
+    public void setFactoryClass(String factoryClass) {
         if(limit == null) {
             limit = Rate.of(0, Duration.ZERO, "", factoryClass);
             return;

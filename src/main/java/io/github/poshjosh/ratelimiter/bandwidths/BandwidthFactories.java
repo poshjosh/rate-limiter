@@ -1,6 +1,5 @@
 package io.github.poshjosh.ratelimiter.bandwidths;
 
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -8,35 +7,26 @@ import java.util.concurrent.TimeUnit;
 
 public final class BandwidthFactories {
 
-    private static WeakReference<Map<String, BandwidthFactory>> bandwidthFactoryMapWeakReference;
+    private static final Map<String, BandwidthFactory> bandwidthFactoryMap = new HashMap<>();
 
     private BandwidthFactories() { }
 
     static BandwidthFactory createSystemBandwidthFactory() {
-        return createBandwidthFactory(getSystemBandwidthFactoryClass());
+        final String className = System.getProperty("bandwidth-factory-class");
+        return createBandwidthFactory(loadClassOrDefault(className));
     }
 
-    private static Class<? extends BandwidthFactory> getSystemBandwidthFactoryClass() {
-        final String factoryClassName = System.getProperty("bandwidth-factory-class");
-        if (factoryClassName == null) {
-            return AllOrNothing.class;
+    public static <T extends BandwidthFactory> T getOrCreateBandwidthFactory
+            (/* Nullable*/ String className) {
+        BandwidthFactory bandwidthFactory = bandwidthFactoryMap.get(className);
+        if (bandwidthFactory == null) {
+            bandwidthFactory = createBandwidthFactory(loadClassOrDefault(className));
+            bandwidthFactoryMap.put(className, bandwidthFactory);
         }
-        try {
-            return (Class<BandwidthFactory>)Class.forName(factoryClassName);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        return (T)bandwidthFactory;
     }
 
-    static <T extends BandwidthFactory> T getOrCreateBandwidthFactory(Class<T> clazz) {
-        if (bandwidthFactoryMapWeakReference == null || bandwidthFactoryMapWeakReference.get() == null) {
-            bandwidthFactoryMapWeakReference = new WeakReference<>(new HashMap<>());
-        }
-        Map<String, BandwidthFactory> bandwidthFactoryMap = bandwidthFactoryMapWeakReference.get();
-        if (bandwidthFactoryMap == null) {
-            bandwidthFactoryMap = new HashMap<>();
-            bandwidthFactoryMapWeakReference = new WeakReference<>(bandwidthFactoryMap);
-        }
+    public static <T extends BandwidthFactory> T getOrCreateBandwidthFactory(Class<T> clazz) {
         final String key = clazz.getName();
         BandwidthFactory bandwidthFactory = bandwidthFactoryMap.get(key);
         if (bandwidthFactory == null) {
@@ -44,14 +34,6 @@ public final class BandwidthFactories {
             bandwidthFactoryMap.put(key, bandwidthFactory);
         }
         return (T)bandwidthFactory;
-    }
-
-    private static <T extends BandwidthFactory> T createBandwidthFactory(Class<T> clazz) {
-        try {
-            return clazz.newInstance();
-        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public static BandwidthFactory ofDefaults() {
@@ -81,11 +63,29 @@ public final class BandwidthFactories {
         return getOrCreateBandwidthFactory(AllOrNothing.class);
     }
 
+    private static <T extends BandwidthFactory> Class<T> loadClassOrDefault(String className) {
+        if (className == null || className.isEmpty()) {
+            return (Class<T>)AllOrNothing.class;
+        }
+        try {
+            return (Class<T>)Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static <T extends BandwidthFactory> T createBandwidthFactory(Class<T> clazz) {
+        try {
+            return clazz.newInstance();
+        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static final class Default implements BandwidthFactory {
         // This is initialized from a system property. We want to use the value at start up and not change
         // so we do static initialization.
         private static final BandwidthFactory delegate = createSystemBandwidthFactory();
-        public Default() { }
         @Override
         public Bandwidth createNew(long permits, long duration, TimeUnit timeUnit, long nowMicros) {
             return delegate.createNew(permits, duration, timeUnit, nowMicros);
