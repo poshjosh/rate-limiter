@@ -1,6 +1,5 @@
 package io.github.poshjosh.ratelimiter.model;
 
-import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -19,7 +18,7 @@ public class Rates implements java.io.Serializable {
     }
 
     public static Rates of(String id, Rate rate) {
-        return new Rates(id, null, rate, null);
+        return new Rates(null, id, null, null, Collections.singletonList(rate));
     }
 
     public static Rates empty() { return new Rates(); }
@@ -39,7 +38,7 @@ public class Rates implements java.io.Serializable {
     }
 
     public static Rates ofCondition(String condition) {
-        return of(condition == null || condition.isEmpty() ? null : Rate.ofCondition(condition));
+        return of(null, condition);
     }
 
     public static Rates of(Operator operator, String condition, Rate... rates) {
@@ -61,8 +60,7 @@ public class Rates implements java.io.Serializable {
     }
 
     public static Rates of(String id, Operator operator, String condition, List<Rate> rates) {
-        final Rate rate = condition == null || condition.isEmpty() ? null : Rate.ofCondition(condition);
-        return new Rates(id, operator, rate, rates);
+        return new Rates(null, id, operator, condition, rates);
     }
 
     private static String randomId() {
@@ -75,57 +73,45 @@ public class Rates implements java.io.Serializable {
 
     private Operator operator;
 
-    /**
-     * Multiple limits. Either set this or {@link #limit} but not both.
-     * @see #limit
-     */
-    // !!! DO NOT ARBITRARILY RENAME !!!
-    // The naming of this variable is part of this class'  contract.
-    // Always access this through its getter. A small inconvenience
-    // to pay for an additional single limit field.
-    //
-    private List<Rate> limits;
+    private List<Rate> rates;
 
-    /**
-     * A single limit. Added for convenience. Either set this or {@link #limits} but not both.
-     * @see #limits
-     */
-    // The naming of this variable is part of this class'  contract. Do not arbitrarily rename
-    //
-    private Rate limit;
+    private String condition;
 
     // A public no-argument constructor is required
     public Rates() {
-        this(null);
+        this((Rate)null);
     }
 
-    protected Rates(Rate limit) {
-        this(null, null, limit, null);
+    protected Rates(Rate rate) {
+        this(null, null, null, null, Collections.singletonList(rate));
     }
 
-    protected Rates(String id, Operator operator, Rate limit, List<Rate> limits) {
+    protected Rates(Rates rates) {
+        this(rates.parentId, rates.id, rates.operator, rates.condition, rates.rates);
+    }
+
+    protected Rates(
+            String parentId, String id, Operator operator, String condition, List<Rate> rates) {
+        this.parentId = parentId;
         this.id = id == null ? randomId() : id;
         this.operator = operator == null ? Operator.NONE : operator;
-        this.limit = limit;
-        this.limits = limits == null || limits.isEmpty()
-                ? Collections.emptyList() : limits.stream()
+        this.condition = condition;
+        this.rates = rates == null || rates.isEmpty()
+                ? Collections.emptyList() : rates.stream()
                 .filter(Objects::nonNull)
                 .filter(Rate::isSet)
                 .map(Rate::new).collect(Collectors.toList());
     }
 
     public Rates copy() {
-        return new Rates(id, operator, limit, limits);
+        return new Rates(this);
     }
 
     public boolean isSet() {
-        if (limit != null && limit.isSet()) {
-            return true;
-        }
-        if (limits == null) {
+        if (rates == null) {
             return false;
         }
-        for(Rate rate : limits) {
+        for(Rate rate : rates) {
             if (rate.isSet()) {
                 return true;
             }
@@ -134,22 +120,21 @@ public class Rates implements java.io.Serializable {
     }
 
     public boolean hasSubConditions() {
-        for(Rate rate : limits) {
-            String condition = rate.getCondition();
-            if (condition != null && !condition.isEmpty()) {
+        for(Rate rate : rates) {
+            String val = rate.getCondition();
+            if (val != null && !val.isEmpty()) {
                 return true;
             }
         }
         return false;
     }
 
-    public int subLimitSize() {
-        return limits == null ? 0 : limits.size();
+    public int subRateSize() {
+        return rates == null ? 0 : rates.size();
     }
 
-    public int totalSize() {
-        final int mainSize = limit == null ? 0 : 1;
-        return mainSize + subLimitSize();
+    public int size() {
+        return rates == null ? 0 : rates.size();
     }
 
     public Rates parentId(String parentId) {
@@ -178,19 +163,6 @@ public class Rates implements java.io.Serializable {
         this.id = Objects.requireNonNull(id);
     }
 
-    public Rates limit(Rate limit) {
-        setLimit(limit);
-        return this;
-    }
-
-    public Rate getLimit() {
-        return limit;
-    }
-
-    public void setLimit(Rate limit) {
-        this.limit = limit;
-    }
-
     public Rates operator(Operator operator) {
         setOperator(operator);
         return this;
@@ -204,90 +176,34 @@ public class Rates implements java.io.Serializable {
         this.operator = operator;
     }
 
-    public Rates limits(Rate... limits) {
-        setLimits(Arrays.asList(limits));
+    public Rates rates(Rate... rates) {
+        setRates(Arrays.asList(rates));
         return this;
     }
 
-    public Rates limits(List<Rate> limits) {
-        setLimits(limits);
+    public Rates rates(List<Rate> rates) {
+        setRates(rates);
         return this;
     }
 
-    public List<Rate> getSubLimits() {
-        return getLimits();
+    public List<Rate> getRates() {
+        return rates;
     }
 
-    public List<Rate> getLimits() {
-        return limits;
+    public void setRates(List<Rate> rates) {
+        this.rates = rates;
+    }
+    public Rates condition(String condition) {
+        setCondition(condition);
+        return this;
     }
 
-    public List<Rate> getAllLimits() {
-        Set<Rate> result = new LinkedHashSet<>();
-        // In springframework, the single limit was added twice to the limits array.
-        // To prevent this, we check if the limits array already contains the single limit.
-        if (limit != null) {
-            result.add(limit);
-        }
-        if (limits != null) {
-            result.addAll(limits);
-        }
-        return Arrays.asList(result.toArray(new Rate[0]));
+    public String getCondition() {
+        return condition;
     }
 
-    public void setLimits(List<Rate> limits) {
-        this.limits = limits;
-    }
-
-    // Rate related properties
-    //
-
-    public String getRateCondition() {
-        return this.limit == null ? null : this.limit.getCondition();
-    }
-
-    public void setRateCondition(String condition) {
-        if (this.limit == null) {
-            this.limit = Rate.ofCondition(condition);
-            return;
-        }
-        this.limit.setCondition(condition);
-    }
-
-    public long getPermits() {
-        return limit == null ? 0 : limit.getPermits();
-    }
-
-    public void setPermits(long permits) {
-        if (limit == null) {
-            limit = Rate.of(permits, Duration.ZERO);
-            return;
-        }
-        limit.setPermits(permits);
-    }
-
-    public Duration getDuration() {
-        return limit == null ? null : limit.getDuration();
-    }
-
-    public void setDuration(Duration duration) {
-        if(limit == null) {
-            limit = Rate.of(0, duration);
-            return;
-        }
-        limit.setDuration(duration);
-    }
-
-    public String getFactoryClass() {
-        return limit == null ? null : limit.getFactoryClass();
-    }
-
-    public void setFactoryClass(String factoryClass) {
-        if(limit == null) {
-            limit = Rate.of(0, Duration.ZERO, "", factoryClass);
-            return;
-        }
-        limit.setFactoryClass(factoryClass);
+    public void setCondition(String condition) {
+        this.condition = condition;
     }
 
     @Override public boolean equals(Object o) {
@@ -296,9 +212,9 @@ public class Rates implements java.io.Serializable {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        Rates rates = (Rates) o;
+        Rates ratesObj = (Rates) o;
 
-        return id.equals(rates.id);
+        return id.equals(ratesObj.id);
     }
 
     @Override public int hashCode() {
@@ -307,21 +223,19 @@ public class Rates implements java.io.Serializable {
 
     @Override
     public String toString() {
-        return "Rates{id=" + id + ", main=" + limit
-                + ", operator=" + operator + ", sub=" + limits + '}';
+        return "Rates{parentId=" + parentId + ", id=" + id + ", operator=" + operator
+                + ", condition=" + condition + ", rates=" + rates + '}';
     }
 
-    private static final Rates NONE = new Rates("", null, null, null){
+    private static final Rates NONE = new Rates(null, "", null, null, null){
         @Override public boolean isSet() { return false; }
         @Override public boolean hasSubConditions() { return false; }
-        @Override public int subLimitSize() { return 0; }
-        @Override public int totalSize() { return 0; }
+        @Override public int subRateSize() { return 0; }
+        @Override public int size() { return 0; }
         @Override public void setId(String id) { throw new UnsupportedOperationException(); }
         @Override public void setParentId(String parentId) { throw new UnsupportedOperationException(); }
-        @Override public void setLimit(Rate limit) { throw new UnsupportedOperationException(); }
         @Override public void setOperator(Operator optr) { throw new UnsupportedOperationException(); }
-        @Override public void setLimits(List<Rate> limits) { throw new UnsupportedOperationException(); }
-        @Override public void setRateCondition(String val) { throw new UnsupportedOperationException(); }
-        @Override public void setPermits(long permits) { throw new UnsupportedOperationException(); }
+        @Override public void setRates(List<Rate> rates) { throw new UnsupportedOperationException(); }
+        @Override public void setCondition(String val) { throw new UnsupportedOperationException(); }
     };
 }

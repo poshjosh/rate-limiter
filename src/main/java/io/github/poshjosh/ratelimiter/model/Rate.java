@@ -13,6 +13,8 @@ public class Rate implements java.io.Serializable {
 
     private static final long serialVersionUID = 100L;
 
+    public static final Duration DEFAULT_DURATION = Duration.ofSeconds(1);
+
     /**
      * Returns a string representation of the rate.
      * 99/m = 99 permits per minute
@@ -55,12 +57,8 @@ public class Rate implements java.io.Serializable {
         return of(permits, Duration.ofDays(1));
     }
 
-    public static Rate ofCondition(String condition) {
-        return of(0, Duration.ZERO, condition);
-    }
-
     public static Rate of(long permitsPerSecond, String condition) {
-        return of(permitsPerSecond, Duration.ofSeconds(1), condition);
+        return of(permitsPerSecond, DEFAULT_DURATION, condition);
     }
 
     public static Rate parse(String text) {
@@ -68,9 +66,7 @@ public class Rate implements java.io.Serializable {
     }
 
     public static Rate of(String rate) {
-        final long permits = parsePermits(rate);
-        final long durationMillis = parseDurationMillis(rate);
-        return of(permits, Duration.ofMillis(durationMillis));
+        return of(rate, "");
     }
 
     public static Rate of(long permits, Duration duration) {
@@ -78,9 +74,7 @@ public class Rate implements java.io.Serializable {
     }
 
     public static Rate of(String rate, String condition) {
-        final long permits = parsePermits(rate);
-        final long durationMillis = parseDurationMillis(rate);
-        return of(permits, Duration.ofMillis(durationMillis), condition);
+        return of(rate, 0, DEFAULT_DURATION, condition, "");
     }
 
     public static Rate of(long permits, Duration duration, String condition) {
@@ -88,16 +82,19 @@ public class Rate implements java.io.Serializable {
     }
 
     public static Rate of(long permits, Duration duration, String condition, String factoryClass) {
-        return new Rate("", permits, duration, condition, factoryClass);
+        return of("", permits, duration, condition, factoryClass);
+    }
+
+    private static Rate of(
+            String rate, long permits, Duration duration, String condition, String factoryClass) {
+        return new Rate(rate, permits, duration, condition, factoryClass);
     }
 
     public static Rate of(Rate rate) {
         return new Rate(rate);
     }
 
-    private static final Duration DEFAULT_DURATION = Duration.ofSeconds(1);
-
-    private String rate = "";
+    private String rate;
 
     private long permits;
     private Duration duration = DEFAULT_DURATION;
@@ -110,7 +107,7 @@ public class Rate implements java.io.Serializable {
      * <p><code>jvm.memory.available < 1_000_000_000</code></p>
      * <p><code>web.request.user.role = ROLE_GUEST</code></p>
      *
-     * Support must be provide for the expression. Support is provided by default for the following:
+     * Support must be provided for the expression. Support is provided by default for the following:
      *
      * <p><code>jvm.thread.count < /code></p>
      * <p><code>jvm.thread.count.daemon < /code></p>
@@ -148,15 +145,15 @@ public class Rate implements java.io.Serializable {
      * %  contains
      * !  not (e.g !=, !>, !$ etc)
      * </pre>
-     * @see Rates#getRateCondition()
+     * @see Rates#getCondition()
      */
-    private String condition = "";
+    private String condition;
 
     /**
      * A class name of a BandwidthFactory that will be dynamically instantiated and used to
      * create Bandwidths from this rate limit. The class must have a zero-argument constructor.
      */
-    private String factoryClass = "";
+    private String factoryClass;
 
     public Rate() { }
 
@@ -165,26 +162,25 @@ public class Rate implements java.io.Serializable {
     }
 
     Rate(String rate, long permits, Duration duration, String condition, String factoryClass) {
-        this.rate = Objects.requireNonNull(rate);
-        requireFalse(permits < 0, "Must not be negative, permits: %d", permits);
-        requireFalse(duration.isNegative(), "Duration must be withPositiveOperator, duration: " + duration);
+        this.rate = rate;
         this.permits = permits;
-        this.duration = Objects.requireNonNull(duration);
-        this.condition = Objects.requireNonNull(condition);
-        this.factoryClass = Objects.requireNonNull(factoryClass);
+        this.duration = duration == null ? DEFAULT_DURATION : requirePositive(duration);
+        this.condition = condition;
+        this.factoryClass = factoryClass;
     }
-    private void requireFalse(boolean expression, String errorMessageFormat, Object... args) {
-        if (expression) {
-            throw new IllegalArgumentException(String.format(errorMessageFormat, args));
+    private Duration requirePositive(Duration duration) {
+        if (duration.isNegative()) {
+            throw new IllegalArgumentException("Duration must be positive, duration: " + duration);
         }
+        return duration;
     }
 
     public boolean isSet() {
-        return !Duration.ZERO.equals(duration);
+        return permits > 0 || (rate != null && !rate.isEmpty());
     }
 
-    public Rate text(String permits) {
-        this.setRate(permits);
+    public Rate rate(String rate) {
+        this.setRate(rate);
         return this;
     }
 
@@ -248,28 +244,6 @@ public class Rate implements java.io.Serializable {
         this.factoryClass = factoryClass;
     }
 
-    private static long parseDurationMillis(String rate) {
-        final int pivot = rate.indexOf('/');
-        return toDurationMillis(pivot == -1 ? '\u0000' : rate.charAt(pivot + 1));
-    }
-
-    private static long parsePermits(String rate) {
-        final int pivot = rate.indexOf('/');
-        return Long.parseLong(pivot == -1 ? rate : rate.substring(0, pivot));
-    }
-
-    private static long toDurationMillis(char ch) {
-        switch (ch) {
-        case '\u0000': return 1;
-        case 's': return 1000;
-        case 'm': return (60 * 1000);
-        case 'h': return (60 * 60 * 1000);
-        case 'd': return (24 * 60 * 60 * 1000);
-        default: throw new IllegalArgumentException("Invalid duration character: " + ch +
-                ", supported characters: '', 's', 'm', 'h', 'd'");
-        }
-    }
-
     private static char toChar(TimeUnit ch) {
         switch (ch) {
         case MILLISECONDS: return '\u0000';
@@ -319,7 +293,7 @@ public class Rate implements java.io.Serializable {
     @Override
     public String toString() {
         return "Rate{" +
-                "rate=" + rate +
+                ", rate=" + rate +
                 "permits=" + permits +
                 ", duration=" + duration +
                 ", condition=" + condition +

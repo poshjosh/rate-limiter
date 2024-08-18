@@ -7,6 +7,7 @@ import io.github.poshjosh.ratelimiter.util.Ticker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,7 +27,11 @@ final class DefaultRateToBandwidthConverter implements RateToBandwidthConverter 
         }
         final BandwidthFactory factory = BandwidthFactories
                 .getOrCreateBandwidthFactory(rate.getFactoryClass());
-        return factory.createNew(rate.getPermits(), rate.getDuration(), ticker.elapsedMicros());
+        final long permits = rate.getPermits() < 1 ?
+                parsePermits(rate.getRate()) : rate.getPermits();
+        final Duration duration = rate.getPermits() < 1 ?
+                parseDuration(rate.getRate()) : rate.getDuration();
+        return factory.createNew(permits, duration, ticker.elapsedMicros());
     }
 
     @Override
@@ -35,7 +40,7 @@ final class DefaultRateToBandwidthConverter implements RateToBandwidthConverter 
             log(rates, resultIfNone);
             return resultIfNone;
         }
-        final List<Rate> limits = rates.getAllLimits();
+        final List<Rate> limits = rates.getRates();
         final Bandwidth[] bandwidths = new Bandwidth[limits.size()];
         for (int i = 0; i < bandwidths.length; i++) {
             Rate rate = limits.get(i);
@@ -50,6 +55,28 @@ final class DefaultRateToBandwidthConverter implements RateToBandwidthConverter 
         final Bandwidth bandwidth = Bandwidths.of(operator, bandwidths);
         log(rates, bandwidth);
         return bandwidth;
+    }
+
+    private Duration parseDuration(String rate) {
+        final int pivot = rate.indexOf('/');
+        return Duration.ofMillis(toDurationMillis(pivot == -1 ? '\u0000' : rate.charAt(pivot + 1)));
+    }
+
+    private long parsePermits(String rate) {
+        final int pivot = rate.indexOf('/');
+        return Long.parseLong(pivot == -1 ? rate : rate.substring(0, pivot));
+    }
+
+    private long toDurationMillis(char ch) {
+        switch (ch) {
+        case '\u0000': return 1;
+        case 's': return 1000;
+        case 'm': return (60 * 1000);
+        case 'h': return (60 * 60 * 1000);
+        case 'd': return (24 * 60 * 60 * 1000);
+        default: throw new IllegalArgumentException("Invalid duration character: " + ch +
+                ", supported characters: '', 's', 'm', 'h', 'd'");
+        }
     }
 
     private static void log(Rates rates, Bandwidth bandwidth) {
