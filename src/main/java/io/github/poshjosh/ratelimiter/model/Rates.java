@@ -14,7 +14,7 @@ public class Rates implements java.io.Serializable {
     }
 
     public static Rates ofId(String id) {
-        return of(id, (Rate)null);
+        return of(id, null);
     }
 
     public static Rates of(String id, Rate rate) {
@@ -30,19 +30,11 @@ public class Rates implements java.io.Serializable {
     public static Rates and(Rate... rates) { return of(Operator.AND, rates); }
 
     public static Rates of(Operator operator, Rate... rates) {
-        return of(operator, null, rates);
-    }
-
-    public static Rates of(String condition, Rate... rates) {
-        return of(null, condition, rates);
+        return of(null, operator, null, rates);
     }
 
     public static Rates ofCondition(String condition) {
-        return of(null, condition);
-    }
-
-    public static Rates of(Operator operator, String condition, Rate... rates) {
-        return of(null, operator, condition, rates);
+        return of(null, null, condition);
     }
 
     public static Rates of(String id, Operator operator, String condition, Rate... rates) {
