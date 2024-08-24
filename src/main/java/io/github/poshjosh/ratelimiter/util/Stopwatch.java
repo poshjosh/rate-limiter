@@ -119,7 +119,9 @@ final class Stopwatch {
      * @throws IllegalStateException if the stopwatch is already running.
      */
     public Stopwatch start() {
-        Checks.requireFalse(isRunning, "This stopwatch is already running.");
+        if (isRunning) {
+            throw new IllegalArgumentException("This stopwatch is already running.");
+        }
         isRunning = true;
         startTick = ticker.elapsedNanos();
         return this;
@@ -133,8 +135,10 @@ final class Stopwatch {
      * @throws IllegalStateException if the stopwatch is already stopped.
      */
     public Stopwatch stop() {
+        if (!isRunning) {
+            throw new IllegalArgumentException("This stopwatch is already stopped.");
+        }
         long tick = ticker.elapsedNanos();
-        Checks.requireTrue(isRunning, "This stopwatch is already stopped.");
         isRunning = false;
         elapsedNanos += tick - startTick;
         return this;

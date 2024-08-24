@@ -1,7 +1,7 @@
 package io.github.poshjosh.ratelimiter.expression;
 
 import io.github.poshjosh.ratelimiter.model.Operator;
-import io.github.poshjosh.ratelimiter.util.Matcher;
+import io.github.poshjosh.ratelimiter.matcher.Matcher;
 import io.github.poshjosh.ratelimiter.util.StringUtils;
 
 import java.util.Optional;

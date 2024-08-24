@@ -1,6 +1,6 @@
 package io.github.poshjosh.ratelimiter.expression;
 
-import io.github.poshjosh.ratelimiter.util.Matchers;
+import io.github.poshjosh.ratelimiter.matcher.Matchers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

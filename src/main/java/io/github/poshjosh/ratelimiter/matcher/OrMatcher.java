@@ -1,4 +1,4 @@
-package io.github.poshjosh.ratelimiter.util;
+package io.github.poshjosh.ratelimiter.matcher;
 
 import java.util.Objects;
 

@@ -35,8 +35,8 @@ We want rate limiting to be adjusted dynamically based on specific conditions. [
 ```java
 import io.github.poshjosh.ratelimiter.RateLimiter;
 import io.github.poshjosh.ratelimiter.bandwidths.Bandwidths;
-import io.github.poshjosh.ratelimiter.util.Matcher;
-import io.github.poshjosh.ratelimiter.util.Matchers;
+import io.github.poshjosh.ratelimiter.matcher.Matcher;
+import io.github.poshjosh.ratelimiter.matcher.Matchers;
 
 class DynamicRateLimiting {
 

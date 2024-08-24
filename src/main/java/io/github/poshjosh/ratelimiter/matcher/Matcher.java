@@ -1,13 +1,19 @@
-package io.github.poshjosh.ratelimiter.util;
+package io.github.poshjosh.ratelimiter.matcher;
 
 @FunctionalInterface
 public interface Matcher<INPUT> {
-
-    static <T> Matcher<T> matchNone() {
-        return Matchers.matchNone();
-    }
-
     static String composeResults(String first, String second) {
+        final boolean firstIsMatch = isMatch(first);
+        final boolean secondIsMatch = isMatch(second);
+        if (!firstIsMatch && !secondIsMatch) {
+            return Matchers.NO_MATCH;
+        }
+        if (!firstIsMatch) {
+            return second;
+        }
+        if (!secondIsMatch) {
+            return first;
+        }
         return first + '_' + second;
     }
     static boolean isMatch(String matchResult) { return !matchResult.isEmpty(); }

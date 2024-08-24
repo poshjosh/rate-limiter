@@ -1,6 +1,6 @@
 package io.github.poshjosh.ratelimiter.expression;
 
-import io.github.poshjosh.ratelimiter.util.Matcher;
+import io.github.poshjosh.ratelimiter.matcher.Matcher;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
