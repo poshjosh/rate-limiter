@@ -6,11 +6,11 @@ import io.github.poshjosh.ratelimiter.matcher.Matchers;
 import java.util.Arrays;
 import java.util.Objects;
 
-final class AnyExpressionMatcher<INPUT> implements ExpressionMatcher<INPUT>{
+final class ExpressionMatcherComposite<INPUT> implements ExpressionMatcher<INPUT>{
 
     private final ExpressionMatcher<INPUT>[] expressionMatchers;
 
-    AnyExpressionMatcher(ExpressionMatcher<INPUT>[] expressionMatchers) {
+    ExpressionMatcherComposite(ExpressionMatcher<INPUT>[] expressionMatchers) {
         this.expressionMatchers = Objects.requireNonNull(expressionMatchers);
     }
 
@@ -47,6 +47,6 @@ final class AnyExpressionMatcher<INPUT> implements ExpressionMatcher<INPUT>{
 
     @Override
     public String toString() {
-        return "AnyExpressionMatcher{matchers=" + Arrays.toString(expressionMatchers) + '}';
+        return "ExpressionMatcherComposite{matchers=" + Arrays.toString(expressionMatchers) + '}';
     }
 }

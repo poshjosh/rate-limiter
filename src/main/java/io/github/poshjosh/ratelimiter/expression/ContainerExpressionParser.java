@@ -19,7 +19,7 @@ final class ContainerExpressionParser<CONTEXT> implements ExpressionParser<CONTE
     public Object parseLeft(CONTEXT context, Expression<String> expression) {
         try {
             return delegate.parseLeft(context, expression);
-        } catch (UnsupportedOperationException e) {
+        } catch (ExpressionException e) {
             return expression.getLeftOrDefault(null);
         }
     }

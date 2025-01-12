@@ -43,7 +43,7 @@ public interface ExpressionMatchers {
         if (matchers.length == 1) {
             return matchers[0];
         }
-        return new AnyExpressionMatcher<>(matchers);
+        return new ExpressionMatcherComposite<>(matchers);
     }
 
     static <R> ExpressionMatcher<R> ofJvmMemory() {

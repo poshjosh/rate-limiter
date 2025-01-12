@@ -10,7 +10,7 @@ public final class ExpressionParsers {
         if (parsers.length == 1) {
             return (ExpressionParser<C, Object>)parsers[0];
         }
-        return new AnyExpressionParser(parsers);
+        return new ExpressionParserComposite(parsers);
     }
 
     static final ExpressionParser<?, Long> JVM_MEMORY = new JvmMemoryExpressionParser<>();

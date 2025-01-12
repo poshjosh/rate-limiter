@@ -3,11 +3,11 @@ package io.github.poshjosh.ratelimiter.expression;
 import java.util.Arrays;
 import java.util.Objects;
 
-final class AnyExpressionParser<CONTEXT, OPERAND> implements ExpressionParser<CONTEXT, OPERAND>{
+final class ExpressionParserComposite<CONTEXT, OPERAND> implements ExpressionParser<CONTEXT, OPERAND>{
 
     private final ExpressionParser<CONTEXT, OPERAND>[] expressionParsers;
 
-    AnyExpressionParser(ExpressionParser<CONTEXT, OPERAND>[] expressionParsers) {
+    ExpressionParserComposite(ExpressionParser<CONTEXT, OPERAND>[] expressionParsers) {
         this.expressionParsers = Objects.requireNonNull(expressionParsers);
     }
 
@@ -43,6 +43,6 @@ final class AnyExpressionParser<CONTEXT, OPERAND> implements ExpressionParser<CO
 
     @Override
     public String toString() {
-        return "AnyExpressionParser{parsers=" + Arrays.toString(expressionParsers) + '}';
+        return "ExpressionParserComposite{parsers=" + Arrays.toString(expressionParsers) + '}';
     }
 }
