@@ -12,7 +12,7 @@ final class JvmMemoryExpressionParser<CONTEXT> implements ExpressionParser<CONTE
     public static final String MEMORY_TOTAL = "jvm.memory.total";
     public static final String MEMORY_USED = "jvm.memory.used";
 
-    // b has to come before all others, because all others end with b
+    // b has to come after all others, because all others end with b
     private static final String [] SUFFIXES = {"yb", "zb", "eb", "pb", "tb", "gb", "mb", "kb", "b"};
 
     JvmMemoryExpressionParser() { }

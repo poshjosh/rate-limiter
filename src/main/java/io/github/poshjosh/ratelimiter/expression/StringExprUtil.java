@@ -86,8 +86,8 @@ final class StringExprUtil {
         }
     }
 
-    private static RuntimeException invalidTextException(String text, Throwable cause) {
-        return new IllegalArgumentException("Invalid: " + text
+    private static ExpressionParseException invalidTextException(String text, Throwable cause) {
+        return new ExpressionParseException("Invalid: " + text
                 + ". Expected format: <class>#<field|method()> e.g org.spaces.Me#getName()", cause);
     }
 
@@ -138,7 +138,7 @@ final class StringExprUtil {
         final int idxOfFirstNonSpaceChar = indexOfFirstNonSpaceChar(expression, 0);
         final int idxOfSpaceBeforeOptr = expression.indexOf(' ', idxOfFirstNonSpaceChar);
         if (idxOfSpaceBeforeOptr == -1) {
-            throw Checks.notSupported(Expression.class, expression);
+            throw notSupported(expression);
         }
         final String left = expression.substring(0, idxOfSpaceBeforeOptr).trim();
         final int operatorStart = indexOfFirstNonSpaceChar(expression, idxOfSpaceBeforeOptr + 1);
@@ -155,7 +155,7 @@ final class StringExprUtil {
                 return i;
             }
         }
-        throw Checks.notSupported(Expression.class, expression);
+        throw notSupported(expression);
     }
 
     private static String parseOperator(String expression, int operatorStart, int idxOfSpaceAfterOptr) {
@@ -172,10 +172,14 @@ final class StringExprUtil {
         } else {
             final int next = idxOfSpaceAfterOptr + 1;
             if (expression.length() < next) {
-                throw Checks.notSupported(Expression.class, expression);
+                throw notSupported(expression);
             }
             return expression.substring(next).trim();
         }
+    }
+
+    private static ExpressionParseException notSupported(Object unsupported) {
+        return new ExpressionParseException("Unsupported expression: " + unsupported);
     }
 
     /**

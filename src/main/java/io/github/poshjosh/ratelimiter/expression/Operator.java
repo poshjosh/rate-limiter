@@ -1,5 +1,7 @@
 package io.github.poshjosh.ratelimiter.expression;
 
+import io.github.poshjosh.ratelimiter.util.StringUtils;
+
 import java.util.Objects;
 
 public enum Operator {
@@ -34,7 +36,10 @@ public enum Operator {
     private final String symbol;
     private final Type [] types;
     Operator(String symbol, Type... types) {
-        this.symbol = Checks.requireContent(symbol);
+        if (!StringUtils.hasText(symbol)) {
+            throw new ExpressionParseException("Operator symbol may not be null or empty");
+        }
+        this.symbol = symbol;
         this.types = Objects.requireNonNull(types);
     }
     public boolean equalsIgnoreNegation(Operator operator) {

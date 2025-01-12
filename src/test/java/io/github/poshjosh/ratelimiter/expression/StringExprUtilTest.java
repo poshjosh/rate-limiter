@@ -34,7 +34,7 @@ class StringExprUtilTest {
             "io.github.poshjosh.ratelimiter.expression.StringExprUtilTest#getNumber()",
     })
     void tryValueFromJavaType_shouldFail(String text) {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ExpressionParseException.class,
                 () -> StringExprUtil.tryValueFromJavaType(text, Integer.class),
                 "\nShould throw IllegalArgumentException, but did not\n");
     }
