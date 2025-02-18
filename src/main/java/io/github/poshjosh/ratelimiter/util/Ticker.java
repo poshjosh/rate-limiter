@@ -6,7 +6,21 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
- * A Ticker which counts from time created
+ * A Ticker which keeps track of time.
+ * <p>A Ticker makes working with Bandwidths easier, as shown in the following example:</p>
+ * <pre>
+ * <code>
+ *     Ticker ticker = Ticker.ofDefaults();
+ *     Bandwidth bandwidth = Bandwidths.allOrNothing(1, Duration.ofSeconds(1), ticker.elapsedMicros());
+ *     bandwidth.isAvailable(ticker.elapsedMicros());
+ * </code>
+ * </pre>
+ * <p>
+ *     <b>Note:</b>Use the same ticker you used when creating the bandwidth to keep track of time
+ *     each time you call a bandwidth method which requires the current time. To make life easier,
+ *     you could create one ticker and use it throughout your application. There is a default
+ *     Ticker which can be accessed via {@link Ticker#ofDefaults()}.
+ * </p>
  */
 public interface Ticker {
     static Ticker ofDefaults() {

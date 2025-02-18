@@ -6,14 +6,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class AbstractBandwidthTest {
 
     private final Ticker ticker = Tickers.ofDefaults();
 
     protected abstract Bandwidth getBandwidth(double permitsPerSeconds, long nowMicros);
+
+    @Test
+    void isAvailable_givenEarlierTime_shouldThrowException() {
+        final long nowMicros = readMicros();
+        final long earlierTime = nowMicros - 1;
+        Bandwidth bandwidth = getBandwidth(5, nowMicros);
+        assertThrows(IllegalArgumentException.class, () -> bandwidth.isAvailable(earlierTime));
+    }
 
     @Test
     void with_givenSameMicros_shouldReturnExactCopy() throws InterruptedException{

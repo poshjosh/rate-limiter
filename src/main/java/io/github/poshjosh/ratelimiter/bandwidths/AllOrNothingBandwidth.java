@@ -1,5 +1,8 @@
 package io.github.poshjosh.ratelimiter.bandwidths;
 
+import io.github.poshjosh.ratelimiter.util.Ticker;
+import io.github.poshjosh.ratelimiter.util.Tickers;
+
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
@@ -9,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * An all or nothing Bandwidth, wired to return a value between zero and stable interval for both methods
  * {@link #queryEarliestAvailable(long)} and {@link #reserveEarliestAvailable(int, long)}
+ * <p><b>Note:</b>This class is not thread safe</p>
  */
 final class AllOrNothingBandwidth implements Bandwidth, Serializable {
 
@@ -20,14 +24,14 @@ final class AllOrNothingBandwidth implements Bandwidth, Serializable {
 
         private long permits;
         private long durationMicros;
-        private long nowMicros;
+        private long startTimeMicros;
 
-        private Rate(long permits, long durationMicros, long nowMicros) {
+        private Rate(long permits, long durationMicros, long startTimeMicros) {
             Checks.requireNotNegative(permits, "permits");
             Checks.requireNotNegative(durationMicros, "duration");
             this.permits = permits;
             this.durationMicros = durationMicros;
-            this.nowMicros = nowMicros;
+            this.startTimeMicros = startTimeMicros;
         }
         public int compareTo(Rate rate) {
             if(permits == rate.permits && durationMicros == rate.durationMicros) {
@@ -41,28 +45,37 @@ final class AllOrNothingBandwidth implements Bandwidth, Serializable {
         private void reset(long nowMicros) {
             this.permits = 0;
             this.durationMicros = 0;
-            this.nowMicros = nowMicros;
+            this.startTimeMicros = nowMicros;
         }
         private void increment(int amount, long nowMicros) {
             Checks.requireNotNegative(amount, "amount");
+            validateTime(nowMicros);
             this.permits += amount;
-            this.durationMicros = (nowMicros - this.nowMicros);
+            this.durationMicros = (nowMicros - this.startTimeMicros);
+        }
+        private void validateTime(long nowMicros) {
+            if (nowMicros < this.startTimeMicros) {
+                throw new IllegalArgumentException(
+                        String.format("Current time: %1$d cannot be earlier than start time %2$d. It is recommended to use an instance of %3$s to keep track of time. See %3$s java docs for more details.",
+                                nowMicros, this.startTimeMicros, Ticker.class.getName()));
+            }
         }
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Rate rate = (Rate) o;
-            return permits == rate.permits && durationMicros == rate.durationMicros && nowMicros == rate.nowMicros;
+            return permits == rate.permits && durationMicros == rate.durationMicros && startTimeMicros
+                    == rate.startTimeMicros;
         }
         @Override
         public int hashCode() {
-            return Objects.hash(permits, durationMicros, nowMicros);
+            return Objects.hash(permits, durationMicros, startTimeMicros);
         }
         @Override
         public String toString() {
             return "{permits=" + permits + ", duration=" + (durationMicros/1000) +
-                    "millis, now=" + (nowMicros/1000) + "millis}";
+                    "millis, now=" + (startTimeMicros /1000) + "millis}";
         }
     }
 
