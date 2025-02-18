@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PARENT_DIR="$HOME/dev_looseboxes"
-MVN_SETTINGS_FILE="/$HOME/dev_looseboxes/.m2/settings.xml"
+MVN_SETTINGS_FILE="$HOME/dev_looseboxes/.m2/settings.xml"
 UPDATE_CHANGE_LOG=false
 
 function promptOkExit() {
