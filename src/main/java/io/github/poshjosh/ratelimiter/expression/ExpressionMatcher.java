@@ -14,12 +14,16 @@ public interface ExpressionMatcher<INPUT> extends Matcher<INPUT> {
     boolean isSupported(Expression<String> expression);
 
     default Optional<Matcher<INPUT>> matcher(String text) {
+        return Optional.ofNullable(matcherOrFallback(text, null));
+    }
+
+    default Matcher<INPUT> matcherOrFallback(String text, Matcher<INPUT> fallback) {
         if (!StringUtils.hasText(text)) {
-            return Optional.empty();
+            return fallback;
         }
         String [] parts = StringExprUtil.splitIntoExpressionsAndConjunctors(text);
         if (parts.length == 0) {
-            return Optional.empty();
+            return fallback;
         }
         Matcher<INPUT> result = null;
         Operator operator = Operator.NONE;
@@ -54,6 +58,6 @@ public interface ExpressionMatcher<INPUT> extends Matcher<INPUT> {
                 operator = Operator.ofSymbol(parts[i]);
             }
         }
-        return Optional.ofNullable(result);
+        return result == null ? fallback : result;
     }
 }
