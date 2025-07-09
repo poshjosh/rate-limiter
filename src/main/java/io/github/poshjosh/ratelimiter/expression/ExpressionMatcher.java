@@ -17,7 +17,8 @@ public interface ExpressionMatcher<INPUT> extends Matcher<INPUT> {
         return Optional.ofNullable(matcherOrFallback(text, null));
     }
 
-    default Matcher<INPUT> matcherOrFallback(String text, Matcher<INPUT> fallback) {
+    default /* Nullable */ Matcher<INPUT> matcherOrFallback(
+            String text, /* Nullable */ Matcher<INPUT> fallback) {
         if (!StringUtils.hasText(text)) {
             return fallback;
         }

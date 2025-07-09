@@ -22,10 +22,12 @@ public interface ExpressionMatchers {
     }
 
     static <R> Matcher<R> matcher(String expression) {
-        return ExpressionMatchers.<R>ofDefaults().matcher(expression)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Not a valid expression: " + expression +
-                                ". For valid expressions see: https://github.com/poshjosh/rate-limiter/blob/master/docs/RATE-CONDITION-EXPRESSION-LANGUAGE.md"));
+        final Matcher<R> matcher = ExpressionMatchers.<R>ofDefaults().matcherOrFallback(expression, null);
+        if (matcher == null) {
+            throw new IllegalArgumentException("Not a valid expression: " + expression +
+                    ". For valid expressions see: https://github.com/poshjosh/rate-limiter/blob/master/docs/RATE-CONDITION-EXPRESSION-LANGUAGE.md");
+        }
+        return matcher;
     }
 
     ExpressionMatcher<Object> DEFAULT = any(
