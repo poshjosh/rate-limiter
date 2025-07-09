@@ -195,7 +195,7 @@ final class StringExprUtil {
         }
         boolean opened = false;
         int pivot = -1;
-        List<String> result = new ArrayList<>();
+        List<String> result = new ArrayList<>(Math.max(text.length() / 2, 2));
         for (int i = 0; i < text.length(); i++) {
             char ch = text.charAt(i);
             if (OPEN_SQUARE_BRACKET == ch || OPEN_BRACKET == ch) {
